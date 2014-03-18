@@ -42,8 +42,11 @@ describe('global methods', function () {
            expect(parseInt('0x16', fakeZero)).toBe(parseInt('0x16', 16));
        });
     });
+});
 
+describe("new feature", function() {
   describe("Reserved words as property names", function() {
+    'use strict';
     it("should support", function() {
       expect((function () {
         try {
@@ -57,6 +60,7 @@ describe('global methods', function () {
     });
   });
   describe("use strict", function() {
+    'use strict';
     it("should support", function() {
       expect((function () {
         "use strict";
@@ -65,6 +69,7 @@ describe('global methods', function () {
     });
   });
   describe("getter", function() {
+    'use strict';
     it("should support", function() {
       expect((function () {
         try {
@@ -76,6 +81,7 @@ describe('global methods', function () {
     });
   });
   describe("setter", function() {
+    'use strict';
     it("should support", function() {
       expect((function () {
         try {
@@ -88,5 +94,27 @@ describe('global methods', function () {
       })()).toBeTruthy();
     });
   });
+  describe("Zero-width chars in identifiers", function() {
+    'use strict';
+    it("should support", function() {
+      expect(function () {
+        try {
+          return eval('_\u200c\u200d = true');
+        } catch (e) { }
+      }()).toBeTruthy();
+    });
+  });
+  describe("Immutable undefined", function() {
+    it("should support", function() {
+      expect(function () {
+        var result;
+        try {
+          undefined = 12345;
+          result = typeof undefined == 'undefined';
+          undefined = void 0;
+        } catch (e) { }
+        return result;
+      }()).toBeTruthy();
+    });
+  });
 });
-
