@@ -201,4 +201,10 @@ describe('String', function() {
             });
         });
     });
+
+  describe("Property access on strings", function() {
+    it("should support", function() {
+      expect("foobar"[3]).toBe('b');
+    })
+  });
 });

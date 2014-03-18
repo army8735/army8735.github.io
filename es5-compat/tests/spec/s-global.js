@@ -42,5 +42,51 @@ describe('global methods', function () {
            expect(parseInt('0x16', fakeZero)).toBe(parseInt('0x16', 16));
        });
     });
+
+  describe("Reserved words as property names", function() {
+    it("should support", function() {
+      expect((function () {
+        try {
+          var obj = { };
+          eval('obj = ({ if: 1 })');
+          return obj['if'] === 1;
+        } catch (e) {
+          return false;
+        }
+      })()).toBeTruthy();
+    });
+  });
+  describe("use strict", function() {
+    it("should support", function() {
+      expect((function () {
+        "use strict";
+        return !this;
+      }())).toBeTruthy();
+    });
+  });
+  describe("getter", function() {
+    it("should support", function() {
+      expect((function () {
+        try {
+          return eval('({ get x(){ return 1 } }).x === 1');
+        } catch (e) {
+          return false;
+        }
+      })()).toBeTruthy();
+    });
+  });
+  describe("setter", function() {
+    it("should support", function() {
+      expect((function () {
+        try {
+          var value;
+          eval('({ set x(v){ value = v; } }).x = 1');
+          return value === 1;
+        } catch (e) {
+          return false;
+        }
+      })()).toBeTruthy();
+    });
+  });
 });
 

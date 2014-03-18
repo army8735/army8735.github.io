@@ -185,4 +185,55 @@ describe('Object', function () {
             }).toThrow();
         });
     });
+
+  describe("Object.create", function() {
+    it("should exists", function() {
+      expect(typeof Object.create).toBe("function");
+    });
+  });
+  describe("Object.getPrototypeOf", function() {
+    it("should exists", function() {
+      expect(typeof Object.getPrototypeOf).toBe("function");
+    });
+  });
+  describe("Object.getOwnPropertyNames", function() {
+    it("should exists", function() {
+      expect(typeof Object.getOwnPropertyNames).toBe("function");
+    });
+  });
+  describe("Object.defineProperties", function() {
+    it("should exists", function() {
+      expect(typeof Object.defineProperties).toBe("function");
+    });
+  });
+  describe("Object.freeze", function() {
+    it("should exists", function() {
+      expect(typeof Object.freeze).toBe("function");
+    });
+  });
+  describe("Object.preventExtensions", function() {
+    it("should exists", function() {
+      expect(typeof Object.preventExtensions).toBe("function");
+    });
+  });
+  describe("Object.isSealed", function() {
+    it("should exists", function() {
+      expect(typeof Object.isSealed).toBe("function");
+    });
+  });
+  describe("Object.isFrozen", function() {
+    it("should exists", function() {
+      expect(typeof Object.isFrozen).toBe("function");
+    });
+  });
+  describe("Object.isExtensible", function() {
+    it("should exists", function() {
+      expect(typeof Object.isExtensible).toBe("function");
+    });
+  });
+  describe("Object.seal", function() {
+    it("should exists", function() {
+      expect(typeof Object.seal).toBe("function");
+    });
+  });
 });
