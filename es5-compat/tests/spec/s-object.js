@@ -135,7 +135,43 @@ describe('Object', function () {
                 Object.defineProperty(42, 'name', {});
             }).toThrow();
         });
+
+      it('should throw error for property descriptors specify a value or be writable when a getter or setter has been specified', function () {
+        expect(function() {
+          Object.defineProperty(obj, 'name2', {
+            value : 'Testing',
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            get: function() {
+              return this.name2
+            }
+          })
+        }).toThrow();
+      });
+
+      it('should throw error for unExtensible object', function () {
+        var obj = {};
+        Object.preventExtensions(obj);
+        expect(function () {
+          obj.newProp = 50;
+        }).toThrow();
+      });
+
+      it('should throw error for unFunction getter', function () {
+        expect(function () {
+          Object.defineProperty(obj, 'name2', {
+            value: 'Testing',
+            get: 1
+          });
+        }).toThrow();
+      });
     });
+  describe("Object.defineProperties", function () {
+    it("should exists", function() {
+      expect(typeof Object.defineProperties).toBe("function");
+    });
+  });
 
 	describe("Object.getOwnPropertyDescriptor", function () {
         it('should return undefined because the object does not own the property', function () {
@@ -214,6 +250,25 @@ describe('Object', function () {
   describe("Object.preventExtensions", function() {
     it("should exists", function() {
       expect(typeof Object.preventExtensions).toBe("function");
+    });
+
+    var obj = {};
+    Object.preventExtensions(obj);
+
+    it('should throw error for non object', function () {
+      expect(function () {
+        Object.preventExtensions(42);
+      }).toThrow();
+    });
+
+    it('should return false', function() {
+      expect(Object.isExtensible(obj)).toBeFalsy();
+    });
+
+    it('should throw error', function() {
+      expect(function() {
+        obj.newProp = 50;
+      }).toThrow();
     });
   });
   describe("Object.isSealed", function() {
