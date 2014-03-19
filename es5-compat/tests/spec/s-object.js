@@ -246,6 +246,11 @@ describe('Object', function () {
     it("should exists", function() {
       expect(typeof Object.freeze).toBe("function");
     });
+    it("should return true on a frozen object", function() {
+      var obj = { a: 1 };
+      Object.freeze(obj);
+      expect(Object.isFrozen(obj)).toBeTruthy();
+    });
   });
   describe("Object.preventExtensions", function() {
     it("should exists", function() {
@@ -275,20 +280,35 @@ describe('Object', function () {
     it("should exists", function() {
       expect(typeof Object.isSealed).toBe("function");
     });
+    it("should return true on a sealed object", function() {
+      var obj = { a: 1 };
+      Object.seal(obj);
+      expect(Object.isSealed(obj)).toBeTruthy();
+    });
   });
   describe("Object.isFrozen", function() {
     it("should exists", function() {
       expect(typeof Object.isFrozen).toBe("function");
     });
-  });
-  describe("Object.isExtensible", function() {
-    it("should exists", function() {
-      expect(typeof Object.isExtensible).toBe("function");
+    it("should return true on a frozen object", function() {
+      var obj = { a: 1 };
+      Object.freeze(obj);
+      expect(Object.isFrozen(obj)).toBeTruthy();
     });
   });
   describe("Object.seal", function() {
     it("should exists", function() {
       expect(typeof Object.seal).toBe("function");
+    });
+    it("should seal an object and return true", function() {
+      var obj = { a: 1 };
+      Object.seal(obj);
+      expect(Object.isSealed(obj)).toBeTruthy();
+    });
+    it('should throw error for non object', function () {
+      expect(function () {
+        Object.seal(42);
+      }).toThrow();
     });
   });
 });
