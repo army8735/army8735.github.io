@@ -231,10 +231,26 @@ describe('Object', function () {
     it("should exists", function() {
       expect(typeof Object.getPrototypeOf).toBe("function");
     });
+    it("should return true", function() {
+      function Pasta(grain, width) {
+        this.grain = grain;
+        this.width = width;
+      }
+      var spaghetti = new Pasta("wheat", 0.2);
+      expect(Object.getPrototypeOf(spaghetti)).toBe(Pasta.prototype);
+    });
   });
   describe("Object.getOwnPropertyNames", function() {
     it("should exists", function() {
       expect(typeof Object.getOwnPropertyNames).toBe("function");
+    });
+    it("should ", function() {
+      var obj = {};
+      obj.newDataProperty = "abc";
+      var descriptor = Object.getOwnPropertyDescriptor(obj, "newDataProperty");
+      descriptor.enumerable = false;
+      Object.defineProperty(obj, 'newDataProperty', descriptor);
+      expect(Object.getOwnPropertyNames(obj)[0]).toBe('newDataProperty');
     });
   });
   describe("Object.defineProperties", function() {
