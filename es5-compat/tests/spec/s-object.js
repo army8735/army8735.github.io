@@ -226,6 +226,31 @@ describe('Object', function () {
     it("should exists", function() {
       expect(typeof Object.create).toBe("function");
     });
+    it('should throw error for non object', function () {
+      expect(function () {
+        Object.create(42);
+      }).toThrow();
+    });
+    it('should be null on nonPrototype object', function() {
+      var obj = Object.create(null);
+      expect(Object.getPrototypeOf(obj)).toBe(null)
+    });
+    it('should throw error for unFunction get on description', function () {
+      expect(function () {
+        Object.create(null, {
+          get: true
+        });
+      }).toThrow();
+    });
+    it('should return value', function() {
+      var newObj = Object.create(null, {
+        size: {
+          value: "large",
+          enumerable: true
+        }
+      });
+      expect(newObj.size).toBe('large');
+    });
   });
   describe("Object.getPrototypeOf", function() {
     it("should exists", function() {
