@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>es5-compat native</title>
+  <title>es5-compat mobile</title>
   <style>
     body{font-size:14px;}
     #compat-table{border-spacing:0;}
     #compat-table td{padding:1px 2px;border:1px solid #FFF;}
-    #compat-table thead{color:#00F;font-weight:700;}
-    #compat-table span{display:inline-block;padding-top:2px;width:100%;text-align:center;background:#1A1;color:#FFF;}
+    #compat-table thead{color:#00F;font-weight:700;text-align:center;}
+    #compat-table span{display:inline-block;padding-top:2px;width:100%;min-width:50px;text-align:center;background:#1A1;color:#FFF;}
     .b{background:#FC1!important;}
     .t{background:#19C!important;}
     .n{background:#E31!important;}
@@ -19,6 +19,7 @@
   </style>
 </head>
 <body>
+<img src="qrcode.png" style="position:absolute;top:0;right:0;display:block;width:280px;height:280px;"/>
 <p><a href="tests/" target="_blank" title="es5-compat native tests">es5-compat native tests</a></p>
 <p><a href="es5-shim-mobile.js" target="_blank" title="es5-shim-mobile.js">download es5-shim-mobile.js</a></p>
 <p><a href="tests/fix.html" target="_blank" title="es5-shim-mobile.js tests">es5-shim-mobile.js tests</a></p>
@@ -38,11 +39,13 @@
       <td>Andriod 4.x</td>
       <td>IE 10 mobile</td>
       <td>IOS 7.x</td>
+      <td>UC</td>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Array.isArray</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -56,9 +59,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.filter</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -72,9 +77,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.indexOf</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -88,9 +95,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.map</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -104,9 +113,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.reduceRight</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -120,9 +131,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.splice</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -136,9 +149,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Date.now</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -152,11 +167,13 @@
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
+      <td><span class="b">B</span></td>
     </tr>
     <tr>
       <td>Date.prototype.toISOString</td>
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -168,6 +185,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Number.prototype.toFixed</td>
@@ -175,6 +193,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
@@ -184,9 +203,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.create</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -200,9 +221,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.defineProperty</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -216,9 +239,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.getOwnPropertyNames</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -232,9 +257,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.freeze</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -248,9 +275,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.isFrozen</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -264,9 +293,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.keys</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -280,9 +311,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.seal</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -296,6 +329,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>String.prototype.split</td>
@@ -304,9 +338,11 @@
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
     </tr>
     <tr>
       <td>String.prototype.substr</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -320,9 +356,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>getter</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -336,9 +374,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Property access on strings</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -352,9 +392,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Zero-width chars in identifiers</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -368,9 +410,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Strict mode</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
