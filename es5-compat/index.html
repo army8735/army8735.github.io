@@ -19,6 +19,7 @@
 </style>
 </head>
 <body>
+<div id="qrcode" style="position:absolute;top:0;right:0;width:256px;height:256px;"></div>
 <p><a href="tests/" target="_blank" title="es5-compat native tests">es5-compat native tests</a></p>
 <p><a href="es5-shim-mobile.js" target="_blank" title="es5-shim-mobile.js">download es5-shim-mobile.js</a></p>
 <p><a href="tests/fix.html" target="_blank" title="es5-shim-mobile.js tests">es5-shim-mobile.js tests</a></p>
@@ -37,7 +38,8 @@
       <td>Firefox 27</td>
       <td>Andriod 4.x</td>
       <td>IE 10 mobile</td>
-      <td>IOS 7.x</td>
+      <td>iOS 7.x</td>
+      <td>iOS 4.2</td>
       <td>Andriod UC</td>
       <td>Andriod QQ</td>
     </tr>
@@ -45,6 +47,7 @@
   <tbody>
     <tr>
       <td>Array.isArray</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -62,9 +65,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.filter</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -82,9 +87,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.indexOf</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -102,9 +109,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.map</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -122,9 +131,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.reduceRight</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -142,6 +153,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.splice</td>
@@ -150,11 +162,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Array.prototype.unshift</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -172,9 +186,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Date.parse</td>
+      <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
@@ -190,6 +206,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -199,6 +216,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -210,6 +228,7 @@
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -220,11 +239,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
+      <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.create</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -240,6 +261,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -250,11 +272,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.getOwnPropertyDescriptor</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -272,9 +296,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.getPrototypeOf</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -290,6 +316,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -300,6 +327,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -310,6 +338,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -320,11 +349,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Object.keys</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -340,6 +371,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
@@ -350,11 +382,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="n">N</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>parseInt</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -372,9 +406,11 @@
       <td><span>Y</span></td>
       <td><span class="b">B</span></td>
       <td><span class="b">B</span></td>
+      <td><span class="b">B</span></td>
     </tr>
     <tr>
       <td>String.prototype.substr</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -390,11 +426,13 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span class="b">B</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
     </tr>
     <tr>
       <td>getter</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -412,9 +450,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Property access on strings</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -432,9 +472,11 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Zero-width chars in identifiers</td>
+      <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
@@ -452,6 +494,7 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
     <tr>
       <td>Strict mode</td>
@@ -462,14 +505,12 @@
       <td><span>Y</span></td>
       <td><span>Y</span></td>
       <td><span>Y</span></td>
+      <td><span>Y</span></td>
     </tr>
   </tbody>
 </table>
-<script type="text/javascript">
-  var strwrite =
-    '<img src="https://chart.googleapis.com/chart?cht=qr&chs=150x150&choe=UTF-8&chld=L|4&chl='
-      + document.URL + '" style="position:absolute;top:0;right:0;width:150px;height:150px;display:block;"/>';
-  document.write( strwrite );
-</script>
+<script src="../jquery-2.1.0.min.js"></script>
+<script src="../jquery.qrcode.min.js"></script>
+<script>$('#qrcode').qrcode({width:256,height:256,text:document.URL});</script>
 </body>
 </html>
