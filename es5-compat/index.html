@@ -1,25 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>es5-compat mobile</title>
-  <style>
-    body{font-size:14px;}
-    #compat-table{border-spacing:0;}
-    #compat-table td{padding:1px 2px;border:1px solid #FFF;}
-    #compat-table thead{color:#00F;font-weight:700;text-align:center;}
-    #compat-table span{display:inline-block;padding-top:2px;width:100%;min-width:50px;text-align:center;background:#1A1;color:#FFF;}
-    .b{background:#FC1!important;}
-    .t{background:#19C!important;}
-    .n{background:#E31!important;}
-    .u{background:#333!important;}
-    #intro{padding:0;list-style:none;}
-    #intro li{padding:2px 0;}
-    #intro span{display:inline-block;margin-right:5px;padding-top:2px;width:50px;text-align:center;background:#1A1;color:#FFF;}
-    span:hover{font-weight:700;box-shadow:0 0 5px rgba(0, 0, 0, .5);text-shadow:1px 1px 2px rgba(0, 0, 0, .5);}
-  </style>
+<title>es5-compat mobile</title>
+<style>
+  body{font-size:14px;}
+  #compat-table{border-spacing:0;}
+  #compat-table td{padding:1px 2px;border:1px solid #FFF;}
+  #compat-table thead{color:#00F;font-weight:700;text-align:center;}
+  #compat-table span{display:inline-block;padding-top:2px;width:100%;min-width:50px;text-align:center;background:#1A1;color:#FFF;}
+  .b{background:#FC1!important;}
+  .t{background:#19C!important;}
+  .n{background:#E31!important;}
+  .u{background:#333!important;}
+  #intro{padding:0;list-style:none;}
+  #intro li{padding:2px 0;}
+  #intro span{display:inline-block;margin-right:5px;padding-top:2px;width:50px;text-align:center;background:#1A1;color:#FFF;}
+  span:hover{font-weight:700;box-shadow:0 0 5px rgba(0, 0, 0, .5);text-shadow:1px 1px 2px rgba(0, 0, 0, .5);}
+</style>
 </head>
 <body>
-<img src="qrcode.png" style="position:absolute;top:0;right:0;display:block;width:280px;height:280px;"/>
 <p><a href="tests/" target="_blank" title="es5-compat native tests">es5-compat native tests</a></p>
 <p><a href="es5-shim-mobile.js" target="_blank" title="es5-shim-mobile.js">download es5-shim-mobile.js</a></p>
 <p><a href="tests/fix.html" target="_blank" title="es5-shim-mobile.js tests">es5-shim-mobile.js tests</a></p>
@@ -466,5 +465,11 @@
     </tr>
   </tbody>
 </table>
+<script type="text/javascript">
+  var strwrite =
+    '<img src="https://chart.googleapis.com/chart?cht=qr&chs=150x150&choe=UTF-8&chld=L|4&chl='
+      + document.URL + '" style="position:absolute;top:0;right:0;width:150px;height:150px;display:block;"/>';
+  document.write( strwrite );
+</script>
 </body>
 </html>
