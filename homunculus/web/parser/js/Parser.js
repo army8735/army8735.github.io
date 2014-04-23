@@ -74,45 +74,32 @@ define(function(require, exports, module) {
           return this.cststmt();
         case 'var':
           return this.varstmt();
-        break;
         case '{':
           return this.block();
-        break;
         case ';':
           return this.emptstmt();
-        break;
         case 'if':
           return this.ifstmt();
-        break;
         case 'do':
         case 'while':
         case 'for':
           return this.iterstmt();
-        break;
         case 'continue':
           return this.cntnstmt();
-        break;
         case 'break':
           return this.brkstmt();
-        break;
         case 'return':
           return this.retstmt();
-        break;
         case 'with':
           return this.withstmt();
-        break;
         case 'switch':
           return this.swchstmt();
-        break;
         case 'throw':
           return this.thrstmt();
-        break;
         case 'try':
           return this.trystmt();
-        break;
         case 'debugger':
           return this.debstmt();
-        break;
         case 'super':
           if(!allowSuper) {
             this.error('super must in a class');
@@ -251,9 +238,6 @@ define(function(require, exports, module) {
     },
     iterstmt: function() {
       var node = new Node(Node.ITERSTMT);
-      if(!this.look) {
-        this.error();
-      }
       switch(this.look.content()) {
         case 'do':
           node.add(
@@ -1003,9 +987,6 @@ define(function(require, exports, module) {
       return node;
     },
     leftexpr: function() {
-      if(!this.look) {
-        this.error();
-      }
       if(this.look.content() == 'new') {
         return this.newexpr();
       }
@@ -1097,9 +1078,6 @@ define(function(require, exports, module) {
     },
     mmbexpr: function() {
       var node = new Node(Node.MMBEXPR);
-      if(!this.look) {
-        this.error();
-      }
       var mmb;
       if(this.look.content() == 'function') {
         mmb = this.fnexpr();
@@ -1135,9 +1113,6 @@ define(function(require, exports, module) {
     },
     prmrexpr: function() {
       var node = new Node(Node.PRMREXPR);
-      if(!this.look) {
-        this.error();
-      }
       switch(this.look.type()) {
         case Token.ID:
         case Token.NUMBER:
@@ -1409,7 +1384,7 @@ define(function(require, exports, module) {
     },
     error: function(msg) {
       msg = 'SyntaxError: ' + (msg || ' syntax error');
-      throw new Error(msg + ' line ' + this.lastLine + ' col ' + this.lastCol + ' index ' + this.look.sIndex());
+      throw new Error(msg + ' line ' + this.lastLine + ' col ' + this.lastCol);
     },
     ignore: function() {
       return this.ignores;
