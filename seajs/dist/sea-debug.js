@@ -526,12 +526,14 @@ Module.prototype.onload = function() {
   var mod = this
   mod.status = STATUS.LOADED
 
-  var entry
-  while (entry = mod._entry.shift()) {
+  for (var i = 0, len = mod._entry.length; i < len; i++) {
+    var entry = mod._entry[i]
     if (--entry.remain === 0) {
       entry.callback()
     }
   }
+
+  delete mod._entry
 }
 
 // Execute a module
@@ -576,6 +578,9 @@ Module.prototype.exec = function () {
 
   // Reduce memory leak
   delete mod.factory
+  if (mod._entry && !mod._entry.length) {
+    delete mod._entry
+  }
 
   mod.exports = exports
   mod.status = STATUS.EXECUTED
@@ -599,12 +604,12 @@ Module.prototype.fetch = function(requestCache) {
   var requestUri = emitData.requestUri || uri
 
   // Empty uri or a non-CMD module
-  if (!requestUri || fetchedList[requestUri]) {
+  if (!requestUri || fetchedList.hasOwnProperty(requestUri)) {
     mod.load()
     return
   }
 
-  if (fetchingList[requestUri]) {
+  if (fetchingList.hasOwnProperty(requestUri)) {
     callbackList[requestUri].push(mod)
     return
   }
@@ -740,6 +745,8 @@ Module.use = function (ids, callback, uri) {
   mod.remain = 1
 
   mod.callback = function() {
+    mod.status = STATUS.LOADED
+
     var exports = []
     var uris = mod.resolve()
 
@@ -754,6 +761,7 @@ Module.use = function (ids, callback, uri) {
     delete mod.callback
     delete mod.history
     delete mod.remain
+    delete mod._entry
   }
 
   mod.load()
