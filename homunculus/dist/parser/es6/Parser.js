@@ -234,7 +234,7 @@
       this.declnode(node);
       return node;
     },
-    bindid: function(msg, noIn, noOf, noYield, pYield) {
+    bindid: function(msg, noIn, noOf, yYield) {
       var node = new Node(Node.BINDID);
       if(!this.look) {
         this.error(msg);
@@ -245,11 +245,8 @@
       if(noOf && this.look.content() == 'of') {
         this.error();
       }
-      if(pYield && this.look.content() == 'yield') {
+      if(yYield && this.look.content() == 'yield') {
         node.add(this.match());
-      }
-      else if(noYield && this.look.content() == 'yield') {
-        this.error();
       }
       else {
         node.add(this.match(Token.ID, msg));
@@ -287,32 +284,32 @@
       node.add(this.match(']', 'missing ] after element list'));
       return node;
     },
-    bindelem: function(pYield) {
+    bindelem: function() {
       var node = new Node(Node.BINDELEM);
       if(['[', '{'].indexOf(this.look.content()) > -1) {
-        node.add(this.bindpat(pYield));
+        node.add(this.bindpat());
         if(this.look && this.look.content() == '=') {
-          node.add(this.initlz(pYield));
+          node.add(this.initlz());
         }
       }
       else {
-        return this.singlename(pYield);
+        return this.singlename();
       }
       return node;
     },
-    singlename: function(pYield) {
+    singlename: function() {
       var node = new Node(Node.SINGLENAME);
-      node.add(this.bindid(null, null, null, null, pYield));
+      node.add(this.bindid());
       if(this.look && this.look.content() == '=') {
-        node.add(this.initlz(pYield));
+        node.add(this.initlz());
       }
       return node;
     },
-    bindrest: function(pYield) {
+    bindrest: function() {
       var node = new Node(Node.BINDREST);
       node.add(
         this.match('...'),
-        this.bindid('no parameter name after ...', null, null, null, pYield)
+        this.bindid('no parameter name after ...')
       );
       return node;
     },
@@ -687,13 +684,8 @@
     },
     labstmt: function() {
       var node = new Node(Node.LABSTMT);
-      if(this.look.content() == 'yield') {
-        node.add(this.match());
-      }
-      else {
-        node.add(this.match(Token.ID));
-      }
       node.add(
+        this.match(Token.ID),
         this.match(':'),
         this.stmt()
       );
@@ -756,38 +748,6 @@
       node.add(
         this.match('finally'),
         this.block('missing { before finally block')
-      );
-      return node;
-    },
-    superstmt: function() {
-      var node = new Node(Node.SUPERSTMT);
-      node.add(this.match('super'));
-      if(!this.look) {
-        this.error();
-      }
-      if(this.look.content() == '.') {
-        while(this.look && this.look.content() == '.') {
-          node.add(this.match());
-          if(!this.look) {
-            this.error();
-          }
-          if(this.look.content() == 'super') {
-            node.add(this.match());
-          }
-          else {
-            break;
-          }
-        }
-        if(this.look.content() != '(') {
-          node.add(this.match(Token.ID));
-          while(this.look && this.look.content() == '.') {
-            node.add(this.match(), this.match(Token.ID));
-          }
-        }
-      }
-      node.add(
-        this.args(),
-        this.match(';')
       );
       return node;
     },
@@ -1006,7 +966,7 @@
         );
       }
       else if(this.look.content() == '*') {
-        node.add(this.genmethod(noIn, noOf));
+        return this.genmethod(noIn, noOf);
       }
       else {
         node.add(
@@ -1720,7 +1680,7 @@
                     node.add(this.gencmph(noIn, noOf, yYield));
                   }
                   else {
-                    node.add(this.cpeapl(noIn, noOf));
+                    node.add(this.cpeapl(noIn, noOf, yYield));
                   }
                   break;
                 }
@@ -1777,10 +1737,10 @@
       node.add(this.cmphfor());
       while(this.look && this.look.content() != ']') {
         if(this.look.content() == 'for') {
-          node.add(this.cmphfor(noIn, noOf));
+          node.add(this.cmphfor(noIn, noOf, yYield));
         }
         else if(this.look.content() == 'if') {
-          node.add(this.cmphif(noIn, noOf));
+          node.add(this.cmphif(noIn, noOf, yYield));
         }
         else {
           node.add(this.assignexpr(noIn, noOf, yYield));
