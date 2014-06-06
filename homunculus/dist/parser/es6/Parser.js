@@ -6,7 +6,7 @@
     factory(require, exports, module);
   }
 })(function(require, exports, module) {
-  var Class = require('../../util/Class');
+  var IParser = require('../Parser');
   var character = require('../../util/character');
   var Lexer = require('../../lexer/Lexer');
   var Rule = require('../../lexer/rule/EcmascriptRule');
@@ -29,15 +29,14 @@
     = NOASSIGN[Node.UNARYEXPR]
     = NOASSIGN[Node.POSTFIXEXPR]
     = true;
-  var Parser = Class(function(lexer) {
+  var Parser = IParser.extend(function(lexer) {
+    IParser.call(this, lexer);
     this.init(lexer);
+    return this;
   }).methods({
     parse: function(code) {
       this.lexer.parse(code);
       this.tree = this.script();
-      return this.tree;
-    },
-    ast: function() {
       return this.tree;
     },
     init: function(lexer) {
@@ -2261,9 +2260,6 @@
     error: function(msg) {
       msg = 'SyntaxError: ' + (msg || ' syntax error');
       throw new Error(msg + ' line ' + this.lastLine + ' col ' + this.lastCol);
-    },
-    ignore: function() {
-      return this.ignores;
     }
   });
   module.exports = Parser;
