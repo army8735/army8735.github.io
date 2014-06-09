@@ -24,6 +24,7 @@
   var ArrCmph = require('./dist/ArrCmph');
   var ArrowFn = require('./dist/ArrowFn');
   var Genarator = require('./dist/Genarator');
+  var Destruct = require('./dist/Destruct');
 
   var Jsdc = Class(function(code) {
     this.code = (code + '') || '';
@@ -44,6 +45,7 @@
     this.arrCmph = new ArrCmph(this);
     this.arrowFn = new ArrowFn(this);
     this.gen = new Genarator(this);
+    this.destruct = new Destruct(this);
 
     this.i = 0;
     this.ids = {};
@@ -174,6 +176,7 @@
       while(ig = this.next()) {
         if(!ignore || ig.type() != Token.BLANK) {
           this.res += ig.content();
+          ignore && (ig.ignore = true);
           ignore = false;
         }
       }
@@ -310,7 +313,7 @@
         node.ignore = true;
       }
       else if(node.name() == JsNode.TOKEN) {
-        node.token().ignore = true;console.log(arguments.callee.caller)
+        node.token().ignore = true;
       }
       else {
         node.leaves().forEach(function(leaf) {
