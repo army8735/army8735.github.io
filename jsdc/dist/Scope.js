@@ -49,6 +49,12 @@
     },
     prevar: function(varstmt) {
       var self = this;
+      var gen = self.inGen(varstmt);
+      //genarator的忽略
+      if(gen) {
+        varstmt.gen = gen;
+        return;
+      }
       var parent = self.closest(varstmt);
       if(parent
           && self.hash[parent.nid()]) {
@@ -79,6 +85,23 @@
           this.jsdc.insert('var ' + id + ';', i);
         }
         this.jsdc.ignore(fndecl.leaf(1));
+        this.jsdc.append(id + '=');
+      };
+    },
+    pregen: function(gendecl) {
+      var parent = this.closest(gendecl);
+      if(parent
+        && this.hash[parent.nid()]) {
+        //插入声明的变量到作用域开始，并改写为var形式
+        var i = this.index[this.index.length - 1];
+        this.history[i] = this.history[i] || {};
+        var his = this.history[i];
+        var id = gendecl.leaf(2).first().token().content();
+        if(!his.hasOwnProperty(id)) {
+          his[id] = true;
+          this.jsdc.insert('var ' + id + ';', i);
+        }
+        this.jsdc.ignore(gendecl.leaf(2));
         this.jsdc.append(id + '=');
       };
     },
@@ -133,6 +156,20 @@
       while(parent = parent.parent()) {
         if(SCOPE.hasOwnProperty(parent.name())) {
           return parent;
+        }
+      }
+    },
+    inGen: function(node) {
+      var parent = node;
+      while(parent = parent.parent()) {
+        switch(parent.name()) {
+          case JsNode.GENDECL:
+            return parent;
+          case JsNode.FNDECL:
+          case JsNode.FNEXPR:
+          case JsNode.CLASSDECL:
+          case JsNode.CLASSEXPR:
+            return false;
         }
       }
     }

@@ -23,6 +23,7 @@
   var Module = require('./dist/Module');
   var ArrCmph = require('./dist/ArrCmph');
   var ArrowFn = require('./dist/ArrowFn');
+  var Genarator = require('./dist/Genarator');
 
   var Jsdc = Class(function(code) {
     this.code = (code + '') || '';
@@ -30,8 +31,9 @@
     this.res = '';
     this.node = {};
     this.ignores = {};
+
     this.scope = new Scope(this);
-    this.default = new DefaultValue(this);
+    this.defaultValue = new DefaultValue(this);
     this.rest = new Rest(this);
     this.template = new Template(this);
     this.forof = new Forof(this);
@@ -40,25 +42,36 @@
     this.module = new Module(this);
     this.arrCmph = new ArrCmph(this);
     this.arrowFn = new ArrowFn(this);
+    this.gen = new Genarator(this);
+
     this.i = 0;
+    this.ids = {};
     return this;
   }).methods({
     parse: function(code) {
+      var self = this;
       if(!character.isUndefined(code)) {
-        this.code = code + '';
+        self.code = code + '';
       }
       var parser = homunculus.getParser('es6');
-      this.node = parser.parse(code);
-      this.ignores = parser.ignore();
+      self.node = parser.parse(code);
+      self.ignores = parser.ignore();
+      //记录所有id
+      var lexer = parser.lexer;
+      lexer.tokens().forEach(function(token) {
+        if(token.type() == Token.ID) {
+          self.ids[token.content()] = true;
+        }
+      });
       //开头部分的ignore
-      while(this.ignores[this.index]) {
-        this.append(this.ignores[this.index++].content());
+      while(self.ignores[self.index]) {
+        self.append(self.ignores[self.index++].content());
       }
       //预分析局部变量，将影响的let和const声明查找出来
-      this.scope.parse(this.node);
+      self.scope.parse(self.node);
       //递归处理
-      this.recursion(this.node);
-      return this.res;
+      self.recursion(self.node);
+      return self.res;
     },
     ast: function() {
       return this.node;
@@ -124,15 +137,12 @@
         }
         else if(token.type() == Token.KEYWORD
           && content == 'super'){
-          token.ignore = true;
-          this.append(this.klass.super(node));
+          this.klass.super(node);
         }
         else if(token.type() == Token.TEMPLATE) {
-          token.ignore = true;
           this.template.parse(token);
         }
         else if(!token.ignore && token.type() == Token.NUMBER) {
-          token.ignore = true;
           this.num.parse(token);
         }
         //替换操作会设置ignore属性将其忽略
@@ -166,20 +176,26 @@
         //var变量前置，赋值部分删除var，如此可以将block用匿名函数包裹达到局部作用与效果
         case JsNode.VARSTMT:
           this.scope.prevar(node);
+          this.gen.prevar(node);
           break;
         case JsNode.FNDECL:
           this.scope.prefn(node);
           break;
+        case JsNode.GENDECL:
+          this.scope.pregen(node);
+          this.gen.parse(node, true);
+          break;
         case JsNode.FNBODY:
           this.scope.enter(node);
-          this.default.enter(node);
+          this.defaultValue.enter(node);
           this.rest.enter(node);
+          this.gen.body(node, true);
           break;
         case JsNode.BLOCK:
           this.scope.block(node, true);
           break;
         case JsNode.FMPARAMS:
-          this.default.param(node);
+          this.defaultValue.param(node);
           this.rest.param(node);
           break;
         case JsNode.CALLEXPR:
@@ -231,12 +247,16 @@
         case JsNode.CNCSBODY:
           this.arrowFn.body(node, true);
           break;
+        case JsNode.YIELDEXPR:
+          this.gen.yield(node, true);
+          break;
       }
     },
     after: function(node) {
       switch(node.name()) {
         case JsNode.FNBODY:
           this.scope.leave(node);
+          this.gen.body(node);
           break;
         case JsNode.BLOCK:
           this.scope.block(node);
@@ -269,6 +289,12 @@
         case JsNode.CNCSBODY:
           this.arrowFn.body(node);
           break;
+        case JsNode.GENDECL:
+          this.gen.parse(node);
+          break;
+        case JsNode.YIELDEXPR:
+          this.gen.yield(node);
+          break;
       }
     },
     ignore: function(node) {
@@ -285,8 +311,28 @@
         });
       }
     },
+    unIgnore: function(node) {
+      var self = this;
+      if(node instanceof Token) {
+        delete node.ignore;
+      }
+      else if(node.name() == JsNode.TOKEN) {
+        delete node.token().ignore;
+      }
+      else {
+        node.leaves().forEach(function(leaf) {
+          self.unIgnore(leaf);
+        });
+      }
+    },
     uid: function() {
-      return Jsdc.uid();
+      var temp;
+      while(temp = '__' + uid++ + '__') {
+        if(!this.ids.hasOwnProperty(temp)) {
+          break;
+        }
+      }
+      return temp;
     },
     define: function(d) {
       return Jsdc.define(d);
@@ -298,9 +344,6 @@
     },
     ast: function() {
       return jsdc.ast();
-    },
-    uid: function() {
-      return '__' + uid++ + '__';
     },
     reset: function() {
       uid = 0;
