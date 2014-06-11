@@ -122,10 +122,10 @@ function drawNode(layer, node, x, index, parent, sibling) {
 }
 seajs.config({
   alias: {
-    'homunculus': seajs.resolve('../node_modules/homunculus/index.js', seajs.data.cwd)
+    'homunculus': seajs.resolve('../../homunculus/index.js', seajs.data.cwd)
   },
   map: [function(url) {
-    return url.replace('demo/lexer/', 'node_modules/homunculus/web/lexer/');
+    return url.replace('demo/lexer/', '../homunculus/web/lexer/');
   }]
 });
 seajs.use(['../index', './jssc'], function(jsdc, jssc) {
