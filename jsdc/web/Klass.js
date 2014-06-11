@@ -14,17 +14,18 @@ define(function(require, exports, module) {
         if(start) {
           var o = {};
           o.name = node.leaf(1).first().token().content();
-          this.body(node.last().prev(), o.name);
           this.jsdc.ignore(node.leaf(0));
           this.jsdc.ignore(node.leaf(1));
           this.jsdc.ignore(node.leaf(2));
           if(node.leaf(3).name() == JsNode.CLASSBODY) {
             this.jsdc.ignore(node.leaf(4));
+            this.body(node.last().prev(), o.name);
           }
           else {
             this.jsdc.ignore(node.leaf(3));
             this.jsdc.ignore(node.leaf(5));
             o.extend = this.join(node.leaf(2).last());
+            this.body(node.last().prev(), o.name, o.extend);
             this.jsdc.append('!function(){');
             this.jsdc.append('var _=Object.create(' + o.extend + '.prototype);');
             this.jsdc.append('_.constructor=' + o.name + ';');
@@ -67,13 +68,10 @@ define(function(require, exports, module) {
           else {
             o.name = this.jsdc.uid();
             this.jsdc.ignore(node.leaf(1));
-            if(node.leaf(2).name() == JsNode.HERITAGE) {
-              o.extend = this.join(node.leaf(2).last());
-            }
           }
           this.jsdc.ignore(node.last());
           var classbody = node.last().prev();
-          this.body(classbody, o.name);
+          this.body(classbody, o.name, o.extend);
           if(o.extend) {
             this.jsdc.append('!function(){');
             this.jsdc.append('var _=Object.create(' + o.extend + '.prototype);');
@@ -183,7 +181,7 @@ define(function(require, exports, module) {
         }
       }
     },
-    body: function(node, id) {
+    body: function(node, id, extend) {
       var noCons = true;
       var leaves = node.leaves();
       for(var i = 0; i < leaves.length; i++) {
@@ -197,7 +195,7 @@ define(function(require, exports, module) {
         }
       }
       if(noCons) {
-        this.jsdc.append('function ' + id + '(){}');
+        this.jsdc.append('function ' + id + '(){' + (extend ? (extend + '.call(this)') : '') + '}');
       }
     },
     closest: function(node) {

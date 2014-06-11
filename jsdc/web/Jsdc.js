@@ -18,6 +18,8 @@ define(function(require, exports, module) {
   var ArrowFn = require('./ArrowFn');
   var Generator = require('./Generator');
   var Destruct = require('./Destruct');
+  var Str = require('./Str');
+  var Obj = require('./Obj');
   
   var Jsdc = Class(function(code) {
     this.code = (code + '') || '';
@@ -39,6 +41,8 @@ define(function(require, exports, module) {
     this.arrowFn = new ArrowFn(this);
     this.gen = new Generator(this);
     this.destruct = new Destruct(this);
+    this.str = new Str(this);
+    this.obj = new Obj(this);
   
     this.i = 0;
     this.ids = {};
@@ -50,24 +54,28 @@ define(function(require, exports, module) {
         self.code = code + '';
       }
       var parser = homunculus.getParser('es6');
-      self.node = parser.parse(code);
-      self.ignores = parser.ignore();
-      //记录所有id
-      var lexer = parser.lexer;
-      lexer.tokens().forEach(function(token) {
-        if(token.type() == Token.ID) {
-          self.ids[token.content()] = true;
+      try {
+        self.node = parser.parse(code);
+        self.ignores = parser.ignore();
+        //记录所有id
+        var lexer = parser.lexer;
+        lexer.tokens().forEach(function(token) {
+          if(token.type() == Token.ID) {
+            self.ids[token.content()] = true;
+          }
+        });
+        self.ts = lexer.tokens();
+        //开头部分的ignore
+        while(self.ignores[self.index]) {
+          self.append(self.ignores[self.index++].content());
         }
-      });
-      self.ts = lexer.tokens();
-      //开头部分的ignore
-      while(self.ignores[self.index]) {
-        self.append(self.ignores[self.index++].content());
+        //预分析局部变量，将影响的let和const声明查找出来
+        self.scope.parse(self.node);
+        //递归处理
+        self.recursion(self.node);
+      } catch(e) {
+        return e.toString();
       }
-      //预分析局部变量，将影响的let和const声明查找出来
-      self.scope.parse(self.node);
-      //递归处理
-      self.recursion(self.node);
       return self.res;
     },
     ast: function() {
@@ -142,6 +150,9 @@ define(function(require, exports, module) {
         else if(token.type() == Token.TEMPLATE) {
           this.template.parse(token);
         }
+        else if(token.type() == Token.STRING) {
+          this.str.parse(token);
+        }
         else if(!token.ignore && token.type() == Token.NUMBER) {
           this.num.parse(token);
         }
@@ -180,6 +191,12 @@ define(function(require, exports, module) {
         case JsNode.VARSTMT:
           this.scope.prevar(node);
           this.gen.prevar(node);
+          break;
+        case JsNode.VARDECL:
+          this.destruct.parse(node, true);
+          break;
+        case JsNode.ASSIGNEXPR:
+          this.destruct.expr(node, true);
           break;
         case JsNode.FNDECL:
           this.scope.prefn(node);
@@ -253,10 +270,22 @@ define(function(require, exports, module) {
         case JsNode.YIELDEXPR:
           this.gen.yield(node, true);
           break;
+        case JsNode.PROPTDEF:
+          this.obj.propt(node, true);
+          break;
+        case JsNode.OBJLTR:
+          this.obj.parse(node, true);
+          break;
       }
     },
     after: function(node) {
       switch(node.name()) {
+        case JsNode.VARDECL:
+          this.destruct.parse(node);
+          break;
+        case JsNode.ASSIGNEXPR:
+          this.destruct.expr(node);
+          break;
         case JsNode.FNBODY:
           this.scope.leave(node);
           this.gen.body(node);
@@ -298,6 +327,15 @@ define(function(require, exports, module) {
         case JsNode.YIELDEXPR:
           this.gen.yield(node);
           break;
+        case JsNode.PROPTDEF:
+          this.obj.propt(node);
+          break;
+        case JsNode.PROPTNAME:
+          this.obj.name(node);
+          break;
+        case JsNode.OBJLTR:
+          this.obj.parse(node);
+          break;
       }
     },
     ignore: function(node) {
@@ -311,20 +349,6 @@ define(function(require, exports, module) {
       else {
         node.leaves().forEach(function(leaf) {
           self.ignore(leaf);
-        });
-      }
-    },
-    unIgnore: function(node) {return;
-      var self = this;
-      if(node instanceof Token) {
-        delete node.ignore;
-      }
-      else if(node.name() == JsNode.TOKEN) {
-        delete node.token().ignore;
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.unIgnore(leaf);
         });
       }
     },
