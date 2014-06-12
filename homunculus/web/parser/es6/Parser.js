@@ -281,6 +281,8 @@ define(function(require, exports, module) {
           return this.fndecl();
         case 'class':
           return this.classdecl();
+        default:
+          this.error();
       }
     },
     stmt: function(yYield) {
@@ -538,7 +540,7 @@ define(function(require, exports, module) {
       }
       this.error('missing : after property id');
     },
-    blockstmt: function() {
+    blockstmt: function(yYield) {
       var node = new Node(Node.BLOCKSTMT);
       node.add(this.block(null, yYield));
       return node;
