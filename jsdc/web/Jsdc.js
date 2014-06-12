@@ -147,6 +147,9 @@ define(function(require, exports, module) {
           && content == 'super'){
           this.klass.super(node);
         }
+        else if(content == ')') {
+          this.forof.prts(node, true);
+        }
         else if(token.type() == Token.TEMPLATE) {
           this.template.parse(token);
         }
@@ -225,6 +228,7 @@ define(function(require, exports, module) {
           this.rest.args(node);
           break;
         case JsNode.ARGLIST:
+          this.klass.arglist(node);
           this.rest.arglist(node);
           break;
         case JsNode.ITERSTMT:
