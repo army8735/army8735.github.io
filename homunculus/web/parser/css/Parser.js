@@ -1,16 +1,54 @@
 define(function(require, exports, module) {
-  var Class = require('../../util/Class');
+  var IParser = require('../Parser');
   var character = require('../../util/character');
   var Lexer = require('../../lexer/Lexer');
+  var Rule = require('../../lexer/rule/CssRule');
   var Token = require('../../lexer/Token');
   var Node = require('./Node');
   var S = {};
-  S[Token.BLANK] = S[Token.TAB] = S[Token.COMMENT] = S[Token.LINE] = S[Token.ENTER] = true;
-  var Parser = Class(function(lexer) {
+  S[Token.BLANK] = S[Token.TAB] = S[Token.COMMENT] = S[Token.LINE] = true;
+  var MQL = {
+    'only': true,
+    'not': true,
+    'all': true,
+    'aural': true,
+    'braille': true,
+    'handheld': true,
+    'print': true,
+    'projection': true,
+    'screen': true,
+    'tty': true,
+    'embossed': true,
+    'tv': true,
+    '(': true
+  };
+  var MT = {
+    'all': true,
+    'aural': true,
+    'braille': true,
+    'handheld': true,
+    'print': true,
+    'projection': true,
+    'screen': true,
+    'tty': true,
+    'embossed': true,
+    'tv': true
+  };
+  var Parser = IParser.extend(function(lexer) {
+    IParser.call(this, lexer);
     this.init(lexer);
+    return this;
   }).methods({
     init: function(lexer) {
-      this.lexer = lexer;
+      if(lexer) {
+        this.lexer = lexer;
+      }
+      else if(this.lexer) {
+        this.lexer.init();
+      }
+      else {
+        this.lexer = new Lexer(new Rule());
+      }
       this.look = null;
       this.tokens = null;
       this.lastLine = 1;
@@ -25,19 +63,19 @@ define(function(require, exports, module) {
     },
     parse: function(code) {
       this.lexer.parse(code);
-      this.tree = this.program();
+      this.tree = this.sheet();
       return this.tree;
     },
     ast: function() {
       return this.tree;
     },
-    program: function() {
+    sheet: function() {
       this.tokens = this.lexer.tokens();
       this.length = this.tokens.length;
       if(this.tokens.length) {
         this.move();
       }
-      var node = new Node(Node.PROGRAME);
+      var node = new Node(Node.SHEET);
       while(this.look) {
         var element = this.element();
         if(element) {
@@ -47,45 +85,23 @@ define(function(require, exports, module) {
       return node;
     },
     element: function() {
-      if(this.look.type() == Token.HEAD) {
-        return this.head();
-      }
-      else if(this.look.type() == Token.VARS) {
-        return this.vars();
-      }
-      else if(['}', ';', ','].indexOf(this.look.content()) > -1) {
-        return this.match();
-      }
-      else {
-        for(var i = this.index; i < this.length; i++) {
-          var token = this.tokens[i];
-          if(!S[token.type()]) {
-            if(token.content() == '(' && this.look.type() == Token.ID) {
-              return this.fn();
-            }
-            else {
-              break;
-            }
+      switch(this.look.type()) {
+        case Token.HEAD:
+          return this.head();
+        case Token.VARS:
+          return this.vardecl();
+        case Token.SELECTOR:
+          return this.styleset();
+        default:
+          if(this.look.content() == '[' && this.look.type() != Token.HACK) {
+            return this.styleset();
           }
-        }
-        return this.styleset();
+          return this.match();
       }
     },
     head: function() {
-      var s = this.look.content();
-      var i = -1;
-      if((i = s.indexOf('-webkit-')) > -1) {
-        s = s.slice(0, i) + s.slice(i + 8);
-      }
-      else if((i = s.indexOf('-moz-')) > -1) {
-        s = s.slice(0, i) + s.slice(i + 5);
-      }
-      else if((i = s.indexOf('-ms-')) > -1) {
-        s = s.slice(0, i) + s.slice(i + 4);
-      }
-      else if((i = s.indexOf('-o-')) > -1) {
-        s = s.slice(0, i) + s.slice(i + 3);
-      }
+      var s = this.look.content().toLowerCase();
+      s = s.replace(/^@(-moz-|-o-|-ms-|-webkit-)/, '@');
       switch(s) {
         case '@import':
           return this.impt();
@@ -99,33 +115,19 @@ define(function(require, exports, module) {
           return this.kframes();
         case '@page':
           return this.page();
-        case '@function':
-          return this.fn();
-        default:
-          //兼容less
-          this.look.type(Token.VARS);
-          return this.vars();
+  //      case '@function':
+  //        return this.fn();
+        case '@namespace':
+          return this.namespace();
+        case '@document':
+          return this.doc();
       }
     },
     impt: function() {
       var node = new Node(Node.IMPORT);
       node.add(this.match());
       node.add(this.url(true));
-      var m = {
-        'only': true,
-        'not': true,
-        'all': true,
-        'aural': true,
-        'braille': true,
-        'handheld': true,
-        'print': true,
-        'projection': true,
-        'screen': true,
-        'tty': true,
-        'embossed': true,
-        'tv': true
-      };
-      if(m[this.look.content()]) {
+      if(this.look && MQL.hasOwnProperty(this.look.content().toLowerCase())) {
         node.add(this.mediaQList());
       }
       node.add(this.match(';'));
@@ -134,74 +136,79 @@ define(function(require, exports, module) {
     media: function() {
       var node = new Node(Node.MEDIA);
       node.add(this.match());
-      var m = {
-        'only': true,
-        'not': true,
-        'all': true,
-        'aural': true,
-        'braille': true,
-        'handheld': true,
-        'print': true,
-        'projection': true,
-        'screen': true,
-        'tty': true,
-        'embossed': true,
-        'tv': true,
-        '(': true
-      };
       if(!this.look) {
-        return node;
+        this.error();
       }
-      if(m[this.look.content()]) {
-        node.add(this.mediaQList());
-      }
-      while(this.look && this.look.content() == ',') {
-        node.add(this.match());
+      if(MQL.hasOwnProperty(this.look.content().toLowerCase())
+        || this.look.type() == Token.HACK) {
         node.add(this.mediaQList());
       }
       if(this.look && this.look.content() == '{') {
-        node.add(this.block(true));
+        node.add(this.block());
       }
       return node;
     },
     mediaQList: function() {
       var node = new Node(Node.MEDIAQLIST);
-      if(['only', 'not'].indexOf(this.look.content()) != -1) {
+      node.add(this.mediaQuery());
+      while(this.look && this.look.content() == ',') {
+        node.add(
+          this.match(),
+          this.mediaQuery()
+        );
+      }
+      return node;
+    },
+    mediaQuery: function() {
+      var node = new Node(Node.MEDIAQUERY);
+      if(this.look && ['only', 'not'].indexOf(this.look.content().toLowerCase()) > -1) {
         node.add(this.match());
       }
       if(!this.look) {
-        return node;
+        this.error();
       }
-      if(this.look.type() == Token.PROPERTY) {
-        node.add(this.match(Token.PROPERTY));
-      }
-      else if(this.look.content() == '(') {
+      if(this.look.content() == '(') {
         node.add(this.expr());
       }
       else {
-        return node;
+        node.add(this.mediaType());
       }
-      while(this.look && this.look.content() == 'and') {
+      if(this.look && this.look.content().toLowerCase() == 'and') {
+        node.add(
+          this.match(),
+          this.expr()
+        );
+      }
+      return node;
+    },
+    mediaType: function() {
+      var node = new Node(Node.MEDIATYPE);
+      if(this.look && this.look.type() == Token.HACK) {
         node.add(this.match());
-        node.add(this.expr());
+      }
+      if(!this.look || !MT.hasOwnProperty(this.look.content().toLowerCase())) {
+        this.error();
+      }
+      node.add(this.match());
+      if(this.look && this.look.type() == Token.HACK) {
+        node.add(this.match());
+        if(this.look && MT.hasOwnProperty(this.look.content().toLowerCase())) {
+          node.add(this.match());
+          if(this.look && this.look.type() == Token.HACK) {
+            node.add(this.match());
+          }
+        }
       }
       return node;
     },
     expr: function() {
       var node = new Node(Node.EXPR);
       node.add(this.match('('));
-      var key = new Node(Node.KEY);
-      key.add(this.match(Token.KEYWORD));
-      node.add(key);
-      node.add(this.match(':'));
-      var value = new Node(Node.VALUE);
-      if([Token.PROPERTY, Token.NUMBER, Token.SIGN].indexOf(this.look.type())== -1) {
-        this.error('missing value');
+      node.add(this.key());
+      if(this.look && this.look.content() == ':') {
+        node.add(this.match(':'));
+        node.add(this.value(true));
       }
-      while(this.look && this.look.content() != ')' && [Token.PROPERTY, Token.NUMBER, Token.SIGN].indexOf(this.look.type()) > -1) {
-        value.add(this.match());
-      }
-      node.add(value);
       node.add(this.match(')'));
       return node;
     },
@@ -215,64 +222,15 @@ define(function(require, exports, module) {
     fontface: function() {
       var node = new Node(Node.FONTFACE);
       node.add(this.match());
+  
       var node2 = new Node(Node.BLOCK);
       node2.add(this.match('{'));
-      var style = new Node(Node.STYLE);
-      var key = new Node(Node.KEY);
-      var value = new Node(Node.VALUE);
-      key.add(this.match('font-family'));
-      style.add(key);
-      style.add(this.match(':'));
-      if(this.look.type() == Token.STRING) {
-        value.add(this.match());
-      }
-      else {
-        value.add(this.match(Token.ID));
-      }
-      style.add(value);
-      style.add(this.match(';'));
-      node2.add(style);
-      style = new Node(Node.STYLE);
-      key = new Node(Node.KEY);
-      value = new Node(Node.VALUE);
-      key.add(this.match('src'));
-      style.add(key);
-      style.add(this.match(':'));
-      value.add(this.url());
-      if(this.look && this.look.content() == 'format') {
-        value.add(this.format());
-      }
-      while(this.look && this.look.content() == ',') {
-        value.add(this.match());
-        value.add(this.url());
-        if(this.look && this.look.content() == 'format') {
-          value.add(this.format());
-        }
-      }
-      style.add(value);
-      style.add(this.match(';'));
-      node2.add(style);
+  
+      node2.add(this.style('font-family'));
+      node2.add(this.style('src'));
+  
       while(this.look && this.look.content() == 'src') {
-        style = new Node(Node.STYLE);
-        key = new Node(Node.KEY);
-        value = new Node(Node.VALUE);
-        key.add(this.match('src'));
-        style.add(key);
-        style.add(this.match(':'));
-        value.add(this.url());
-        if(this.look && this.look.content() == 'format') {
-          value.add(this.format());
-        }
-        while(this.look && this.look.content() == ',') {
-          value.add(this.match());
-          value.add(this.url());
-          if(this.look && this.look.content() == 'format') {
-            value.add(this.format());
-          }
-        }
-        style.add(value);
-        style.add(this.match(';'));
-        node2.add(style);
+        node2.add(this.style('src'));
       }
       while(this.look && this.look.content() != '}') {
         node2.add(this.style());
@@ -285,24 +243,48 @@ define(function(require, exports, module) {
       var node = new Node(Node.KEYFRAMES);
       node.add(this.match());
       node.add(this.match(Token.ID));
-      var node2 = new Node(Node.BLOCK);
-      node2.add(this.match('{'));
-      while(this.look && [Token.ID, Token.NUMBER].indexOf(this.look.type()) != -1) {
-        node2.add(this.styleset(true));
-      }
-      node2.add(this.match('}'));
-      node.add(node2);
+      node.add(this.block(true));
       return node;
     },
     page: function() {
       var node = new Node(Node.PAGE);
       node.add(this.match());
-      node.add(this.styleset());
+      if(this.look && this.look.type() == Token.ID) {
+        node.add(this.match());
+      }
+      if(this.look && this.look.type() == Token.PSEUDO) {
+        node.add(this.match());
+      }
+      node.add(this.block());
       return node;
     },
-    vars: function() {
-      var node = new Node(Node.VARS);
+    namespace: function() {
+      var node = new Node(Node.NAMESPACE);
       node.add(this.match());
+      if(this.look && this.look.type() == Token.ID) {
+        node.add(this.match());
+      }
+      node.add(this.match(Token.STRING));
+      node.add(this.match(';'));
+      return node;
+    },
+    doc: function() {
+      var node = new Node(Node.DOC);
+      node.add(
+        this.match(),
+        this.match(Token.ID),
+        this.match('('),
+        this.match(')'),
+        this.block()
+      );
+      return node;
+    },
+    vardecl: function() {
+      var node = new Node(Node.VARDECL);
+      node.add(this.match());
+      if(!this.look) {
+        this.error();
+      }
       if([':', '='].indexOf(this.look.content()) > -1) {
         node.add(this.match());
       }
@@ -310,255 +292,137 @@ define(function(require, exports, module) {
       node.add(this.match(';'));
       return node;
     },
-    fn: function() {
-      var node = new Node(Node.FN);
-      if(this.look.content() == '@function') {
-        node.add(this.match());
-      }
-      else {
-        node.add(new Node(Node.TOKEN, new Token(Token.VIRTUAL, '@function')));
-      }
-      node.add(this.match(Token.ID));
-      node.add(this.match('('));
-      node.add(this.params());
-      node.add(this.match(')'));
-      node.add(this.block());
-      return node;
-    },
-    params: function() {
-      var node = new Node(Node.PARAMS);
-      var hash = {};
-      while(this.look) {
-        if(this.look.type() == Token.VARS) {
-          var v = this.look.content().replace(/^$/, '');
-          if(hash.hasOwnProperty(v)) {
-            this.error('duplicate params');
-          }
-          hash[v] = true;
-          node.add(this.match());
-          if(this.look && this.look.content() == ',') {
-            node.add(this.match());
-          }
-        }
-        else if(this.look.type() == Token.ID) {
-          var v = this.look.content();
-          if(hash.hasOwnProperty(v)) {
-            this.error('duplicate params');
-          }
-          hash[v] = true;
-          node.add(this.match());
-          if(this.look && this.look.content() == ',') {
-            node.add(this.match());
-          }
-        }
-        else {
-          break;
-        }
-      }
-      return node;
-    },
-    fnc: function() {
-      var node = new Node(Node.FNC);
-      node.add(this.match(Token.ID));
-      node.add(this.match('('));
-      node.add(this.cparams());
-      node.add(this.match(')'));
-      node.add(this.match(';'));
-      return node;
-    },
-    cparams: function() {
-      var node = new Node(Node.CPARAMS);
-      if(this.look.content() != ')') {
-        node.add(this.cparam());
-      }
-      while(this.look && this.look.content() != ')') {
-        node.add(this.match(','));
-        node.add(this.cparam());
-      }
-      return node;
-    },
-    cparam: function() {
-      var node = new Node(Node.CPARAM);
-      node.add(this.match());
-      while(this.look && [',', ')'].indexOf(this.look.content()) == -1) {
-        node.add(this.match());
-      }
-      return node;
-    },
-    styleset: function(numCanBeKey) {
+    styleset: function(kf) {
       var node = new Node(Node.STYLESET);
-      node.add(this.selectors(numCanBeKey));
+      node.add(this.selectors(kf));
       node.add(this.block());
       return node;
     },
-    selectors: function(numCanBeKey) {
+    selectors: function(kf) {
       var node = new Node(Node.SELECTORS);
-      node.add(this.selector(numCanBeKey));
+      node.add(this.selector(kf));
       while(this.look && this.look.content() == ',') {
         node.add(this.match());
-        node.add(this.selector(numCanBeKey));
+        node.add(this.selector(kf));
       }
       return node;
     },
-    selector: function(numCanBeKey) {
+    selector: function(kf) {
       var node = new Node(Node.SELECTOR);
-      var sign = {
-        '*': true,
-        '>': true,
-        '~': true,
-        '::': true,
-        ':': true,
-        '[': true,
-        ']': true,
-        '$=': true,
-        '|=': true,
-        '*=': true,
-        '~=': true,
-        '^=': true,
-        '=': true,
-        '(': true,
-        ')': true
-      };
       if(!this.look) {
         this.error();
       }
-      if([Token.STRING, Token.ID].indexOf(this.look.type()) != -1) {
+      if(kf && this.look.type() == Token.NUMBER) {
         node.add(this.match());
-      }
-      else if(sign[this.look.content()]) {
-        node.add(this.match());
-      }
-      else if(numCanBeKey && this.look.type() == Token.NUMBER) {
-        node.add(this.match());
+        node.add(this.match('%'));
       }
       else {
-        this.error();
-      }
-      while(this.look) {
-        if([Token.STRING, Token.ID].indexOf(this.look.type()) != -1) {
+        var s = this.look.content().toLowerCase();
+        if(s == '[' && this.look.type() != Token.HACK) {
           node.add(this.match());
-        }
-        else if(sign[this.look.content()]) {
-          node.add(this.match());
+          while(this.look && this.look.content() != ']') {
+            node.add(this.match([Token.ATTR, Token.SIGN, Token.VARS, Token.NUMBER, Token.UNITS, Token.STRING]));
+          }
+          node.add(this.match(']'));
         }
         else {
-          break;
+          node.add(this.match(Token.SELECTOR));
+        }
+        while(this.look && [',', ';', '{', '}'].indexOf(this.look.content()) == -1) {
+          if(this.look.content() == '[' && this.look.type() != Token.HACK) {
+            node.add(this.match());
+            while(this.look && this.look.content() != ']') {
+              node.add(this.match([Token.ATTR, Token.SIGN, Token.VARS, Token.NUMBER, Token.UNITS, Token.STRING]));
+            }
+            node.add(this.match(']'));
+          }
+          else {
+            node.add(this.match([Token.SELECTOR, Token.PSEUDO, Token.SIGN]));
+          }
         }
       }
       return node;
     },
-    block: function(single) {
+    block: function(kf) {
       var node = new Node(Node.BLOCK);
       node.add(this.match('{'));
-      while(this.look) {
-        if(this.look.type() == Token.ID) {
-          outer:
-          for(var i = this.index; i < this.length; i++) {
-            var token = this.tokens[i];
-            if(!S[token.type()]) {
-              if(token.content() == ':') {
-                node.add(this.style(true));
-                break;
-              }
-              else if(token.content() == '(') {
-                node.add(this.fnc());
-                break;
-              }
-              for(var j = i; j < this.length; j++) {
-                token = this.tokens[j];
-                if(!S[token.type()]) {
-                  if(token.type() == Token.ID || token.content() == ',') {
-                    continue;
-                  }
-                  else if(token.content() == ';' || token.content() == '}') {
-                    node.add(this.extend(true));
-                    break outer;
-                  }
-                  else {
-                    node.add(this.styleset());
-                    break outer;
-                  }
-                }
-              }
-            }
-          }
-        }
-        else if(['*', '>', '~', ':', '&'].indexOf(this.look.content()) != -1) {
+      while(this.look
+        && this.look.content() != '}') {
+        if(this.look.type() == Token.SELECTOR
+          || this.look.content() == '['
+            && this.look.type() != Token.HACK) {
           node.add(this.styleset());
         }
-        else if(this.look.type() == Token.KEYWORD) {
-          node.add(this.style());
+        else if(kf && this.look.type() == Token.NUMBER) {
+          node.add(this.styleset(kf));
         }
-        else if(this.look.content() == ';') {
-          node.add(this.match());
-        }
-        else if(this.look.content() == '@extend') {
-          node.add(this.extend());
-        }
-        else if(this.look.type() == Token.VARS) {
-          node.add(this.match());
+        else if(this.look.type() == Token.HEAD) {
+          node.add(this.head());
         }
         else {
-          break;
+          node.add(this.style());
         }
       }
       node.add(this.match('}'));
       return node;
     },
-    extend: function(miss) {
-      var node = new Node(Node.EXTEND);
-      if(!miss) {
-        node.add(this.match());
-      }
-      else {
-        node.add(new Node(Node.TOKEN, new Token(Token.VIRTUAL, '@extend')));
-      }
-      node.add(this.selectors());
-      node.add(this.match(';'));
-      return node;
-    },
-    style: function(unknow) {
+    style: function(name) {
       var node = new Node(Node.STYLE);
-      node.add(this.key(unknow));
+      node.add(this.key(name));
       node.add(this.match(':'));
       node.add(this.value());
+      while(this.look && this.look.type() == Token.HACK) {
+        node.add(this.match());
+      }
       node.add(this.match(';'));
       return node;
     },
-    key: function(unknow) {
+    key: function(name) {
       var node = new Node(Node.KEY);
-      if(unknow) {
-        node.add(this.match(Token.ID));
+      while(this.look && this.look.type() == Token.HACK) {
+        node.add(this.match());
       }
-      else {
-        node.add(this.match(Token.KEYWORD));
-      }
+      node.add(this.match(name || Token.KEYWORD));
       return node;
     },
-    value: function() {
+    value: function(noP) {
       var node = new Node(Node.VALUE);
       if(!this.look) {
         this.error();
       }
-      if([Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD].indexOf(this.look.type()) > -1) {
-        node.add(this.match());
-      }
-      else if(['(', ')', '/', '~', '-'].indexOf(this.look.content()) != -1) {
-        node.add(this.match());
-      }
-      while(this.look) {
-        if([Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD].indexOf(this.look.type()) > -1) {
+      var s = this.look.content().toLowerCase();
+      if([Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+        && [';', '}'].indexOf(s) == -1) {
+        if(s == 'url') {
+          node.add(this.url());
+        }
+        else {
           node.add(this.match());
         }
-        else if([',', '(', ')', '/', '=', ':', '-'].indexOf(this.look.content()) != -1) {
-          node.add(this.match());
+      }
+      else {
+        this.error();
+      }
+      while(this.look) {
+        s = this.look.content().toLowerCase();
+        if([Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+          && [';', '}'].indexOf(this.look.content()) == -1) {
+          if(noP && this.look.content() == ')') {
+            break;
+          }
+          if(s == 'url') {
+            node.add(this.url());
+          }
+          else if(s == 'format') {
+            node.add(this.format());
+          }
+          else {
+            node.add(this.match());
+          }
         }
         else {
           break;
         }
-      }
-      if(this.look && this.look.type() == Token.HACK) {
-        node.add(this.match());
       }
       if(this.look && this.look.type() == Token.IMPORTANT) {
         node.add(this.match());
@@ -571,7 +435,7 @@ define(function(require, exports, module) {
       }
       var node = new Node(Node.URL);
       if(ellipsis && this.look.type() == Token.STRING) {
-        if(['"', '"'].indexOf(this.look.content().charAt(0)) > -1) {
+        if(this.look.content().charAt(0) == '"') {
           node.add(this.match());
         }
         else {
@@ -582,7 +446,7 @@ define(function(require, exports, module) {
         node.add(
           this.match('url'),
           this.match('('),
-          this.match([Token.VARS, Token.STRING, Token.HEAD]),
+          this.match([Token.VARS, Token.STRING]),
           this.match(')')
         );
       }
@@ -592,7 +456,7 @@ define(function(require, exports, module) {
       var node = new Node(Node.FORMAT);
       node.add(this.match());
       node.add(this.match('('));
-      node.add(this.match(Token.STRING));
+      node.add(this.match([Token.VARS, Token.STRING]));
       node.add(this.match(')'));
       return node;
     },
@@ -629,7 +493,7 @@ define(function(require, exports, module) {
       }
       //或者根据token的type或者content匹配
       else if(typeof type == 'string') {
-        if(this.look && this.look.content() == type) {
+        if(this.look && this.look.content().toLowerCase() == type) {
           var l = this.look;
           this.move();
           return new Node(Node.TOKEN, l);
@@ -655,7 +519,7 @@ define(function(require, exports, module) {
     },
     error: function(msg) {
       msg = 'SyntaxError: ' + (msg || ' syntax error');
-      throw new Error(msg + ' line ' + this.lastLine + ' col ' + this.lastCol);
+      throw new Error(msg + ' line ' + this.lastLine + ' col ' + this.lastCol + ' look ' + (this.look && this.look.content()));
     },
     move: function() {
       this.lastLine = this.line;
