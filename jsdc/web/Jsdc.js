@@ -5,6 +5,7 @@ define(function(require, exports, module) {
   
   var character = require('./util/character');
   var Class = require('./util/Class');
+  var eventbus = require('./eventbus');
   
   var Scope = require('./Scope');
   var DefaultValue = require('./DefaultValue');
@@ -179,8 +180,6 @@ define(function(require, exports, module) {
         }
       }
       var ignore = token.ignore;
-      //firefox的奇怪bug，调试时不显示，重新赋值就好了
-      token.ignore = token.ignore;
       this.i = this.res.length;
       //加上ignore
       var ig;
@@ -287,6 +286,7 @@ define(function(require, exports, module) {
           this.obj.parse(node, true);
           break;
       }
+      eventbus.emit(node.nid(), [node, true]);
     },
     after: function(node) {
       switch(node.name()) {
@@ -350,6 +350,7 @@ define(function(require, exports, module) {
           this.obj.parse(node);
           break;
       }
+      eventbus.emit(node.nid(), [node]);
     },
     ignore: function(node) {
       var self = this;
