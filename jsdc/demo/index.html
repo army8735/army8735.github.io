@@ -167,11 +167,18 @@ seajs.use(['../index', './jssc'], function(jsdc, jssc) {
 		init();
     location.hash = encodeURIComponent(s);
   }
-  var s = location.hash.replace(/^#/, '');
-  if(s) {
-    ta.value = decodeURIComponent(s);
-    input.onclick();
+  function hashChange() {
+    var s = location.hash.replace(/^#/, '');
+    if(s) {
+      s = decodeURIComponent(s);
+      if(s != ta.value) {
+        ta.value = s;
+        input.onclick();
+      }
+    }
   }
+  hashChange();
+  window.onhashchange = hashChange;
 });
 </script>
 </body>
