@@ -11,11 +11,7 @@ define(function(require, exports, module) {
     this.jsdc = jsdc;
     this.hash = {};
     this.star = {};
-<<<<<<< HEAD
     this.stmt = {};
-=======
-    this.block = {};
->>>>>>> FETCH_HEAD
   }).methods({
     parse: function(node, start) {
       var self = this;
@@ -30,43 +26,7 @@ define(function(require, exports, module) {
           self.jsdc.append(node.leaf(2).first().token().content());
           self.jsdc.append('=');
         }
-<<<<<<< HEAD
         self.gen(node, start);
-=======
-        var state = this.jsdc.uid();
-        var temp = this.jsdc.uid();
-        var param = node.leaf(4).first();
-        var count = this.count(node.last().prev());
-        if(!param) {
-          if(count) {
-            param = this.jsdc.uid();
-          }
-          else {
-            param = '';
-          }
-        }
-        else if(param.name() == JsNode.SINGLENAME) {
-          param = param.first().first().token().content();
-        }
-        else if(param.name() == JsNode.BINDREST) {
-          param = param.last().first().token().content();
-        }
-        var o = this.hash[node.nid()] = {
-          state: state,
-          index: 0,
-          count: count,
-          temp: temp,
-          param: param,
-          last: null,
-          yield: []
-        };
-        this.jsdc.append('function(' + param + '){');
-        this.jsdc.append('var ' + state + '=0;');
-        this.jsdc.append('return ');
-        this.jsdc.append('function(){return{next:' + temp + '}};');
-        o.pos = this.jsdc.res.length;
-        this.jsdc.append('function ' + temp);
->>>>>>> FETCH_HEAD
       }
       else {
         self.gen(node, start);
@@ -82,7 +42,6 @@ define(function(require, exports, module) {
         if(node.leaf(2).name() == JsNode.BINDID) {
           self.jsdc.ignore(node.leaf(2), 'gen5');
         }
-<<<<<<< HEAD
         self.gen(node, start);
       }
       else {
@@ -109,15 +68,6 @@ define(function(require, exports, module) {
             eventbus.on(node.leaf(4).nid(), function(node, start) {
               start && self.jsdc.append(param);
             });
-=======
-        var state = this.jsdc.uid();
-        var temp = this.jsdc.uid();
-        var count = this.count(node.last().prev());
-        var param = node.leaf(4).first();
-        if(!param) {
-          if(count) {
-            param = this.jsdc.uid();
->>>>>>> FETCH_HEAD
           }
           else {
             param = '';
@@ -127,7 +77,6 @@ define(function(require, exports, module) {
           param = param.first().first().token().content();
         }
         else if(param.name() == JsNode.BINDREST) {
-<<<<<<< HEAD
           param = param.last().first().token().content() + '[0]';
         }
         var o = self.hash[node.nid()] = {
@@ -148,27 +97,6 @@ define(function(require, exports, module) {
         self.jsdc.append('return function(){return{next:' + temp + '}};');
         o.pos = self.jsdc.res.length;
         self.jsdc.append('function ' + temp);
-=======
-          param = param.last().first().token().content();
-        }
-        var o = this.hash[node.nid()] = {
-          state: state,
-          index: 0,
-          count: count,
-          temp: temp,
-          param: param,
-          last: null,
-          yield: []
-        };
-        this.jsdc.append('function(' + param + '){');
-        this.jsdc.append('var ' + state + '=0;');
-        this.jsdc.append('return function(){return{next:' + temp + '}};');
-        o.pos = this.jsdc.res.length;
-        this.jsdc.append('function ' + temp);
-      }
-      else {
-        this.jsdc.appendBefore('}()');
->>>>>>> FETCH_HEAD
       }
     },
     yield: function(node, start) {
@@ -176,7 +104,6 @@ define(function(require, exports, module) {
       var top = self.closest(node);
       var o = self.hash[top.nid()];
       if(start) {
-<<<<<<< HEAD
         self.jsdc.ignore(node.first(), 'gen7');
         var parent = node.parent();
         //赋值语句需要添加上参数，先默认undefined，并记录在变量中为下次添加做标记
@@ -194,47 +121,11 @@ define(function(require, exports, module) {
         //加上状态变更
         o.index++;
         self.jsdc.append(o.state + '=' + ++o.index2 + ';');
-=======
-        self.jsdc.ignore(node.first());
-        var parent = node.parent();
-        //赋值语句需要添加上参数，先默认undefined，并记录在变量中为下次添加做标记
-        if([JsNode.INITLZ, JsNode.ASSIGNEXPR].indexOf(parent.name()) > -1) {
-          self.jsdc.append('void 0;');
-          if(parent.name() == JsNode.INITLZ) {
-            o.last = join(parent.prev());
-          }
-          else {
-            o.last = join(parent.first());
-          }
-        }
-        else {
-          o.last = null;
-          //省略{}的ifstmt/iteratorstmt等要加上
-          var parent = node.parent();
-          if(parent.name() == JsNode.EXPRSTMT) {
-            var grand = parent.parent();
-            if(grand.name() == JsNode.IFSTMT && !parent.next()) {
-              self.jsdc.append('{');
-              eventbus.on(grand.nid(), function(node, start) {
-                if(!start) {
-                  self.jsdc.appendBefore('}');
-                }
-              });
-            }
-          }
-        }
-        //加上状态变更
-        self.jsdc.append(o.state + '++;');
->>>>>>> FETCH_HEAD
         //yield *
         if(node.size() > 2
           && node.leaf(1).name() == JsNode.TOKEN
           && node.leaf(1).token().content() == '*') {
-<<<<<<< HEAD
           self.jsdc.ignore(node.leaf(1), 'gen8');
-=======
-          self.jsdc.ignore(node.leaf(1));
->>>>>>> FETCH_HEAD
           var temp = this.star[node.nid()] = self.jsdc.uid();
           self.jsdc.append('var ' + temp + '=');
         }
@@ -243,32 +134,21 @@ define(function(require, exports, module) {
         }
       }
       else {
-<<<<<<< HEAD
         //yield *
         if(self.star.hasOwnProperty(node.nid())) {
           var temp = self.star[node.nid()];
           self.jsdc.appendBefore('.next();return{done:(!' + temp + '.done&&' + o.state + '--),value:' + temp + '}');
-=======
-        if(self.star.hasOwnProperty(node.nid())) {
-          var temp = self.star[node.nid()];
-          self.jsdc.appendBefore('();if(!' + temp + '.done)' + o.state + '--;return ' + temp + ';');
->>>>>>> FETCH_HEAD
           o.yield.push({
             i: self.jsdc.i,
             star: temp
           });
         }
         else {
-<<<<<<< HEAD
           self.jsdc.appendBefore(',done:' + (o.index == o.count) + '}');
-=======
-          self.jsdc.appendBefore(',done:' + (o.index == o.count - 1) + '};');
->>>>>>> FETCH_HEAD
           o.yield.push({
             i: self.jsdc.i
           });
         }
-<<<<<<< HEAD
         self.ignoreNext(node, ';');
         if(o.index < o.count) {
           self.jsdc.appendBefore(';case ' + o.index2 + ':');
@@ -276,15 +156,6 @@ define(function(require, exports, module) {
         else {
           self.jsdc.appendBefore(';case ' + o.index2 + ':');
         }
-=======
-        if(o.index++ < o.count - 1) {
-          self.jsdc.appendBefore('case ' + o.index + ':');
-        }
-        else {
-          self.jsdc.appendBefore('default:');
-        }
-        self.ignoreNext(node, ';');
->>>>>>> FETCH_HEAD
         //有赋值需要先赋值
         if(o.last) {
           self.jsdc.appendBefore(o.last + '=' + o.param + ';');
@@ -297,7 +168,6 @@ define(function(require, exports, module) {
       if(top.name() == JsNode.GENDECL) {
         var o = this.hash[top.nid()];
         if(start) {
-<<<<<<< HEAD
           if(o.count) {
             this.jsdc.append('while(1){switch(' + o.state + '){case 0:');
           }
@@ -310,18 +180,6 @@ define(function(require, exports, module) {
           else {
             this.jsdc.appendBefore('return{done:true}');
           }
-=======
-          this.jsdc.append('switch(' + o.state + '){case 0:');
-        }
-        else {
-          var last = this.getLast(node);
-          if(last) {
-            if([';', '}'].indexOf(last.token().content()) == -1) {
-              this.jsdc.appendBefore(';');
-            }
-          }
-          this.jsdc.appendBefore('return{done:true}}');
->>>>>>> FETCH_HEAD
         }
       }
     },
@@ -341,7 +199,6 @@ define(function(require, exports, module) {
         this.jsdc.insert('var ' + varstmt.leaf(1).first().first().token().content() + ';', this.hash[top.nid()].pos);
       }
     },
-<<<<<<< HEAD
     count: function(node, top, res) {
       res = res || { count: 0, return: false, pre: false };
       var self = this;
@@ -485,21 +342,6 @@ define(function(require, exports, module) {
           self.pre(leaf, nid, bid, res);
         });
       }
-=======
-    count: function(node, res) {
-      res = res || { count: 0 };
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      if(!isToken) {
-        if(node.name() == JsNode.YIELDEXPR) {
-          res.count++;
-        }
-        node.leaves().forEach(function(leaf) {
-          self.count(leaf, res);
-        });
-      }
-      return res.count;
->>>>>>> FETCH_HEAD
     },
     getLast: function(node) {
       while(node = node.last()) {
@@ -519,11 +361,7 @@ define(function(require, exports, module) {
             continue;
           }
           if(token.content() == value) {
-<<<<<<< HEAD
             this.jsdc.ignore(token, 'gen23');
-=======
-            this.jsdc.ignore(token);
->>>>>>> FETCH_HEAD
             return;
           }
           else {
@@ -531,7 +369,6 @@ define(function(require, exports, module) {
           }
         }
       }
-<<<<<<< HEAD
     },
     belong: function(node) {
       var res = [];
@@ -546,8 +383,6 @@ define(function(require, exports, module) {
         }
       }
       return res;
-=======
->>>>>>> FETCH_HEAD
     }
   });
   

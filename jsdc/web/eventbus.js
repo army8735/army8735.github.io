@@ -46,11 +46,7 @@ define(function(require, exports, module) {
   
       // Execute event callbacks, use index because it's the faster.
       for(var i = 0, len = list.length; i < len; i++) {
-<<<<<<< HEAD
         list[i].apply(exports, data);
-=======
-        list[i].call(exports, data);
->>>>>>> FETCH_HEAD
       }
     }
   

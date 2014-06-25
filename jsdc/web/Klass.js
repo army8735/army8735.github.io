@@ -25,13 +25,8 @@ define(function(require, exports, module) {
             this.body(node.last().prev(), o.name);
           }
           else {
-<<<<<<< HEAD
             this.jsdc.ignore(node.leaf(3), 'klass5');
             this.jsdc.ignore(node.leaf(5), 'klass6');
-=======
-            this.jsdc.ignore(node.leaf(3));
-            this.jsdc.ignore(node.leaf(5));
->>>>>>> FETCH_HEAD
             o.extend = join(node.leaf(2).last());
             this.body(node.last().prev(), o.name, o.extend);
             this.jsdc.append('!function(){');
@@ -125,11 +120,7 @@ define(function(require, exports, module) {
           if(start) {
             var prptn = first.next();
             this.gs[prptn.nid()] = true;
-<<<<<<< HEAD
             this.jsdc.ignore(prptn, 'klass14');
-=======
-            this.jsdc.ignore(prptn);
->>>>>>> FETCH_HEAD
             this.jsdc.append('Object.defineProperty(');
             this.jsdc.append(o.name);
             this.jsdc.append('.prototype, "');
