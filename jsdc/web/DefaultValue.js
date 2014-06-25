@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   var Token = homunculus.getClass('Token');
   
   var Class = require('./util/Class');
+  var join = require('./join');
   
   var DefaultValue = Class(function(jsdc) {
     this.jsdc = jsdc;
@@ -17,7 +18,7 @@ define(function(require, exports, module) {
           if(sgname.name() == JsNode.SINGLENAME && sgname.size() == 2) {
             var init = sgname.last();
             if(init.name() == JsNode.INITLZ) {
-              self.jsdc.ignore(init);
+              self.jsdc.ignore(init, 'default1');
               (self.hash[fnbody] = self.hash[fnbody] || []).push(sgname);
             }
           }
@@ -31,23 +32,8 @@ define(function(require, exports, module) {
         sgnames.forEach(function(sgname) {
           var id = sgname.first().first().token().content();
           self.jsdc.append('if(' + id + '===void 0)' + id);
-          self.recursion(sgname.last());
+          self.jsdc.append(join(sgname.last()));
           self.jsdc.append(';');
-        });
-      }
-    },
-    recursion: function(node) {
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-      if(isToken) {
-        if(!isVirtual) {
-          self.jsdc.append(' ' + node.token().content());
-        }
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.recursion(leaf);
         });
       }
     }

@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   var Token = homunculus.getClass('Token');
   
   var Class = require('./util/Class');
+  var join = require('./join');
   
   var Destruct = Class(function(jsdc) {
     this.jsdc = jsdc;
@@ -15,7 +16,7 @@ define(function(require, exports, module) {
       if(this.idCache.hasOwnProperty(node.nid())) {
         return this.idCache[node.nid()];
       }
-      this.jsdc.ignore(node);
+      this.jsdc.ignore(node, 'destruct1');
       var res = { arr: [] };
       this.recursion(node, res);
       this.idCache[node.nid()] = res.arr;
@@ -70,6 +71,12 @@ define(function(require, exports, module) {
           if(first.name() == JsNode.SINGLENAME) {
             res.push(first.first().first().token().content());
           }
+          else if(first.name() == JsNode.PROPTNAME) {
+            first = leaf.leaf(2);
+            if(first.name() == JsNode.SINGLENAME) {
+              res.push(first.first().first().token().content());
+            }
+          }
         }
       });
       this.idCache[node.nid()] = res;
@@ -104,8 +111,8 @@ define(function(require, exports, module) {
                   //初始化赋值
                   if(leaf.size() == 2) {
                     var init = leaf.last();
-                    self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                    self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                    self.jsdc.appendBefore((end ? ';' : '') + 'if(' + temp + '.indexOf(' + id + ')!=' + i + ')');
+                    self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                   }
                   break;
                 case JsNode.BINDELEM:
@@ -151,8 +158,8 @@ define(function(require, exports, module) {
                   //初始化赋值
                   if(leaf.size() == 2) {
                     var init = leaf.last();
-                    self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                    self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                    self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + id + '"))');
+                    self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                   }
                   break;
                 case JsNode.PROPTNAME:
@@ -162,6 +169,12 @@ define(function(require, exports, module) {
                     case JsNode.SINGLENAME:
                       var id = last.first().first().token().content();
                       self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                      //初始化赋值
+                      if(last.size() == 2) {
+                        var init = last.last();
+                        self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                        self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
+                      }
                       break;
                     case JsNode.BINDELEM:
                       self.destruct(last.first(), {
@@ -201,8 +214,8 @@ define(function(require, exports, module) {
                 //初始化赋值
                 if(leaf.size() == 2) {
                   var init = leaf.last();
-                  self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                  self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                  self.jsdc.appendBefore((end ? ';' : '') + 'if(' + temp + '.indexOf(' + id + ')!=' + i + ')');
+                  self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                 }
                 break;
               case JsNode.BINDELEM:
@@ -237,8 +250,8 @@ define(function(require, exports, module) {
                 //初始化赋值
                 if(leaf.size() == 2) {
                   var init = leaf.last();
-                  self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                  self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                  self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + id + '"))');
+                  self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                 }
                 break;
               case JsNode.PROPTNAME:
@@ -248,6 +261,12 @@ define(function(require, exports, module) {
                   case JsNode.SINGLENAME:
                     var id = last.first().first().token().content();
                     self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                    //初始化赋值
+                    if(last.size() == 2) {
+                      var init = last.last();
+                      self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                      self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
+                    }
                     break;
                   case JsNode.BINDELEM:
                     self.destruct(last.first(), {
@@ -270,17 +289,17 @@ define(function(require, exports, module) {
       switch(first.name()) {
         case JsNode.ARRLTR:
           if(start) {
-            this.jsdc.ignore(first);
+            this.jsdc.ignore(first, 'destruct2');
             if(assignexpr.parent().name() == JsNode.ASSIGNEXPR) {
               self.hash[first.nid()] = self.hash[assignexpr.parent().first().first().nid()];
-              this.jsdc.ignore(assignexpr.leaf(1));
+              this.jsdc.ignore(assignexpr.leaf(1), 'destruct3');
             }
             else if(assignexpr.parent().name() == JsNode.INITLZ) {
               var bindpat = assignexpr.parent().prev();
               if(bindpat.name() == JsNode.ARRBINDPAT
                 || bindpat.name() == JsNode.OBJBINDPAT) {
                 self.hash[first.nid()] = self.hash[assignexpr.parent().prev().nid()];
-                this.jsdc.ignore(assignexpr.leaf(1));
+                this.jsdc.ignore(assignexpr.leaf(1), 'destruct4');
               }
               else {
                 self.jsdc.append('function(){var ');
@@ -293,7 +312,7 @@ define(function(require, exports, module) {
             else {
               var temp = self.jsdc.uid();
               self.hash[first.nid()] = temp;
-              self.jsdc.append('!function(){var ');
+              self.jsdc.append('function(){var ');
               self.jsdc.append(temp);
             }
           }
@@ -321,13 +340,14 @@ define(function(require, exports, module) {
                 case JsNode.PRMREXPR:
                   var id = leaf.first().token().content();
                   self.jsdc.appendBefore(id + '=' + temp + '[' + i + '];');
-                  self.jsdc.appendBefore('if(' + id + '===void 0)')
-                  self.jsdc.appendBefore(id + '=' + self.join(leaf.next().next()) + (end ? '' : ';'));
+                  self.jsdc.appendBefore('if(' + temp + '.indexOf(' + id + ')!=' + i + ')');
+                  self.jsdc.appendBefore(id + '=' + join(leaf.next().next()) + (end ? '' : ';'));
                   break;
                 case JsNode.ARRLTR:
                 case JsNode.OBJLTR:
                   self.destructExpr(leaf, {
                     temp: temp,
+                    end: end,
                     index: i
                   });
               }
@@ -337,18 +357,16 @@ define(function(require, exports, module) {
                 || assignexpr.parent().name() == JsNode.INITLZ)) {
               return;
             }
-            if(self.inAssign[first.nid()]) {
-              self.jsdc.appendBefore(';return ' + temp);
-            }
+            self.jsdc.appendBefore(';return ' + temp);
             self.jsdc.appendBefore('}()');
           }
           break;
         case JsNode.OBJLTR:
           if(start) {
-            self.jsdc.ignore(first);
+            self.jsdc.ignore(first, 'destruct5');
             if(assignexpr.parent().name() == JsNode.ASSIGNEXPR) {
               self.hash[first.nid()] = self.hash[assignexpr.parent().first().first().nid()];
-              this.jsdc.ignore(assignexpr.leaf(1));
+              this.jsdc.ignore(assignexpr.leaf(1), 'destruct6');
               return;
             }
             else if(assignexpr.parent().name() == JsNode.INITLZ) {
@@ -356,7 +374,7 @@ define(function(require, exports, module) {
               if(bindpat.name() == JsNode.ARRBINDPAT
                 || bindpat.name() == JsNode.OBJBINDPAT) {
                 self.hash[first.nid()] = self.hash[assignexpr.parent().prev().nid()];
-                this.jsdc.ignore(assignexpr.leaf(1));
+                this.jsdc.ignore(assignexpr.leaf(1), 'destruct7');
               }
               else {
                 self.jsdc.append('function(){var ');
@@ -367,7 +385,7 @@ define(function(require, exports, module) {
               }
             }
             else {
-              self.jsdc.append('!function(){var ');
+              self.jsdc.append('function(){var ');
               var temp = self.jsdc.uid();
               self.hash[first.nid()] = temp;
               self.jsdc.append(temp);
@@ -386,8 +404,8 @@ define(function(require, exports, module) {
                   self.jsdc.appendBefore(id + '=' + temp + '["' + id + '"]' + (end ? '' : ';'));
                   if(leaf.next()) {
                     var init = leaf.next();
-                    self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                    self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                    self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + id + '"))');
+                    self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                   }
                   break;
                 case JsNode.PROPTNAME:
@@ -397,11 +415,27 @@ define(function(require, exports, module) {
                     case JsNode.TOKEN:
                       var id = last.token().content();
                       self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                      //初始化赋值
+                      if(last.size() == 2) {
+                        var init = last.last();
+                        self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                        self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
+                      }
+                      break;
+                    case JsNode.PRMREXPR:
+                      var id = last.first().token().content();
+                      self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                      //初始化赋值
+                      if(last.next()) {
+                        self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                        self.jsdc.appendBefore(join(last.parent()) + (end ? '' : ';'));
+                      }
                       break;
                     case JsNode.ARRLTR:
                     case JsNode.OBJLTR:
                       self.destructExpr(last, {
                         temp: temp,
+                        end: end,
                         name: name,
                         index: 0
                       });
@@ -415,9 +449,7 @@ define(function(require, exports, module) {
                 || assignexpr.parent().name() == JsNode.INITLZ)) {
               return;
             }
-            if(self.inAssign[first.nid()]) {
-              self.jsdc.appendBefore(';return ' + temp);
-            }
+            self.jsdc.appendBefore(';return ' + temp);
             self.jsdc.appendBefore('}()');
           }
           break;
@@ -440,7 +472,7 @@ define(function(require, exports, module) {
             if(leaf.name() == JsNode.TOKEN) {
               return;
             }
-            var end = i == target.length - 1;
+            var end = i == target.length - 1 && data.end;
             leaf = leaf.first();
             switch(leaf.name()) {
               case JsNode.TOKEN:
@@ -456,13 +488,14 @@ define(function(require, exports, module) {
               case JsNode.PRMREXPR:
                 var id = leaf.first().token().content();
                 self.jsdc.appendBefore(id + '=' + temp + '[' + i + '];');
-                self.jsdc.appendBefore('if(' + id + '===void 0)')
-                self.jsdc.appendBefore(id + '=' + self.join(leaf.next().next()) + (end ? '' : ';'));
+                self.jsdc.appendBefore('if(' + temp + '.indexOf(' + id + ')!=' + i + ')');
+                self.jsdc.appendBefore(id + '=' + join(leaf.next().next()) + (end ? '' : ';'));
                 break;
               case JsNode.ARRLTR:
               case JsNode.OBJLTR:
                 self.destructExpr(leaf, {
                   temp: temp,
+                  end: end,
                   index: i
                 });
             }
@@ -479,7 +512,7 @@ define(function(require, exports, module) {
           }
           var target = self.getArray(node.leaves());
           target.forEach(function(leaf, i) {
-            var end = i == target.length - 1;
+            var end = i == target.length - 1 && data.end;
             leaf = leaf.first();
             switch(leaf.name()) {
               case JsNode.TOKEN:
@@ -487,8 +520,8 @@ define(function(require, exports, module) {
                 self.jsdc.appendBefore(id + '=' + temp + '["' + id + '"]' + (end ? '' : ';'));
                 if(leaf.next()) {
                   var init = leaf.next();
-                  self.jsdc.appendBefore((end ? ';' : '') + 'if(' + id + '===void 0)')
-                  self.jsdc.appendBefore(id + self.join(init) + (end ? '' : ';'));
+                  self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + id + '"))');
+                  self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
                 }
                 break;
               case JsNode.PROPTNAME:
@@ -498,11 +531,27 @@ define(function(require, exports, module) {
                   case JsNode.TOKEN:
                     var id = last.token().content();
                     self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                    //初始化赋值
+                    if(last.size() == 2) {
+                      var init = last.last();
+                      self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                      self.jsdc.appendBefore(id + join(init) + (end ? '' : ';'));
+                    }
+                    break;
+                  case JsNode.PRMREXPR:
+                    var id = last.first().token().content();
+                    self.jsdc.appendBefore(id + '=' + temp + '["' + name + '"]' + (end ? '' : ';'));
+                    //初始化赋值
+                    if(last.next()) {
+                      self.jsdc.appendBefore((end ? ';' : '') + 'if(!' + temp + '.hasOwnProperty("' + name + '"))');
+                      self.jsdc.appendBefore(join(last.parent()) + (end ? '' : ';'));
+                    }
                     break;
                   case JsNode.ARRLTR:
                   case JsNode.OBJLTR:
                     self.destructExpr(last, {
                       temp: temp,
+                      end: end,
                       name: name,
                       index: 0
                     });
@@ -535,23 +584,6 @@ define(function(require, exports, module) {
       return leaves.filter(function(leaf, i) {
         return i % 2 == 1 && i != leaves.length - 1;
       });
-    },
-    join: function(node, res) {
-      res = res || { s: '' };
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-      if(isToken) {
-        if(!isVirtual) {
-          res.s += node.token().content();
-        }
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.join(leaf, res);
-        });
-      }
-      return res.s;
     }
   });
   

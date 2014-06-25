@@ -4,28 +4,30 @@ define(function(require, exports, module) {
   var Token = homunculus.getClass('Token');
   
   var Class = require('./util/Class');
+  var join = require('./join');
   
   var Klass = Class(function(jsdc) {
     this.jsdc = jsdc;
     this.hash = {};
     this.sup = {};
+    this.gs = {};
   }).methods({
     parse: function(node, start) {
       if(node.name() == JsNode.CLASSDECL) {
         if(start) {
           var o = {};
           o.name = node.leaf(1).first().token().content();
-          this.jsdc.ignore(node.leaf(0));
-          this.jsdc.ignore(node.leaf(1));
-          this.jsdc.ignore(node.leaf(2));
+          this.jsdc.ignore(node.leaf(0), 'klass1');
+          this.jsdc.ignore(node.leaf(1), 'klass2');
+          this.jsdc.ignore(node.leaf(2), 'klass3');
           if(node.leaf(3).name() == JsNode.CLASSBODY) {
-            this.jsdc.ignore(node.leaf(4));
+            this.jsdc.ignore(node.leaf(4), 'klass4');
             this.body(node.last().prev(), o.name);
           }
           else {
-            this.jsdc.ignore(node.leaf(3));
-            this.jsdc.ignore(node.leaf(5));
-            o.extend = this.join(node.leaf(2).last());
+            this.jsdc.ignore(node.leaf(3), 'klass5');
+            this.jsdc.ignore(node.leaf(5), 'klass6');
+            o.extend = join(node.leaf(2).last());
             this.body(node.last().prev(), o.name, o.extend);
             this.jsdc.append('!function(){');
             this.jsdc.append('var _=Object.create(' + o.extend + '.prototype);');
@@ -47,13 +49,13 @@ define(function(require, exports, module) {
         if(start) {
           this.jsdc.append('function(){');
           var o = {};
-          this.jsdc.ignore(node.leaf(0));
-          this.jsdc.ignore(node.leaf(1));
+          this.jsdc.ignore(node.leaf(0), 'klass7');
+          this.jsdc.ignore(node.leaf(1), 'klass8');
           if(node.leaf(2).name() == JsNode.TOKEN
             && node.leaf(2).token().content() == '{') {
-            this.jsdc.ignore(node.leaf(2));
+            this.jsdc.ignore(node.leaf(2), 'klass9');
             if(node.leaf(1).name() == JsNode.HERITAGE) {
-              o.extend = this.join(node.leaf(1).last());
+              o.extend = join(node.leaf(1).last());
               o.name = this.jsdc.uid();
             }
             else {
@@ -62,15 +64,15 @@ define(function(require, exports, module) {
           }
           else if(node.leaf(3).name() == JsNode.TOKEN
             && node.leaf(3).token().content() == '{') {
-            this.jsdc.ignore(node.leaf(3));
+            this.jsdc.ignore(node.leaf(3), 'klass10');
             o.name = node.leaf(1).first().token().content();
-            o.extend = this.join(node.leaf(2).last());
+            o.extend = join(node.leaf(2).last());
           }
           else {
             o.name = this.jsdc.uid();
-            this.jsdc.ignore(node.leaf(1));
+            this.jsdc.ignore(node.leaf(1), 'klass11');
           }
-          this.jsdc.ignore(node.last());
+          this.jsdc.ignore(node.last(), 'klass12');
           var classbody = node.last().prev();
           this.body(classbody, o.name, o.extend);
           if(o.extend) {
@@ -102,7 +104,7 @@ define(function(require, exports, module) {
         if(first.name() == JsNode.PROPTNAME) {
           if(start) {
             var token = first.first().first().token();
-            this.jsdc.ignore(token);
+            this.jsdc.ignore(token, 'klass13');
             if(token.content() == 'constructor') {
               this.jsdc.append('function ');
               this.jsdc.append(o.name);
@@ -116,8 +118,12 @@ define(function(require, exports, module) {
         else {
           var token = first.token();
           if(start) {
+            var prptn = first.next();
+            this.gs[prptn.nid()] = true;
+            this.jsdc.ignore(prptn, 'klass14');
+            this.jsdc.append('Object.defineProperty(');
             this.jsdc.append(o.name);
-            this.jsdc.append('.prototype.');
+            this.jsdc.append('.prototype, "');
             if(token.content() == 'get') {
               var n = first.next().first().first().token();
               o.g = n.content();
@@ -128,30 +134,28 @@ define(function(require, exports, module) {
               o.s = n.content();
               this.jsdc.append(o.s);
             }
-            this.jsdc.append('={');
+            this.jsdc.append('", {');
           }
           else {
-            this.jsdc.appendBefore('}["');
-            if(token.content() == 'get') {
-              this.jsdc.appendBefore(o.g);
-            }
-            else {
-              this.jsdc.appendBefore(o.s);
-            }
-            this.jsdc.appendBefore('"];');
+            this.jsdc.appendBefore('});');
           }
         }
       }
       else if(first.name() == JsNode.TOKEN
         && first.token().content() == 'static') {
         if(start) {
-          this.jsdc.ignore(first.token());
+          this.jsdc.ignore(first.token(), 'klass15');
           this.jsdc.append(o.name + '.');
         }
       }
     },
+    prptn: function(node) {
+      if(this.gs.hasOwnProperty(node.nid())) {
+        this.jsdc.append(':function');
+      }
+    },
     super: function(node) {
-      this.jsdc.ignore(node);
+      this.jsdc.ignore(node, 'klass16');
       var top = this.closest(node);
       if(this.hash.hasOwnProperty(top.nid())) {
         this.jsdc.append(this.hash[top.nid()].extend);
@@ -233,26 +237,6 @@ define(function(require, exports, module) {
           || parent.name() == JsNode.CLASSEXPR) {
           return parent;
         }
-      }
-    },
-    join: function(node) {
-      var res = { s: '' };
-      this.recursion(node, res);
-      return res.s;
-    },
-    recursion: function(node, res) {
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-      if(isToken) {
-        if(!isVirtual) {
-          res.s += node.token().content();
-        }
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.recursion(leaf, res);
-        });
       }
     }
   });

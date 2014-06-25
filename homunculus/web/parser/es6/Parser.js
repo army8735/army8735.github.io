@@ -566,7 +566,7 @@ define(function(require, exports, module) {
         this.match('('),
         this.expr(),
         this.match(')'),
-        this.stmt()
+        this.stmt(yYield)
       );
       if(this.look && this.look.content() == 'else') {
         node.add(
@@ -582,7 +582,7 @@ define(function(require, exports, module) {
         case 'do':
           node.add(
             this.match(),
-            this.stmt(),
+            this.stmt(yYield),
             this.match('while'),
             this.match('('),
             this.expr(),
@@ -991,12 +991,7 @@ define(function(require, exports, module) {
         this.match('function'),
         this.match('*')
       );
-      if(!this.look) {
-        this.error('missing formal parameter');
-      }
-      if(this.look.type() == Token.ID) {
-        node.add(this.bindid(null, noIn, noOf));
-      }
+      node.add(this.bindid('missing formal parameter', noIn, noOf));
       node.add(
         this.match('(', 'missing ( before formal parameters'),
         this.fmparams(),

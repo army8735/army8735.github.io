@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   var Token = homunculus.getClass('Token');
   
   var Class = require('./util/Class');
+  var join = require('./join');
   
   var ArrayCmph = Class(function(jsdc) {
     this.jsdc = jsdc;
@@ -17,8 +18,8 @@ define(function(require, exports, module) {
           id: '',
           f: 0
         };
-        self.jsdc.ignore(node.first());
-        self.jsdc.ignore(node.last());
+        self.jsdc.ignore(node.first(), 'arrcmph1');
+        self.jsdc.ignore(node.last(), 'arrcmph2');
         self.jsdc.append('function(){');
         //forbinding的变量要提出来声明
         var leaves = node.leaf(1).leaves();
@@ -51,7 +52,7 @@ define(function(require, exports, module) {
           this.jsdc.appendBefore('{');
           this.jsdc.appendBefore(id);
           this.jsdc.appendBefore('=');
-          this.jsdc.appendBefore(this.join(node.leaf(4)));
+          this.jsdc.appendBefore(join(node.leaf(4)));
           this.jsdc.appendBefore('[');
           this.jsdc.appendBefore(id);
           this.jsdc.appendBefore('];');
@@ -73,26 +74,9 @@ define(function(require, exports, module) {
     },
     of: function(node) {
       if(node.parent().name() == JsNode.CMPHFOR) {
-        this.jsdc.ignore(node);
+        this.jsdc.ignore(node, 'arrcmph3');
         this.jsdc.append('in ');
       }
-    },
-    join: function(node, res) {
-      res = res || { s: '' };
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-      if(isToken) {
-        if(!isVirtual) {
-          res.s += node.token().content();
-        }
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.join(leaf, res);
-        });
-      }
-      return res.s;
     }
   });
   

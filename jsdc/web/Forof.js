@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   var Token = homunculus.getClass('Token');
   
   var Class = require('./util/Class');
+  var join = require('./join');
   
   var Forof = Class(function(jsdc) {
     this.jsdc = jsdc;
@@ -16,7 +17,7 @@ define(function(require, exports, module) {
           && of.name() == JsNode.TOKEN
           && of.token().content() == 'of') {
           this.hash[node.nid()] = true;
-          this.jsdc.ignore(of);
+          this.jsdc.ignore(of, 'forof1');
         }
       }
       else if(this.hash.hasOwnProperty(node.nid())) {
@@ -42,13 +43,15 @@ define(function(require, exports, module) {
           this.jsdc.append('.next();!');
           var k = parent.leaf(2);
           //forof的varstmt只能有一个id，其它为mmbexpr
+          var v = join(parent.leaf(4));
           if(k.name() == JsNode.VARSTMT) {
             k = k.last().first().first().token().content();
           }
           else {
-            k = this.join(k);
+            k = join(k);
           }
-          this.jsdc.append(k + '.done;')
+          this.jsdc.append(k + '.done;');
+          this.jsdc.append(k + '=' + v + '.next()');
         }
         else {
           var last = parent.last();
@@ -79,29 +82,9 @@ define(function(require, exports, module) {
         k = k.last().first().first().token().content();
       }
       else {
-        k = this.join(k);
+        k = join(k);
       }
       this.jsdc.append(k + '=' + k + '.value;');
-    },
-    join: function(node) {
-      var res = { s: '' };
-      this.recursion(node, res);
-      return res.s;
-    },
-    recursion: function(node, res) {
-      var self = this;
-      var isToken = node.name() == JsNode.TOKEN;
-      var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-      if(isToken) {
-        if(!isVirtual) {
-          res.s += node.token().content();
-        }
-      }
-      else {
-        node.leaves().forEach(function(leaf) {
-          self.recursion(leaf, res);
-        });
-      }
     }
   });
   

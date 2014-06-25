@@ -131,6 +131,7 @@ seajs.config({
 seajs.use(['../index', './jssc'], function(jsdc, jssc) {
   jsdc.define(true);
 	function init() {
+    console.clear();
 		var nodes = Array.prototype.slice.call(document.getElementsByTagName('code'), 0);
 		nodes.forEach(function(node, i) {
       var res = jsdc.parse(node.textContent || node.innerText || node.firstChild && node.firstChild.nodeValue);

@@ -24,10 +24,11 @@ define(function(require, exports, module) {
       var isToken = node.name() == JsNode.TOKEN;
       if(!isToken) {
         var name = node.name();
-        //每个{}作用域记录是否有lexdecl或fn或generator
+        //每个{}作用域记录是否有lexdecl或fn或generator或classdecl
         if(name == JsNode.LEXDECL
           || name == JsNode.FNDECL
-          || name == JsNode.GENDECL) {
+          || name == JsNode.GENDECL
+          || name == JsNode.CLASSDECL) {
           var parent = self.closest(node);
           //全局lexdecl没有作用域无需记录，fnbody的也无需记录
           if(parent && parent.name() != JsNode.FNBODY) {
@@ -70,14 +71,14 @@ define(function(require, exports, module) {
             }
           });
           if(vardecl.first().name() == JsNode.BINDID) {
-            self.jsdc.ignore(varstmt.first().token());
+            self.jsdc.ignore(varstmt.first().token(), 'scope1');
           }
           else {
             //destruct需忽略前后可能的,再改为; var也需忽略
-            self.jsdc.ignore(vardecl.prev());
+            self.jsdc.ignore(vardecl.prev(), 'scope2');
             var next = vardecl.next();
             if(next.token().content() == ',') {
-              self.jsdc.ignore(next);
+              self.jsdc.ignore(next, 'scope3');
             }
           }
         }
@@ -155,6 +156,7 @@ define(function(require, exports, module) {
       while(parent = parent.parent()) {
         switch(parent.name()) {
           case JsNode.GENDECL:
+          case JsNode.GENEXPR:
             return parent;
           case JsNode.FNDECL:
           case JsNode.FNEXPR:
