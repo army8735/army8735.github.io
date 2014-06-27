@@ -144,7 +144,27 @@ define(function(require, exports, module) {
           });
         }
         else {
-          self.jsdc.appendBefore(',done:' + (o.index == o.count) + '}');
+          var belong = self.belong(node);
+          if(belong.length) {
+            var done = belong.map(function(o) {
+              return o.done || 0;
+            });
+            done.push((o.index == o.count) ? 1 : 0);
+            done.push((o.return) ? 0 : 1);
+            if(done.indexOf(0) > -1) {
+              done = [false];
+            }
+            var hash = {};
+            done = done.filter(function(o) {
+              var res = !hash.hasOwnProperty(o);
+              hash[o] = true;
+              return res;
+            });
+            self.jsdc.appendBefore(',done:' + done.join('&&') + '}');
+          }
+          else {
+            self.jsdc.appendBefore(',done:' + (o.index == o.count && !o.return) + '}');
+          }
           o.yield.push({
             i: self.jsdc.i
           });
@@ -174,7 +194,14 @@ define(function(require, exports, module) {
         }
         else if(!o.return) {
           if(o.count) {
-            this.jsdc.appendBefore(';' + o.state + '=-1');
+            if(!this.jsdc.endsWith(';')
+              && !this.jsdc.endsWith(':')
+              && !this.jsdc.endsWith('{')
+              && !this.jsdc.endsWith('}')
+              && !this.jsdc.endsWith('\n')) {
+              this.jsdc.appendBefore(';');
+            }
+            this.jsdc.appendBefore(o.state + '=-1');
             this.jsdc.appendBefore(';default:return{done:true}}}');
           }
           else {
@@ -233,14 +260,30 @@ define(function(require, exports, module) {
                 self.jsdc.appendBefore(';' + o.state + '=-1;default:');
               }
             });
-            eventbus.on(node.leaf(1).nid(), function(node, start) {
-              if(start) {
-                self.jsdc.append('{value:');
-              }
-              else {
-                self.jsdc.appendBefore(',done:true}');
-              }
-            });
+            //无return内容分开侦听
+            if(node.leaf(1).name() == JsNode.TOKEN) {
+              eventbus.on(node.leaf(0).nid(), function(node, start) {
+                if(!start) {
+                  self.jsdc.append('{value:');
+                }
+              });
+              eventbus.on(node.nid(), function(node, start) {
+                if(!start) {
+                  self.jsdc.appendBefore(',done:true}');
+                }
+              });
+            }
+            //有则侦听内容
+            else {
+              eventbus.on(node.leaf(1).nid(), function(node, start) {
+                if(start) {
+                  self.jsdc.append('{value:');
+                }
+                else {
+                  self.jsdc.appendBefore(',done:true}');
+                }
+              });
+            }
             break;
           //忽略这些节点中的yield语句
           case JsNode.CLASSDECL:
@@ -266,24 +309,36 @@ define(function(require, exports, module) {
         switch(node.name()) {
           case JsNode.IFSTMT:
             if(self.stmt.hasOwnProperty(node.nid())) {
+              var ifstmt = node;
               res.index++;
-              var block = node.leaf(4);
+              var block = ifstmt.leaf(4);
               //改写if语句
-              self.jsdc.ignore(node.first(), 'gen14');
-              self.jsdc.ignore(node.leaf(1), 'gen15');
-              self.jsdc.ignore(node.leaf(2), 'gen16');
-              self.jsdc.ignore(node.leaf(3), 'gen17');
+              self.jsdc.ignore(ifstmt.first(), 'gen14');
+              self.jsdc.ignore(ifstmt.leaf(1), 'gen15');
+              self.jsdc.ignore(ifstmt.leaf(2), 'gen16');
+              self.jsdc.ignore(ifstmt.leaf(3), 'gen17');
               if(block.name() == JsNode.BLOCKSTMT) {
                 self.jsdc.ignore(block.first().first(), 'gen18');
                 self.jsdc.ignore(block.first().last(), 'gen19');
               }
-              var temp;
+              var elseTemp;
               var ifEndTemp;
               var top;
-              var ifstmt = node;
+              var elset = block.next();
+              var elseblock;
+              if(elset && elset.name() == JsNode.TOKEN) {
+                elseblock = elset.next();
+              }
               //if结束后的状态
-              eventbus.on(node.nid(), function(node, start) {
+              eventbus.on(ifstmt.nid(), function(node, start) {
                 if(!start) {
+                  if(!self.jsdc.endsWith(';')
+                    && !self.jsdc.endsWith(':')
+                    && !self.jsdc.endsWith('{')
+                    && !self.jsdc.endsWith('}')
+                    && !self.jsdc.endsWith('\n')) {
+                    self.jsdc.appendBefore(';');
+                  }
                   self.jsdc.append('case ' + ifEndTemp + ':');
                 }
               });
@@ -295,37 +350,299 @@ define(function(require, exports, module) {
                   self.jsdc.append(top.state + '=');
                   self.jsdc.append(join(ifstmt.leaf(2)));
                   self.jsdc.append('?');
-                  self.jsdc.append(++top.index2 + ':' + ++top.index2 + ';break;');
-                  self.jsdc.append('case ' + (top.index2 - 1) + ':');
-                  temp = top.index2;
+                  self.jsdc.append(++top.index2 + ':');
+                  self.jsdc.append((elseblock ? ++top.index2 : top.index2 + 1) + ';break;');
+                  self.jsdc.append('case ' + (elseblock ? top.index2 - 1 : top.index2) + ':');
+                  elseTemp = top.index2;
                   ifEndTemp = ++top.index2;
                 }
                 else {
+                  if(!self.jsdc.endsWith(';')
+                    && !self.jsdc.endsWith(':')
+                    && !self.jsdc.endsWith('{')
+                    && !self.jsdc.endsWith('}')
+                    && !self.jsdc.endsWith('\n')) {
+                    self.jsdc.appendBefore(';');
+                  }
                   self.jsdc.appendBefore(top.state + '=');
                   self.jsdc.appendBefore(ifEndTemp);
                   self.jsdc.appendBefore(';break;');
                 }
               });
               //else语句忽略{}
-              var elset = block.next();
-              if(elset && elset.name() == JsNode.TOKEN) {
+              if(elseblock) {
                 self.jsdc.ignore(elset, 'gen20');
-                block = elset.next();
-                if(block.name() == JsNode.BLOCKSTMT) {
-                  self.jsdc.ignore(block.first().first(), 'gen21');
-                  self.jsdc.ignore(block.first().last(), 'gen22');
+                if(elseblock.name() == JsNode.BLOCKSTMT) {
+                  self.jsdc.ignore(elseblock.first().first(), 'gen21');
+                  self.jsdc.ignore(elseblock.first().last(), 'gen22');
                 }
-                eventbus.on(block.nid(), function(node, start) {
+                eventbus.on(elseblock.nid(), function(node, start) {
                   if(start) {
-                    self.jsdc.append('case ' + temp + ':');
+                    self.jsdc.append('case ' + elseTemp + ':');
                   }
-                  else {
+                  else if(elseblock.name() != JsNode.IFSTMT
+                    && elseblock.parent().name() != JsNode.IFSTMT) {
+                    if(!self.jsdc.endsWith(';')
+                      && !self.jsdc.endsWith(':')
+                      && !self.jsdc.endsWith('{')
+                      && !self.jsdc.endsWith('}')
+                      && !self.jsdc.endsWith('\n')) {
+                      self.jsdc.appendBefore(';');
+                    }
                     self.jsdc.appendBefore(top.state + '=');
                     self.jsdc.appendBefore(ifEndTemp);
-                    self.jsdc.appendBefore('break;');
+                    self.jsdc.appendBefore(';break;');
                   }
                 });
               }
+            }
+            break;
+          case JsNode.ITERSTMT:
+            var itstmt = node;
+            var first = itstmt.first();
+            var top;
+            var loopTemp;
+            var itTemp;
+            var itEndTemp;
+            var endTemp;
+            switch(first.token().content()) {
+              case 'for':
+                var block = itstmt.last();
+                if(block.name() == JsNode.BLOCKSTMT) {
+                  self.jsdc.ignore(block.first().first(), 'gen23');
+                  self.jsdc.ignore(block.first().last(), 'gen24');
+                }
+                self.jsdc.ignore(first, 'gen25');
+                self.jsdc.ignore(node.leaf(1), 'gen26');
+                self.jsdc.ignore(block.prev(), 'gen27');
+                switch(itstmt.leaf(3).token().content()) {
+                  case 'in':
+                    var keys = self.jsdc.uid();
+                    var len = self.jsdc.uid();
+                    var index = self.jsdc.uid();
+                    var id;
+                    if(node.leaf(2).name() == JsNode.VARSTMT) {
+                      id = join(node.leaf(2).last());
+                    }
+                    else {
+                      id = join(node.leaf(2));
+                    }
+                    var obj = self.jsdc.uid();
+                    self.jsdc.ignore(node.leaf(2), 'gen28');
+                    self.jsdc.ignore(node.leaf(3), 'gen29');
+                    eventbus.on(itstmt.leaf(4).nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append('var ' + obj + '=');
+                        top = self.hash[nid];
+                      }
+                      else {
+                        self.jsdc.appendBefore(',' + keys + '=Object.keys(');
+                        self.jsdc.appendBefore(obj);
+                        self.jsdc.appendBefore('),' + len);
+                        self.jsdc.appendBefore('=' + keys + '.length,');
+                        self.jsdc.appendBefore(index + '=0;');
+                        endTemp = ++top.index2;
+                        self.jsdc.appendBefore('case ' + endTemp + ':');
+                        self.jsdc.appendBefore(top.state + '=');
+                        self.jsdc.appendBefore(index + '++<' + len + '?');
+                        itTemp = ++top.index2;
+                        itEndTemp = ++top.index2;
+                        self.jsdc.appendBefore(itTemp + ':' + itEndTemp + ';break;');
+                        //供yield判断
+                        itstmt.done = index + '<' + len;
+                      }
+                    });
+                    eventbus.on(block.nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append('case ' + itTemp + ':');
+                        self.jsdc.append(id + '=');
+                        self.jsdc.append(keys + '[');
+                        self.jsdc.append(index + '];');
+                      }
+                      else {
+                        self.jsdc.appendBefore(top.state + '=' + endTemp);
+                        self.jsdc.appendBefore(';break;case ' +  itEndTemp + ':');
+                      }
+                    });
+                    break;
+                  case 'of':
+                    var iterator;
+                    //标记使Forof类处理失效
+                    itstmt.gen = true;
+                    var next = self.jsdc.uid();
+                    var id;
+                    if(node.leaf(2).name() == JsNode.VARSTMT) {
+                      id = join(node.leaf(2).last());
+                    }
+                    else {
+                      id = join(node.leaf(2));
+                    }
+                    var obj = self.jsdc.uid();
+                    self.jsdc.ignore(node.leaf(2), 'gen30');
+                    self.jsdc.ignore(node.leaf(3), 'gen31');
+                    eventbus.on(itstmt.leaf(4).nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append('var ' + obj + '=');
+                        top = self.hash[nid];
+                      }
+                      else {
+                        self.jsdc.appendBefore(',' + next);
+                        self.jsdc.appendBefore('=' + obj + '.next();');
+                        endTemp = ++top.index2;
+                        self.jsdc.appendBefore('case ' + endTemp + ':');
+                        self.jsdc.appendBefore(top.state + '=');
+                        self.jsdc.appendBefore(next + '.done' + '?');
+                        iterator = ++top.index2;
+                        itTemp = ++top.index2;
+                        itEndTemp = ++top.index2;
+                        self.jsdc.appendBefore(itTemp + ':' + itEndTemp + ';break;');
+                        //供yield判断
+                        itstmt.done = next + '.done';
+                      }
+                    });
+                    eventbus.on(block.nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append('case ' + iterator + ':');
+                        self.jsdc.append(next + '=' + obj + '.next();');
+                        self.jsdc.append(top.state + '=' + endTemp);
+                        self.jsdc.append(';break;case ' + itTemp + ':');
+                        self.jsdc.append(id + '=' + next + '.value;');
+                      }
+                      else {
+                        self.jsdc.appendBefore(top.state + '=' + endTemp);
+                        self.jsdc.appendBefore(';break;case ' +  itEndTemp + ':');
+                      }
+                    });
+                    break;
+                  default:
+                    eventbus.on(itstmt.leaf(4).nid(), function(node, start) {
+                      if(start) {
+                        top = self.hash[nid];
+                        loopTemp = ++top.index2;
+                        self.jsdc.append('case ' + loopTemp + ':');
+                        self.jsdc.append(top.state + '=');
+                        //防止优先级错误
+                        if(itstmt.leaf(4).name() == JsNode.ASSIGNEXPR) {
+                          self.jsdc.append('(');
+                        }
+                        itTemp = ++top.index2;
+                      }
+                      else {
+                        if(itstmt.leaf(4).name() == JsNode.ASSIGNEXPR) {
+                          self.jsdc.appendBefore(')');
+                        }
+                        itEndTemp = ++top.index2;
+                        endTemp = ++top.index2;
+                        self.jsdc.appendBefore('?' +  itTemp + ':' + itEndTemp);
+                        self.jsdc.appendBefore(';break');
+                        //供yield判断
+                        itstmt.done = join(itstmt.leaf(4));
+                      }
+                    });
+                    eventbus.on(itstmt.leaf(6).nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append('case ' + endTemp + ':');
+                      }
+                      else {
+                        self.jsdc.appendBefore(';' + top.state + '=' + loopTemp);
+                        self.jsdc.appendBefore(';break');
+                      }
+                    });
+                    eventbus.on(block.nid(), function(node, start) {
+                      if(start) {
+                        self.jsdc.append(';case ' + itTemp + ':');
+                      }
+                      else {
+                        self.jsdc.appendBefore(top.state + '=' + endTemp);
+                        self.jsdc.appendBefore(';break;case ' +  itEndTemp + ':');
+                      }
+                    });
+                }
+                break;
+              case 'while':
+                self.jsdc.ignore(itstmt.first());
+                loopTemp = self.jsdc.uid();
+                var block = itstmt.last();
+                if(block.name() == JsNode.BLOCKSTMT) {
+                  self.jsdc.ignore(block.first().first(), 'gen32');
+                  self.jsdc.ignore(block.first().last(), 'gen33');
+                }
+                eventbus.on(itstmt.nid(), function(node, start) {
+                  if(start) {
+                    self.jsdc.append('var ' + loopTemp + ';');
+                    top = self.hash[nid];
+                    endTemp = ++top.index2;
+                    self.jsdc.append('case ' + endTemp + ':');
+                    self.jsdc.append(top.state + '=');
+                  }
+                });
+                eventbus.on(itstmt.leaf(2).nid(), function(node, start) {
+                  if(start) {
+                    self.jsdc.append(loopTemp + '=');
+                  }
+                });
+                eventbus.on(block.nid(), function(node, start) {
+                  if(start) {
+                    itTemp = ++top.index2;
+                    itEndTemp = ++top.index2;
+                    self.jsdc.append('?' + itTemp + ':' + itEndTemp);
+                    self.jsdc.append(';break;case ' + itTemp + ':');
+                    //供yield判断
+                    itstmt.done = loopTemp;
+                  }
+                  else {
+                    self.jsdc.appendBefore(top.state + '=' + endTemp);
+                    self.jsdc.appendBefore(';break;case ' +  itEndTemp + ':');
+                  }
+                });
+                break;
+              case 'do':
+                loopTemp = self.jsdc.uid();
+                //供yield判断
+                itstmt.done = loopTemp;
+                self.jsdc.ignore(itstmt.first());
+                self.jsdc.ignore(itstmt.leaf(2));
+                var block = itstmt.leaf(1);
+                if(block.name() == JsNode.BLOCKSTMT) {
+                  self.jsdc.ignore(block.first().first(), 'gen34');
+                  self.jsdc.ignore(block.first().last(), 'gen35');
+                }
+                eventbus.on(itstmt.nid(), function(node, start) {
+                  if(start) {
+                    self.jsdc.append('var ' + loopTemp + ';');
+                  }
+                  else {
+                    self.jsdc.appendBefore('?' + itTemp + ':' + itEndTemp);
+                    self.jsdc.appendBefore(';break;case ' + itEndTemp + ':');
+                  }
+                });
+                eventbus.on(itstmt.leaf(4).nid(), function(node, start) {
+                  if(start) {
+                    self.jsdc.append(loopTemp + '=');
+                  }
+                });
+                eventbus.on(block.nid(), function(node, start) {
+                  if(start) {
+                    top = self.hash[nid];
+                    itTemp = ++top.index2;
+                    endTemp = ++top.index2;
+                    self.jsdc.append('case ' + itTemp + ':');
+                  }
+                  else {
+                    if(!self.jsdc.endsWith(';')
+                      && !self.jsdc.endsWith(':')
+                      && !self.jsdc.endsWith('{')
+                      && !self.jsdc.endsWith('}')
+                      && !self.jsdc.endsWith('\n')) {
+                      self.jsdc.appendBefore(';');
+                    }
+                    self.jsdc.appendBefore(top.state + '=' + endTemp);
+                    itEndTemp = ++top.index2;
+                    self.jsdc.appendBefore(';break;case ' + endTemp + ':');
+                    self.jsdc.appendBefore(top.state + '=');
+                  }
+                });
+                break;
             }
             break;
           //忽略这些节点中的所有逻辑
@@ -342,6 +659,20 @@ define(function(require, exports, module) {
           self.pre(leaf, nid, bid, res);
         });
       }
+    },
+    belong: function(node) {
+      var res = [];
+      while(node = node.parent()) {
+        switch(node.name()) {
+          case JsNode.IFSTMT:
+          case JsNode.ITERSTMT:
+            res.push(node);
+          case JsNode.GENDECL:
+          case JsNode.GENEXPR:
+            break;
+        }
+      }
+      return res;
     },
     getLast: function(node) {
       while(node = node.last()) {
@@ -361,7 +692,7 @@ define(function(require, exports, module) {
             continue;
           }
           if(token.content() == value) {
-            this.jsdc.ignore(token, 'gen23');
+            this.jsdc.ignore(token, 'gen36');
             return;
           }
           else {
@@ -369,20 +700,6 @@ define(function(require, exports, module) {
           }
         }
       }
-    },
-    belong: function(node) {
-      var res = [];
-      while(node = node.parent()) {
-        switch(node.name()) {
-          case JsNode.IFSTMT:
-          case JsNode.ITERSTMT:
-            res.push(node);
-          case JsNode.GENDECL:
-          case JsNode.GENEXPR:
-            break;
-        }
-      }
-      return res;
     }
   });
   

@@ -86,10 +86,12 @@ define(function(require, exports, module) {
       return this.ts;
     },
     append: function(s) {
+      s = String(s);
       this.res += s;
       this.i = this.res.length;
     },
     appendBefore: function(s) {
+      s = String(s);
       if(this.i < this.res.length) {
         this.insert(s, this.i);
         this.i += s.length;
@@ -99,11 +101,21 @@ define(function(require, exports, module) {
       }
     },
     insert: function(s, i) {
+      s = String(s);
       this.res = this.res.slice(0, i) + s + this.res.slice(i);
     },
     replace: function(s, i, len) {
       this.res = this.res.slice(0, i) + s + this.res.slice(i + len);
       this.i += s.length - len;
+    },
+    endsWith: function(s) {
+      s = String(s);
+      if(this.i < this.res.length) {
+        return this.res.slice(this.i - s.length, this.i) == s;
+      }
+      else {
+        return this.res.slice(this.res.length - s.length) == s;
+      }
     },
     next: function() {
       var i = ++this.index;
@@ -149,6 +161,10 @@ define(function(require, exports, module) {
           this.arrowFn.arrow(token);
         }
         else if(token.type() == Token.KEYWORD
+          && content == 'return') {
+          eventbus.emit(node.nid(), [node, true]);
+        }
+        else if(token.type() == Token.KEYWORD
           && content == 'super'){
           this.klass.super(node);
         }
@@ -177,6 +193,9 @@ define(function(require, exports, module) {
         }
         else if(content == '(') {
           this.klass.prts(node);
+        }
+        else if(content == 'return') {
+          eventbus.emit(node.nid(), [node]);
         }
       }
       var ignore = token.ignore;
