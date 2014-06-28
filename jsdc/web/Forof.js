@@ -11,11 +11,16 @@ define(function(require, exports, module) {
     this.hash = {};
   }).methods({
     parse: function(node, start) {
+      //有可能被Generator中该写过
+      if(node.gen) {
+        return;
+      }
       if(start) {
         var of = node.leaf(3);
         if(node.first().token().content() == 'for'
           && of.name() == JsNode.TOKEN
           && of.token().content() == 'of') {
+          //存放临时li供block首尾改写引用
           this.hash[node.nid()] = true;
           this.jsdc.ignore(of, 'forof1');
         }
@@ -23,6 +28,7 @@ define(function(require, exports, module) {
       else if(this.hash.hasOwnProperty(node.nid())) {
         var last = node.last();
         if(last.name() != JsNode.BLOCKSTMT) {
+          //}闭合
           this.jsdc.appendBefore('}');
         }
       }
@@ -35,7 +41,6 @@ define(function(require, exports, module) {
       }
     },
     prts: function(node, start) {
-      //for of的语句如果省略{}则加上
       var parent = node.parent();
       if(parent.name() == JsNode.ITERSTMT
         && this.hash.hasOwnProperty(parent.nid())) {
@@ -54,9 +59,10 @@ define(function(require, exports, module) {
           this.jsdc.append(k + '=' + v + '.next()');
         }
         else {
+          //for of的语句如果省略{}则加上
           var last = parent.last();
           if(last.name() != JsNode.BLOCKSTMT) {
-            this.jsdc.append('{');
+            this.jsdc.appendBefore('{');
             this.assign(parent);
           }
         }
@@ -89,5 +95,4 @@ define(function(require, exports, module) {
   });
   
   module.exports = Forof;
-  
 });
