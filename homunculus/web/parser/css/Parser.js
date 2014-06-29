@@ -448,13 +448,44 @@ define(function(require, exports, module) {
         this.error();
       }
       var s = this.look.content().toLowerCase();
-      if([Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+      if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
         && [';', '}'].indexOf(s) == -1) {
-        if(s == 'url') {
-          node.add(this.url());
-        }
-        else {
-          node.add(this.match());
+        switch(s) {
+          case 'url':
+            node.add(this.url());
+            break;
+          case 'format':
+            node.add(this.format());
+            break;
+          case 'rgb':
+            node.add(this.rgb());
+            break;
+          case 'rgba':
+            node.add(this.rgb(true));
+            break;
+          case 'hsl':
+            node.add(this.hsl());
+            break;
+          case 'hsla':
+            node.add(this.hsl(true));
+            break;
+          case 'max':
+            node.add(this.minmax(true));
+            break;
+          case 'min':
+            node.add(this.minmax());
+            break;
+          case 'linear-gradient':
+          case 'repeating-linear-gradient':
+            node.add(this.lg());
+            break;
+          case 'radial-gradient':
+          case 'repeating-radial-gradient':
+            node.add(this.rg());
+            break;
+          default:
+            node.add(this.match());
+            break;
         }
       }
       else {
@@ -462,19 +493,47 @@ define(function(require, exports, module) {
       }
       while(this.look) {
         s = this.look.content().toLowerCase();
-        if([Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+        if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
           && [';', '}'].indexOf(this.look.content()) == -1) {
           if(noP && this.look.content() == ')') {
             break;
           }
-          if(s == 'url') {
-            node.add(this.url());
-          }
-          else if(s == 'format') {
-            node.add(this.format());
-          }
-          else {
-            node.add(this.match());
+          switch(s) {
+            case 'url':
+              node.add(this.url());
+              break;
+            case 'format':
+              node.add(this.format());
+              break;
+            case 'rgb':
+              node.add(this.rgb());
+              break;
+            case 'rgba':
+              node.add(this.rgb(true));
+              break;
+            case 'hsl':
+              node.add(this.hsl());
+              break;
+            case 'hsla':
+              node.add(this.hsl(true));
+              break;
+            case 'min':
+              node.add(this.minmax());
+              break;
+            case 'max':
+              node.add(this.minmax(true));
+              break;
+            case 'linear-gradient':
+            case 'repeating-linear-gradient':
+              node.add(this.lg());
+              break;
+            case 'radial-gradient':
+            case 'repeating-radial-gradient':
+              node.add(this.rg());
+              break;
+            default:
+              node.add(this.match());
+              break;
           }
         }
         else {
@@ -484,6 +543,253 @@ define(function(require, exports, module) {
       if(this.look && this.look.type() == Token.IMPORTANT) {
         node.add(this.match());
       }
+      return node;
+    },
+    rg: function() {
+      var node = new Node(Node.RADIOGRADIENT);
+      node.add(
+        this.match(),
+        this.match('(')
+      );
+      if(!this.look) {
+        this.error();
+      }
+      if(this.look.type() == Token.NUMBER
+        || ['left', 'center', 'right'].indexOf(this.look.content().toLowerCase()) > -1) {
+        node.add(this.pos());
+        node.add(this.match(','));
+      }
+      if(!this.look) {
+        this.error();
+      }
+      if(this.look.type() == Token.NUMBER) {
+        node.add(this.len());
+        node.add(this.len());
+      }
+      else {
+        node.add(this.match(['circle', 'ellipse', 'closest-side', 'closest-corner', 'farthest-side', 'farthest-corner', 'contain', 'cover']));
+      }
+      node.add(this.match(','), this.colorstop());
+      while(this.look && this.look.content() == ',') {
+        node.add(
+          this.match(),
+          this.colorstop()
+        );
+      }
+      node.add(this.match(')'));
+      return node;
+    },
+    pos: function() {
+      var node = new Node(Node.POS);
+      if(this.look.type() == Token.NUMBER) {
+        node.add(this.len());
+      }
+      else {
+        node.add(this.match(['left', 'center', 'right']));
+      }
+      if(this.look) {
+        if(this.look.type() == Token.NUMBER) {
+          node.add(this.len());
+        }
+        else if(['left', 'center', 'right'].indexOf(this.look.content().toLowerCase()) > -1){
+          node.add(this.match());
+        }
+      }
+      return node;
+    },
+    len: function() {
+      var node = new Node(Node.LEN);
+      var isZeror = this.look.content() == '0';
+      node.add(this.match(Token.NUMBER));
+      if(this.look && this.look.type() == Token.UNITS) {
+        node.add(this.match());
+      }
+      else if(!isZeror) {
+        this.error();
+      }
+      return node;
+    },
+    lg: function() {
+      var node = new Node(Node.LINEARGRADIENT);
+      node.add(
+        this.match(),
+        this.match('(')
+      );
+      if(!this.look) {
+        this.error();
+      }
+      switch(this.look.type()) {
+        case Token.NUMBER:
+        case Token.PROPERTY:
+        case Token.ID:
+          node.add(this.point());
+          node.add(this.match(','));
+          break;
+      }
+      node.add(
+        this.colorstop(),
+        this.match(','),
+        this.colorstop()
+      );
+      while(this.look && this.look.content() == ',') {
+        node.add(
+          this.match(),
+          this.colorstop()
+        );
+      }
+      node.add(this.match(')'));
+      return node;
+    },
+    point: function() {
+      var node = new Node(Node.POINT);
+      if(this.look.type() == Token.NUMBER) {
+        node.add(
+          this.match(),
+          this.match('deg')
+        );
+      }
+      else {
+        if(this.look && this.look.content().toLowerCase() == 'to') {
+          node.add(this.match());
+        }
+        node.add(this.match(['left', 'right', 'top', 'bottom']));
+        if(this.look && this.look.content().toLowerCase() == 'to') {
+          node.add(this.match());
+        }
+        if(this.look && this.look.type() == Token.PROPERTY) {
+          node.add(this.match(['left', 'right', 'top', 'bottom']));
+        }
+      }
+      return node;
+    },
+    colorstop: function() {
+      var node = new Node(Node.COLORSTOP);
+      if(!this.look) {
+        this.error();
+      }
+      if(this.look.type() == Token.COLOR) {
+        node.add(this.match(Token.COLOR));
+      }
+      else {
+        switch(this.look.content()) {
+          case 'rgb':
+            node.add(this.rgb());
+            break;
+          case 'rgba':
+            node.add(this.rgb(true));
+            break;
+          case 'hsl':
+            node.add(this.hsl());
+            break;
+          case 'hsla':
+            node.add(this.hsl(true));
+            break;
+          default:
+            this.error();
+        }
+      }
+      if(this.look
+        && this.look.type() == Token.NUMBER) {
+        var isZero = this.look.content() == '0';
+        node.add(this.match());
+        if(this.look && this.look.type() == Token.UNITS) {
+          node.add(this.match());
+        }
+        else if(!isZero) {
+          this.error();
+        }
+      }
+      return node;
+    },
+    minmax: function(max) {
+      var node = new Node(max ? Node.MAX : Node.MIN);
+      node.add(
+        this.match(),
+        this.match('(')
+      );
+      while(this.look && this.look.content() != ')') {
+        node.add(this.param());
+        if(this.look && this.look.content() == ',') {
+          node.add(this.match());
+        }
+      }
+      node.add(this.match(')'));
+      return node;
+    },
+    param: function() {
+      var node = new Node(Node.PARAM);
+      var s = this.look.content().toLowerCase();
+      if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+        && [';', '}', ')', ','].indexOf(s) == -1) {
+        node.add(this.match());
+      }
+      else {
+        this.error();
+      }
+      while(this.look) {
+        s = this.look.content().toLowerCase();
+        if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
+          && [';', '}', ')', ','].indexOf(this.look.content()) == -1) {
+          node.add(this.match());
+        }
+        else {
+          break;
+        }
+      }
+      return node;
+    },
+    rgb: function(alpha) {
+      var node = new Node(alpha ? Node.RGBA : Node.RGB);
+      node.add(
+        this.match(),
+        this.match('('),
+        this.match(Token.NUMBER),
+        this.match(','),
+        this.match(Token.NUMBER),
+        this.match(','),
+        this.match(Token.NUMBER)
+      );
+      if(alpha) {
+        node.add(
+          this.match(','),
+          this.match(Token.NUMBER)
+        );
+      }
+      node.add(this.match(')'));
+      return node;
+    },
+    hsl: function(alpha) {
+      var node = new Node(alpha ? Node.HSLA : Node.HSL);
+      node.add(
+        this.match(),
+        this.match('('),
+        this.match(Token.NUMBER),
+        this.match(',')
+      );
+      var isZero = this.look && this.look.content() == '0';
+      node.add(this.match(Token.NUMBER));
+      if(this.look && this.look.content() == '%') {
+        node.add(this.match());
+      }
+      else if(!isZero) {
+        this.error();
+      }
+      node.add(this.match(','));
+      var isZero = this.look && this.look.content() == '0';
+      node.add(this.match(Token.NUMBER));
+      if(this.look && this.look.content() == '%') {
+        node.add(this.match());
+      }
+      else if(!isZero) {
+        this.error();
+      }
+      if(alpha) {
+        node.add(
+          this.match(','),
+          this.match(Token.NUMBER)
+        );
+      }
+      node.add(this.match(')'));
       return node;
     },
     url: function(ellipsis) {
