@@ -29,6 +29,27 @@ define(function(require, exports, module) {
         self.jsdc.append(one.token().content());
         self.jsdc.append(');');
       }
+      //import id from "string"
+      else if(one.name() == JsNode.IMPORTCAULSE
+        && one.size() == 1
+        && one.first().name() == JsNode.TOKEN) {
+        var id = one.first().token().content();
+        var last = node.last();
+        if(last.name() != JsNode.FROMCAULSE) {
+          last = last.prev();
+        }
+        var temp = self.jsdc.uid();
+        self.jsdc.append('var ' + id + '=');
+        self.jsdc.append('function(){var ' + temp);
+        self.jsdc.append('=require(');
+        self.jsdc.append(last.last().token().content());
+        self.jsdc.append(');return ');
+        self.jsdc.append(temp + '.hasOwnProperty("' + id + '")?');
+        self.jsdc.append(temp + '.' + id + ':' + temp + '.hasOwnProperty("default")?');
+        self.jsdc.append(temp + '.default:' + temp);
+        self.jsdc.append('}()');
+      }
+      //import ids from "string",import {ids} from "string"
       else {
         var ids = getIds(one);
         var temp = self.jsdc.uid();
@@ -69,7 +90,7 @@ define(function(require, exports, module) {
             this.jsdc.ignore(node, 'module3');
           }
           else if(s == 'default') {
-            this.jsdc.append('module.exports=');
+            this.jsdc.append('exports.default=');
             this.jsdc.ignore(node.leaf(0), 'module4');
             this.jsdc.ignore(node.leaf(1), 'module5');
           }
