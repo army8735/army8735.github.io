@@ -33,6 +33,7 @@ textarea:hover{opacity:0.8;}
 .jssc .namespace{color:#f00;}
 .jssc .depth{color:#fc0;}
 .jssc .vars{color:#909;}
+.jssc .color{color:#f99;}
 .jssc .java .keyword{color:#909;}
 
 .jssc{position:relative;}
@@ -136,6 +137,7 @@ seajs.use(['../index.js', './jssc'], function(Homunculus, jssc) {
   var ta = document.getElementById('ta');
   var input = document.getElementById('btn');
   input.onclick = function() {
+    console.clear();
     var s = ta.value;
     $('code').html(s);
     $('div.jssc').remove();
@@ -174,10 +176,8 @@ seajs.use(['../index.js', './jssc'], function(Homunculus, jssc) {
     var s = location.hash.replace(/^#/, '');
     if(s) {
       s = decodeURIComponent(s);
-      if(s != ta.value) {
-        ta.value = s;
-        input.onclick();
-      }
+      ta.value = s;
+      input.onclick();
     }
   }
   hashChange();

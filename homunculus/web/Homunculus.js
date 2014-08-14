@@ -1,21 +1,25 @@
 define(function(require, exports, module) {
   var Lexer = require('./lexer/Lexer');
   var CssLexer = require('./lexer/CssLexer');
+  var HtmlLexer = require('./lexer/HtmlLexer');
   
   var EcmascriptRule = require('./lexer/rule/EcmascriptRule');
   var CssRule = require('./lexer/rule/CssRule');
   var JavaRule = require('./lexer/rule/JavaRule');
   var CRule = require('./lexer/rule/CRule');
+  var HtmlRule = require('./lexer/rule/HtmlRule');
   
   var Token = require('./lexer/Token');
   
   var JsParser = require('./parser/js/Parser');
   var Es6Parser = require('./parser/es6/Parser');
   var CssParser = require('./parser/css/Parser');
+  var HtmlParser = require('./parser/html/Parser');
   
   var JsNode = require('./parser/js/Node');
   var Es6Node = require('./parser/es6/Node');
   var CssNode = require('./parser/css/Node');
+  var HtmlNode = require('./parser/html/Node');
   
   var JsContext = require('./parser/js/Context');
   
@@ -36,6 +40,9 @@ define(function(require, exports, module) {
             return Lexer;
           case 'css':
             return CssLexer;
+          case 'html':
+          case 'htm':
+            return HtmlLexer;
           default:
             throw new Error('Unsupport Language Lexer: ' + lan);
         }
@@ -52,6 +59,9 @@ define(function(require, exports, module) {
             return Es6Parser;
           case 'css':
             return CssParser;
+          case 'html':
+          case 'htm':
+            return HtmlParser;
           default:
             throw new Error('Unsupport Language Parser: ' + lan);
         }
@@ -68,6 +78,9 @@ define(function(require, exports, module) {
             return Es6Node;
           case 'css':
             return CssNode;
+          case 'html':
+          case 'htm':
+            return HtmlNode;
           default:
             throw new Error('Unsupport Language Node: ' + lan);
         }
@@ -112,6 +125,9 @@ define(function(require, exports, module) {
       case "cpp":
       case "cplusplus":
         return new Lexer(new CRule());
+      case 'html':
+      case 'htm':
+        return new HtmlLexer(new HtmlRule());
       default:
         throw new Error('Unsupport Language Lexer: ' + lan);
     }
@@ -130,6 +146,9 @@ define(function(require, exports, module) {
         return new Es6Parser(exports.getLexer(lan));
       case 'css':
         return new CssParser(exports.getLexer(lan));
+      case 'html':
+      case 'htm':
+        return new HtmlParser(exports.getLexer(lan));
       default:
         throw new Error('Unsupport Language Parser: ' + lan);
     }
