@@ -60,23 +60,23 @@ define(function(require, exports, module) {
       } catch(e) {
         return e.toString();
       }
-        self.ignores = parser.ignore();
-        //记录所有id
-        var lexer = parser.lexer;
-        lexer.tokens().forEach(function(token) {
-          if(token.type() == Token.ID) {
-            self.ids[token.content()] = true;
-          }
-        });
-        self.ts = lexer.tokens();
-        //开头部分的ignore
-        while(self.ignores[self.index]) {
-          self.append(self.ignores[self.index++].content());
+      self.ignores = parser.ignore();
+      //记录所有id
+      var lexer = parser.lexer;
+      lexer.tokens().forEach(function(token) {
+        if(token.type() == Token.ID) {
+          self.ids[token.content()] = true;
         }
-        //预分析局部变量，将影响的let和const声明查找出来
-        self.scope.parse(self.node);
-        //递归处理
-        self.recursion(self.node);
+      });
+      self.ts = lexer.tokens();
+      //开头部分的ignore
+      while(self.ignores[self.index]) {
+        self.append(self.ignores[self.index++].content());
+      }
+      //预分析局部变量，将影响的let和const声明查找出来
+      self.scope.parse(self.node);
+      //递归处理
+      self.recursion(self.node);
       return self.res;
     },
     ast: function() {
@@ -170,6 +170,9 @@ define(function(require, exports, module) {
         }
         else if(content == ')') {
           this.forof.prts(node, true);
+        }
+        else if(content == ',') {
+          this.rest.comma (node);
         }
         else if(token.type() == Token.TEMPLATE) {
           this.template.parse(token);
@@ -306,8 +309,8 @@ define(function(require, exports, module) {
         case JsNode.OBJLTR:
           this.obj.parse(node, true);
           break;
-        case JsNode.ARRLTR:
-          this.rest.arrltr(node, true);
+        case JsNode.SPREAD:
+          this.rest.spread(node, true);
           break;
       }
       eventbus.emit(node.nid(), [node, true]);
@@ -373,8 +376,8 @@ define(function(require, exports, module) {
         case JsNode.OBJLTR:
           this.obj.parse(node);
           break;
-        case JsNode.ARRLTR:
-          this.rest.arrltr(node);
+        case JsNode.SPREAD:
+          this.rest.spread(node);
           break;
       }
       eventbus.emit(node.nid(), [node]);
@@ -407,7 +410,7 @@ define(function(require, exports, module) {
     },
     uid: function() {
       var temp;
-      while(temp = '_' + uid++ + '_') {
+      while(temp = '_' + uid++) {
         if(!this.ids.hasOwnProperty(temp)) {
           return temp;
         }
