@@ -1,16 +1,20 @@
 define(function(require, exports, module){var fs=require('fs');
+var path=require('path');
+
 var homunculus=require('homunculus');
-var preVar=function(){var _4=require('./preVar');return _4.hasOwnProperty("preVar")?_4.preVar:_4.hasOwnProperty("default")?_4.default:_4}()
-var getVar=function(){var _5=require('./getVar');return _5.hasOwnProperty("getVar")?_5.getVar:_5.hasOwnProperty("default")?_5.default:_5}()
-var preFn=function(){var _6=require('./preFn');return _6.hasOwnProperty("preFn")?_6.preFn:_6.hasOwnProperty("default")?_6.default:_6}()
-var getFn=function(){var _7=require('./getFn');return _7.hasOwnProperty("getFn")?_7.getFn:_7.hasOwnProperty("default")?_7.default:_7}()
-var ignore=function(){var _8=require('./ignore');return _8.hasOwnProperty("ignore")?_8.ignore:_8.hasOwnProperty("default")?_8.default:_8}()
-var clone=function(){var _9=require('./clone');return _9.hasOwnProperty("clone")?_9.clone:_9.hasOwnProperty("default")?_9.default:_9}()
-var join=function(){var _10=require('./join');return _10.hasOwnProperty("join")?_10.join:_10.hasOwnProperty("default")?_10.default:_10}()
-var concatSelector=function(){var _11=require('./concatSelector');return _11.hasOwnProperty("concatSelector")?_11.concatSelector:_11.hasOwnProperty("default")?_11.default:_11}()
-var eventbus=function(){var _12=require('./eventbus.js');return _12.hasOwnProperty("eventbus")?_12.eventbus:_12.hasOwnProperty("default")?_12.default:_12}()
-var checkLevel=function(){var _13=require('./checkLevel.js');return _13.hasOwnProperty("checkLevel")?_13.checkLevel:_13.hasOwnProperty("default")?_13.default:_13}()
-var normalize=function(){var _14=require('./normalize.js');return _14.hasOwnProperty("normalize")?_14.normalize:_14.hasOwnProperty("default")?_14.default:_14}()
+
+var preImport=function(){var _4=require('./preImport');return _4.hasOwnProperty("preImport")?_4.preImport:_4.hasOwnProperty("default")?_4.default:_4}();
+var preVar=function(){var _5=require('./preVar');return _5.hasOwnProperty("preVar")?_5.preVar:_5.hasOwnProperty("default")?_5.default:_5}();
+var getVar=function(){var _6=require('./getVar');return _6.hasOwnProperty("getVar")?_6.getVar:_6.hasOwnProperty("default")?_6.default:_6}();
+var preFn=function(){var _7=require('./preFn');return _7.hasOwnProperty("preFn")?_7.preFn:_7.hasOwnProperty("default")?_7.default:_7}();
+var getFn=function(){var _8=require('./getFn');return _8.hasOwnProperty("getFn")?_8.getFn:_8.hasOwnProperty("default")?_8.default:_8}();
+var ignore=function(){var _9=require('./ignore');return _9.hasOwnProperty("ignore")?_9.ignore:_9.hasOwnProperty("default")?_9.default:_9}();
+var clone=function(){var _10=require('./clone');return _10.hasOwnProperty("clone")?_10.clone:_10.hasOwnProperty("default")?_10.default:_10}();
+var join=function(){var _11=require('./join');return _11.hasOwnProperty("join")?_11.join:_11.hasOwnProperty("default")?_11.default:_11}();
+var concatSelector=function(){var _12=require('./concatSelector');return _12.hasOwnProperty("concatSelector")?_12.concatSelector:_12.hasOwnProperty("default")?_12.default:_12}();
+var eventbus=function(){var _13=require('./eventbus');return _13.hasOwnProperty("eventbus")?_13.eventbus:_13.hasOwnProperty("default")?_13.default:_13}();
+var checkLevel=function(){var _14=require('./checkLevel');return _14.hasOwnProperty("checkLevel")?_14.checkLevel:_14.hasOwnProperty("default")?_14.default:_14}();
+var normalize=function(){var _15=require('./normalize');return _15.hasOwnProperty("normalize")?_15.normalize:_15.hasOwnProperty("default")?_15.default:_15}();
 
 var Token = homunculus.getClass('token');
 var Node = homunculus.getClass('node', 'css');
@@ -20,11 +24,8 @@ var global = {
   fns: {},
   styles: {},
   suffix: 'css',
-  root: '',
-  localRoot: ''
+  root: ''
 };
-
-var single;
 
 
   function More(code) {
@@ -32,13 +33,111 @@ var single;
     this.node = null;
     this.parser = null;
     this.varHash = {};
-    this.styleHash = {};
+    this.styleHash = clone(global.styles);
+    this.styleTemp = 0;
     this.fnHash = {};
+    this.res = '';
+    this.index = 0;
+    this.msg = null;
+    this.autoSplit = false;
+    this.selectorStack = [];
+    this.importStack = [];
   }
-  More.prototype.parse = function(code) {
+  More.prototype.parse = function(code, ignoreImport) {
     if(code) {
       this.code = code;
     }
+    this.preParse(ignoreImport);
+    if(this.msg) {
+      return this.msg;
+    }
+    return this.parseOn();
+  }
+  //combo指明为true时，将全部@import文件合并进来分析
+  //简易使用可忽略此参数，此时变量作用域不是页面，而是此文件本身
+  //按css规范（草案）及历史设计延续，变量作用域应该以页面为准，后出现拥有高优先级
+  More.prototype.parseFile = function(file, combo) {
+    var self = this;
+    var code = fs.readFileSync(file, { encoding: 'utf-8' });
+    self.code = code;
+    self.preParse(combo);
+    if(self.msg) {
+      return self.msg;
+    }
+    if(combo && self.imports().length) {
+      var data = {
+        vars: {},
+        fns: {},
+        styles: {}
+      };
+      var list = [];
+      self.imports().forEach(function(im) {
+        if(global.suffix != 'css') {
+          im = im.replace(/\.\w+$/, '.' + global.suffix);
+        }
+        var iFile;
+        if(im.charAt(0) == '/') {
+          iFile = path.join(More.root(), '.' + im);
+        }
+        else {
+          iFile = path.join(path.dirname(file), im);
+        }
+        self.mixImport(iFile, data, list);
+      });
+      var res = '';
+      Object.keys(self.varHash).forEach(function(k) {
+        data.vars[k] = self.varHash[k];
+      });
+      Object.keys(self.fnHash).forEach(function(k) {
+        data.fns[k] = self.fns[k];
+      });
+      self.vars(data.vars);
+      self.fns(data.fns);
+      list.forEach(function(more, i) {
+        more.vars(data.vars);
+        more.fns(data.fns);
+        if(i) {
+          more.styles(list[i - 1].styles());
+        }
+        res += more.msg || more.parseOn();
+      });
+      self.styles(list[list.length - 1].styles());
+      return res += self.parseOn();
+    }
+    return self.parseOn();
+  }
+  More.prototype.mixImport = function(file, data, list) {
+    var self = this;
+    var code = fs.readFileSync(file, { encoding: 'utf-8' });
+    var more = new More(code);
+    more.preParse(true);
+    if(more.msg) {
+      return more.msg;
+    }
+    more.imports().forEach(function(im) {
+      if(global.suffix != 'css') {
+        im = im.replace(/\.\w+$/, '.' + global.suffix);
+      }
+      var iFile;
+      if(im.charAt(0) == '/') {
+        iFile = path.join(More.root(), '.' + im);
+      }
+      else {
+        iFile = path.join(path.dirname(file), im);
+      }
+      self.mixImport(iFile, data, list);
+    });
+    list.push(more);
+    var vars = more.vars();
+    Object.keys(vars).forEach(function(k) {
+      data.vars[k] = vars[k];
+    });
+    var fns = more.fns();
+    Object.keys(fns).forEach(function(k) {
+      data.fns[k] = fns[k];
+    });
+  }
+  More.prototype.preParse = function(ignoreImport) {
     this.parser = homunculus.getParser('css');
     try {
       this.node = this.parser.parse(this.code);
@@ -48,33 +147,32 @@ var single;
       if(typeof console != 'undefined') {
         console.error(e);
       }
-      return e.toString();
+      return this.msg = e.toString();
     }
-    this.init();
-
+    this.importStack = preImport(this.node, this.ignores, this.index, ignoreImport);
     preVar(this.node, this.ignores, this.index, this.varHash);
     preFn(this.node, this.ignores, this.index, this.fnHash);
+  }
+  More.prototype.parseOn = function() {
+    this.preJoin();
     this.join(this.node);
-    this.saveStyle();
-    this.extend();
     return this.res;
   }
-  More.prototype.init = function() {
-    this.res = '';
-    this.index = 0;
+  More.prototype.preJoin = function() {
     while(this.ignores[this.index]) {
       if(this.ignores[this.index].type() == Token.ignores) {
         this.res += this.ignores[this.index].content().replace(/\S/g, ' ');
       }
       else {
-        this.res += this.ignores[this.index].content();
+        var ig = this.ignores[this.index];
+        var s = ig.content();
+        if(ig.type() == Token.COMMENT && s.indexOf('//') == 0) {
+          s = '/*' + s.slice(2) + '*/';
+        }
+        this.res += s;
       }
       this.index++;
     }
-    this.autoSplit = false;
-    this.selectorStack = [];
-    this.importStack = [];
-    this.extendStack = [];
   }
   More.prototype.join = function(node) {
     var self = this;
@@ -111,7 +209,9 @@ var single;
               if(!/\.\w+['"]?$/.test(str)) {
                 str = str.replace(/(['"]?)$/, '.css$1');
               }
-              self.importStack.push(str);
+              else if(!/\.css+['"]?$/.test(str)) {
+                str = str.replace(/\.\w+(['"]?)$/, '.css$1');
+              }
             }
             self.res += str;
           }
@@ -119,6 +219,9 @@ var single;
         while(self.ignores[++self.index]) {
           var ig = self.ignores[self.index];
           var s = ig.type() == Token.ignores ? ig.content().replace(/\S/g, ' ') : ig.content();
+          if(ig.type() == Token.COMMENT && s.indexOf('//') == 0) {
+            s = '/*' + s.slice(2) + '*/';
+          }
           if(!ig.ignore) {
             self.res += s;
           }
@@ -138,7 +241,7 @@ var single;
           self.res += getFn(node, self.ignores, self.index, self.fnHash, global.fns, self.varHash, global.vars);
           break;
         case Node.EXTEND:
-          self.preExtend(node);
+          self.extend(node);
           break;
         case Node.IMPORT:
           self.impt(node);
@@ -178,8 +281,7 @@ var single;
         else {
           var s = concatSelector(self.selectorStack);
           normalize(s).split(',').forEach(function(se) {
-            self.styleHash[se] = self.styleHash[se] || [];
-            self.styleHash[se].push(self.res.length);
+            self.saveStyle(se, self.res.slice(self.styleTemp, self.res.length));
           });
           self.res += '}';
         }
@@ -193,8 +295,7 @@ var single;
         var s = concatSelector(self.selectorStack);
         var temp = self.res.lastIndexOf('}');
         normalize(s).split(',').forEach(function(se) {
-          self.styleHash[se] = self.styleHash[se] || [];
-          self.styleHash[se].push(temp);
+          self.saveStyle(se, self.res.slice(self.styleTemp, temp));
         });
       }
       self.selectorStack.pop();
@@ -210,8 +311,7 @@ var single;
         else {
           self.res += s + '{';
           normalize(s).split(',').forEach(function(se) {
-            self.styleHash[se] = self.styleHash[se] || [];
-            self.styleHash[se].push(self.res.length);
+            self.styleTemp = self.res.length;
           });
         }
       }
@@ -239,77 +339,52 @@ var single;
         self.res += s;
       }
       normalize(s).split(',').forEach(function(se) {
-        self.styleHash[se] = self.styleHash[se] || [];
-        self.styleHash[se].push(self.res.length + 1);
+        self.styleTemp = self.res.length + 1;
       });
     }
   }
-  More.prototype.preExtend = function(node) {
+  More.prototype.extend = function(node) {
     var self = this;
     ignore(node, self.ignores, self.index);
     var i = self.index;
-    var o = {
-      start: self.res.length
-    };
     while(self.ignores[++i]) {}
     var s = normalize(join(node.leaf(1), self.ignores, i));
-    o.targets = s.split(',');
+    var targets = s.split(',');
+    targets.forEach(function(se) {
+      self.res += self.styleHash[se] || '';
+    });
     var se = normalize(concatSelector(self.selectorStack));
-    o.selectors = se.split(',');
-    self.extendStack.push(o);
+    se = se.split(',');
     eventbus.on(node.parent().nid(), function(start) {
       if(!start) {
-        o.blockEnd = self.res.length;
-      }
-    });
-  }
-  More.prototype.extend = function() {
-    var temp = 0;
-    var self = this;
-    var styleArray = Object.keys(self.styleHash);
-    self.extendStack.forEach(function(o) {
-      var v = '';
-      var v2 = '';
-      o.targets.forEach(function(se) {
-        v += self.styleHash[se] || '';
-        styleArray.forEach(function(se2) {
-          if(se2.indexOf(se) == 0 && se2.length != se.length && o.selectors.indexOf(se2) == -1) {
-            var pseudo = concatSelector([o.selectors].concat([[se2.slice(se.length)]]));
-            pseudo = normalize(pseudo);
-            if(self.styleHash[se2]) {
-              v2 += pseudo + '{' + self.styleHash[se2] + '}';
-              self.styleHash[pseudo] = self.styleHash[pseudo] || '';
-              self.styleHash[pseudo] += self.styleHash[se2];
+        var styleArray = Object.keys(self.styleHash);
+        targets.forEach(function(se1) {
+          styleArray.forEach(function(se2) {
+            if(se2.indexOf(se1) == 0
+              && se2.length != se1.length
+              //确保伪类或孩子元素，防止@extend .test会继承.test1之类
+              && !/[\w-]/.test(se2.charAt(se1.length))
+              && se1.indexOf(se2) == -1) {
+              var pseudo = concatSelector([se].concat([[se2.slice(se1.length)]]));
+              pseudo = normalize(pseudo);
+              if(self.styleHash[se2]) {
+                self.res += pseudo + '{' + self.styleHash[se2] + '}';
+                self.styleHash[pseudo] = self.styleHash[pseudo] || '';
+                self.styleHash[pseudo] += self.styleHash[se2];
+              }
             }
-          }
+          });
         });
-      });
-      if(v) {
-        self.res = self.res.slice(0, o.start + temp) + v + self.res.slice(o.start + temp);
-        temp += v.length;
-        o.selectors.forEach(function(se2) {
-          self.styleHash[se2] += v;
-        });
-      }
-      if(v2) {
-        self.res = self.res.slice(0, o.blockEnd + temp) + v2 + self.res.slice(o.blockEnd + temp);
-        temp += v2.length;
       }
     });
   }
-  More.prototype.saveStyle = function() {
-    var self = this;
-    Object.keys(self.styleHash).forEach(function(key) {
-      var arr = self.styleHash[key];
-      self.styleHash[key] = '';
-      for(var i = 0; i < arr.length; i += 2) {
-        var s = self.res.slice(arr[i], arr[i+1]).trim().replace(/\n/g, '');
-        if(s.length && s.charAt(s.length - 1) != ';') {
-          s += ';';
-        }
-        self.styleHash[key] += s;
-      }
-    });
+  More.prototype.saveStyle = function(k, v) {
+    this.styleHash[k] = this.styleHash[k] || '';
+    v = v.trim();
+    if(v.length && v.charAt(v.length - 1) != ';') {
+      v += ';';
+    }
+    this.styleHash[k] += v;
   }
   More.prototype.impt = function(node) {
     var url = node.leaf(1);
@@ -327,114 +402,147 @@ var single;
     return this.parser.lexer.tokens();
   }
   More.prototype.imports = function() {
-    return this.importStatck;
+    return this.importStack;
   }
 
-  More.prototype.vars = function(o) {
+  More.prototype.vars = function(o, mix) {
     if(o) {
-      this.varHash = o;
+      if(mix) {
+        var self = this;
+        Object.keys(o).forEach(function(k) {
+          self.varHash[k] = o[k];
+        });
+      }
+      else {
+        this.varHash = clone(o);
+      }
     }
     return this.varHash;
   }
-  More.prototype.fns = function(o) {
+  More.prototype.fns = function(o, mix) {
     if(o) {
-      this.fnHash = o;
+      if(mix) {
+        var self = this;
+        Object.keys(o).forEach(function(k) {
+          self.fnHash[k] = o[k];
+        });
+      }
+      else {
+        this.fnHash = o;
+      }
     }
     return this.fnHash;
   }
-  More.prototype.styles = function(o) {
+  More.prototype.styles = function(o, mix) {
     if(o) {
-      this.styleHash = o;
+      if(mix) {
+        var self = this;
+        Object.keys(o).forEach(function(k) {
+          self.styleHash[k] = o[k];
+        });
+      }
+      else {
+        this.styleHash = clone(o);
+      }
     }
     return this.styleHash;
   }
-  More.prototype.config = function(str) {
+  More.prototype.config = function(str, mix) {
+    var self = this;
     if(str) {
-      this.parse(str);
+      var more = new More();
+      more.parse(str);
+      self.vars(more.vars(), mix);
+      self.fns(more.fns(), mix);
+      self.styles(more.styles(), mix);
     }
+    return {
+      vars: self.vars(),
+      fns: self.fns(),
+      styles: self.styles()
+    };
   }
-  More.prototype.configFile = function(file) {
-    this.config(fs.readFileSync(file, { encoding: 'utf-8' }));
+  More.prototype.configFile = function(file, mix) {
+    return this.config(fs.readFileSync(file, { encoding: 'utf-8' }), mix);
   }
   More.prototype.clean = function() {
     this.varHash = {};
     this.fnHash = {};
     this.styleHash = {};
   }
-  More.prototype.build = function(code) {
-    //
-  }
-  More.prototype.buildFile = function(file) {
-    return this.build(fs.readFileSync(file, { encoding: 'utf-8' }));
-  }
 
   More.parse=function(code) {
-    if(!single) {
-      single = new More();
-    }
-    return single.parse(code);
+    return (new More()).parse(code);
   }
-  More.parseFile=function(file) {
-    if(!single) {
-      single = new More();
-    }
-    return single.parseFile(code);
-  }
-  More.build=function(code) {
-    if(!single) {
-      single = new More();
-    }
-    //
-  }
-  More.buildFile=function(file) {
-    return More.build(fs.readFileSync(file, { encoding: 'utf-8' }));
+  More.parseFile=function(file, combo) {
+    return (new More()).parseFile(file, combo);
   }
   More.suffix=function(str) {
-    if(str===void 0)str=null;if(str) {
+    if(str) {
       global.suffix = str.replace(/^\./, '');
     }
     return global.suffix;
   }
   More.root=function(str) {
-    if(str===void 0)str=null;if(str) {
+    if(str) {
+      if(!/\/\\$/.test(str)) {
+        str += '/';
+      }
       global.root = str;
     }
     return global.root;
   }
-  More.localRoot=function(str) {
-    if(str===void 0)str=null;if(str) {
-      global.localRoot = str;
-    }
-    return global.localRoot;
-  }
-  More.vars=function(o) {
+  More.vars=function(o, mix) {
     if(o) {
-      global.varHash = o;
+      if(mix) {
+        Object.keys(o).forEach(function(k) {
+          global.var[k] = o[k];
+        });
+      }
+      else {
+        global.vars = o;
+      }
     }
-    return global.varHash;
+    return global.vars;
   }
-  More.fns=function(o) {
+  More.fns=function(o, mix) {
     if(o) {
-      global.fnHash = o;
+      if(mix) {
+        Object.keys(o).forEach(function(k) {
+          global.fns[k] = o[k];
+        });
+      }
+      else {
+        global.fns = o;
+      }
     }
-    return global.fnHash;
+    return global.fns;
   }
-  More.styles=function(o) {
+  More.styles=function(o, mix) {
     if(o) {
-      global.styleHash = o;
+      if(mix) {
+        Object.keys(o).forEach(function(k) {
+          global.styles[k] = o[k];
+        });
+      }
+      else {
+        global.styles = o;
+      }
     }
-    return global.styleHash;
+    return global.styles;
   }
-  More.config=function(str) {
+  More.config=function(str, mix) {
     if(str) {
-      More.parse(str);
-      global.vars = single.vars();
-      global.fns = single.fns();
-      global.styles = single.styles();
+      var more = new More();
+      more.parse(str);
+      More.vars(more.vars(), mix);
+      More.fns(more.fns(), mix);
+      More.styles(more.styles(), mix);
     }
+    return global;
   }
-  More.configFile=function(file) {
-    More.config(fs.readFileSync(file, { encoding: 'utf-8' }));
+  More.configFile=function(file, mix) {
+    return More.config(fs.readFileSync(file, { encoding: 'utf-8' }), mix);
   }
   More.clean=function() {
     global = {
@@ -442,9 +550,12 @@ var single;
       fns: {},
       styles: {},
       suffix: 'css',
-      root: '',
-      localRoot: ''
+      root: ''
     };
+    return global;
+  }
+  More.addKeyword=function(kw) {
+    homunculus.getClass('rule', 'css').addKeyWord(kw);
   }
 
 
