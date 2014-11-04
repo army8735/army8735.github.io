@@ -44,12 +44,15 @@ var CssLexer = Lexer.extend(function(rule) {
           && !{
             "'": true,
             '"': true,
-            ')': true
+            ')': true,
+            '$': true
           }.hasOwnProperty(this.peek)) {
           this.dealPt(temp);
           this.url = false;
           continue outer;
         }
+        //url只能省略一次，即url()中第一个出现的非空白token，多个的话不能省略
+        this.url = false;
       }
       for(var i = 0, matches = this.rule.matches(), len = matches.length; i < len; i++) {
         var match = matches[i];
@@ -64,6 +67,12 @@ var CssLexer = Lexer.extend(function(rule) {
 
           var s = token.content().toLowerCase();
           switch(token.type()) {
+            //单位必须紧跟数字，否则便不是单位
+            case Token.BLANK:
+            case Token.TAB:
+            case Token.LINE:
+              this.number = false;
+              break;
             //@import和@media之后进入值状态
             case Token.HEAD:
               s = s.replace(/^@(-moz-|-o-|-ms-|-webkit-|-vx-|-hp-|-khtml-|mso-|-prince-|-rim-|-ro-|-tc-|-wap-|-apple-|-atsc-|-ah-)/, '@');
