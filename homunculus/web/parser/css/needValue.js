@@ -14,6 +14,9 @@ function recursion(node) {
     }
   }
   else {
+    if([Node.ADDEXPR, Node.MTPLEXPR].indexOf(node.name()) > -1) {
+      res = false;
+    }
     var leaves = node.leaves();
     leaves.forEach(function(leaf) {
       recursion(leaf);

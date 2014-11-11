@@ -1,12 +1,14 @@
 define(function(require, exports, module) {var Lexer = require('./Lexer');
 var Token = require('./Token');
 var character = require('../util/character');
+var RegMatch = require('./match/RegMatch');
 var S = {
   '\n': true,
   '\r': true,
   ' ': true,
   '\t': true
 };
+var ADD_VALUE = new RegMatch(Token.ID, /^[a-z][\w\-\+\.]*/i);
 var CssLexer = Lexer.extend(function(rule) {
   Lexer.call(this, rule);
   this.media = false;
@@ -167,7 +169,6 @@ var CssLexer = Lexer.extend(function(rule) {
                 token.type(Token.VARS);
                 this.url = false;
                 this.var = false;
-                this.cvar = true;
               }
               else if(this.supports) {
                 if(this.rule.keyWords().hasOwnProperty(s)) {
@@ -178,7 +179,13 @@ var CssLexer = Lexer.extend(function(rule) {
                 }
               }
               else if(this.value) {
-                if(this.cvar && this.rule.keyWords().hasOwnProperty(s)) {
+                //value时id可以带+号，必须紧跟
+                if(this.code.charAt(this.index) == '+') {
+                  ADD_VALUE.match(this.peek, this.code, this.index);
+                  token = new Token(ADD_VALUE.tokenType(), ADD_VALUE.content(), ADD_VALUE.val(), this.index - 1);
+                  matchLen = ADD_VALUE.content().length;
+                }
+                else if(this.cvar && this.rule.keyWords().hasOwnProperty(s)) {
                   token.type(Token.KEYWORD);
                   this.cvar = false;
                 }
@@ -190,7 +197,7 @@ var CssLexer = Lexer.extend(function(rule) {
                 else if(this.rule.keyWords().hasOwnProperty(s)
                   || this.rule.values().hasOwnProperty(s)) {
                   token.type(Token.PROPERTY);
-                  this.url = s == 'url' || s == 'format';
+                  this.url = ['url', 'format', 'url-prefix', 'domain', 'regexp'].indexOf(s) > -1;
                   this.var = s == 'var';
                 }
                 this.kw = false;
@@ -263,6 +270,7 @@ var CssLexer = Lexer.extend(function(rule) {
               this.doc = false;
               break;
             case Token.SIGN:
+              this.number = false;
               switch(s) {
                 case ':':
                   if(this.kw) {
@@ -287,6 +295,8 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.parenthese = false;
                   this.sel = false;
                   this.var = false;
+                  //)之后可能跟单位，比如margin:(1+2)px
+                  this.number = true;
                   break;
                 case '[':
                   if(!this.value) {
@@ -389,7 +399,6 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.var = false;
                   break;
               }
-              this.number = false;
               this.kw = false;
               this.page = false;
               this.kf = false;

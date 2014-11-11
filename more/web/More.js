@@ -3,18 +3,20 @@ var path=require('path');
 
 var homunculus=require('homunculus');
 
-var preImport=function(){var _4=require('./preImport');return _4.hasOwnProperty("preImport")?_4.preImport:_4.hasOwnProperty("default")?_4.default:_4}();
-var preVar=function(){var _5=require('./preVar');return _5.hasOwnProperty("preVar")?_5.preVar:_5.hasOwnProperty("default")?_5.default:_5}();
-var getVar=function(){var _6=require('./getVar');return _6.hasOwnProperty("getVar")?_6.getVar:_6.hasOwnProperty("default")?_6.default:_6}();
-var preFn=function(){var _7=require('./preFn');return _7.hasOwnProperty("preFn")?_7.preFn:_7.hasOwnProperty("default")?_7.default:_7}();
-var getFn=function(){var _8=require('./getFn');return _8.hasOwnProperty("getFn")?_8.getFn:_8.hasOwnProperty("default")?_8.default:_8}();
-var ignore=function(){var _9=require('./ignore');return _9.hasOwnProperty("ignore")?_9.ignore:_9.hasOwnProperty("default")?_9.default:_9}();
-var clone=function(){var _10=require('./clone');return _10.hasOwnProperty("clone")?_10.clone:_10.hasOwnProperty("default")?_10.default:_10}();
-var join=function(){var _11=require('./join');return _11.hasOwnProperty("join")?_11.join:_11.hasOwnProperty("default")?_11.default:_11}();
-var concatSelector=function(){var _12=require('./concatSelector');return _12.hasOwnProperty("concatSelector")?_12.concatSelector:_12.hasOwnProperty("default")?_12.default:_12}();
-var eventbus=function(){var _13=require('./eventbus');return _13.hasOwnProperty("eventbus")?_13.eventbus:_13.hasOwnProperty("default")?_13.default:_13}();
-var checkLevel=function(){var _14=require('./checkLevel');return _14.hasOwnProperty("checkLevel")?_14.checkLevel:_14.hasOwnProperty("default")?_14.default:_14}();
-var normalize=function(){var _15=require('./normalize');return _15.hasOwnProperty("normalize")?_15.normalize:_15.hasOwnProperty("default")?_15.default:_15}();
+var preImport=function(){var _0=require('./preImport');return _0.hasOwnProperty("preImport")?_0.preImport:_0.hasOwnProperty("default")?_0.default:_0}();
+var preVar=function(){var _1=require('./preVar');return _1.hasOwnProperty("preVar")?_1.preVar:_1.hasOwnProperty("default")?_1.default:_1}();
+var getVar=function(){var _2=require('./getVar');return _2.hasOwnProperty("getVar")?_2.getVar:_2.hasOwnProperty("default")?_2.default:_2}();
+var preFn=function(){var _3=require('./preFn');return _3.hasOwnProperty("preFn")?_3.preFn:_3.hasOwnProperty("default")?_3.default:_3}();
+var getFn=function(){var _4=require('./getFn');return _4.hasOwnProperty("getFn")?_4.getFn:_4.hasOwnProperty("default")?_4.default:_4}();
+var ignore=function(){var _5=require('./ignore');return _5.hasOwnProperty("ignore")?_5.ignore:_5.hasOwnProperty("default")?_5.default:_5}();
+var clone=function(){var _6=require('./clone');return _6.hasOwnProperty("clone")?_6.clone:_6.hasOwnProperty("default")?_6.default:_6}();
+var join=function(){var _7=require('./join');return _7.hasOwnProperty("join")?_7.join:_7.hasOwnProperty("default")?_7.default:_7}();
+var concatSelector=function(){var _8=require('./concatSelector');return _8.hasOwnProperty("concatSelector")?_8.concatSelector:_8.hasOwnProperty("default")?_8.default:_8}();
+var eventbus=function(){var _9=require('./eventbus');return _9.hasOwnProperty("eventbus")?_9.eventbus:_9.hasOwnProperty("default")?_9.default:_9}();
+var checkLevel=function(){var _10=require('./checkLevel');return _10.hasOwnProperty("checkLevel")?_10.checkLevel:_10.hasOwnProperty("default")?_10.default:_10}();
+var normalize=function(){var _11=require('./normalize');return _11.hasOwnProperty("normalize")?_11.normalize:_11.hasOwnProperty("default")?_11.default:_11}();
+var compress=function(){var _12=require('./compress');return _12.hasOwnProperty("compress")?_12.compress:_12.hasOwnProperty("default")?_12.default:_12}();
+var operate=function(){var _13=require('./operate');return _13.hasOwnProperty("operate")?_13.operate:_13.hasOwnProperty("default")?_13.default:_13}();
 
 var Token = homunculus.getClass('token');
 var Node = homunculus.getClass('node', 'css');
@@ -150,7 +152,7 @@ var global = {
       return this.msg = e.toString();
     }
     this.importStack = preImport(this.node, this.ignores, this.index, ignoreImport);
-    preVar(this.node, this.ignores, this.index, this.varHash);
+    preVar(this.node, this.ignores, this.index, this.varHash, global.varHash);
     preFn(this.node, this.ignores, this.index, this.fnHash);
   }
   More.prototype.parseOn = function() {
@@ -245,6 +247,15 @@ var global = {
           break;
         case Node.IMPORT:
           self.impt(node);
+          break;
+        case Node.ADDEXPR:
+        case Node.MTPLEXPR:
+        case Node.PRMREXPR:
+          var parent = node.parent();
+          if([Node.ADDEXPR, Node.MTPLEXPR, Node.PRMREXPR].indexOf(parent.name()) == -1) {
+            self.res += operate(node, self.varHash, global.vars);
+            ignore(node, self.ignores, self.index);
+          }
           break;
       }
       //递归子节点
@@ -556,6 +567,9 @@ var global = {
   }
   More.addKeyword=function(kw) {
     homunculus.getClass('rule', 'css').addKeyWord(kw);
+  }
+  More.compress=function(code, radical) {
+    return compress(code, radical);
   }
 
 
