@@ -28,6 +28,7 @@ var CssLexer = Lexer.extend(function(rule) {
   this.doc = false;
   this.supports = false;
   this.extend = false;
+  this.param = false;
   this.depth = 0;
 }).methods({
   //@override
@@ -138,7 +139,7 @@ var CssLexer = Lexer.extend(function(rule) {
               }
               break;
             case Token.COLOR:
-              if(!this.value) {
+              if(!this.value && !this.param && !this.cvar) {
                 token.type(Token.SELECTOR);
               }
               break;
@@ -178,6 +179,44 @@ var CssLexer = Lexer.extend(function(rule) {
                   token.type(Token.PROPERTY);
                 }
               }
+              else if(this.param || this.cvar) {
+                //value时id可以带+号，必须紧跟
+                if(this.code.charAt(this.index) == '+') {
+                  ADD_VALUE.match(this.peek, this.code, this.index);
+                  token = new Token(ADD_VALUE.tokenType(), ADD_VALUE.content(), ADD_VALUE.val(), this.index - 1);
+                  matchLen = ADD_VALUE.content().length;
+                }
+                if(this.rule.keyWords().hasOwnProperty(s)) {
+                  //前面是hack也作为关键字
+                  if(this.tokenList[this.tokenList.length - 1].type() == Token.HACK) {
+                    token.type(Token.KEYWORD);
+                    this.kw = true;
+                  }
+                  else {
+                    //LL2确定后面如果是:说明是关键字（$var:keyword:）
+                    for(var j = this.index + matchLen - 1; j < length; j++) {
+                      var c = this.code.charAt(j);
+                      if(!S.hasOwnProperty(c)) {
+                        if(c == ':') {
+                          token.type(Token.KEYWORD);
+                          this.kw = true;
+                        }
+                        else {
+                          token.type(Token.PROPERTY);
+                          this.value = true;
+                        }
+                        break;
+                      }
+                    }
+                  }
+                }
+                else if(this.rule.values().hasOwnProperty(s)) {
+                  token.type(Token.PROPERTY);
+                  this.url = ['url', 'format', 'url-prefix', 'domain', 'regexp'].indexOf(s) > -1;
+                }
+                this.sel = false;
+                this.cvar = false;
+              }
               else if(this.value) {
                 //value时id可以带+号，必须紧跟
                 if(this.code.charAt(this.index) == '+') {
@@ -185,11 +224,7 @@ var CssLexer = Lexer.extend(function(rule) {
                   token = new Token(ADD_VALUE.tokenType(), ADD_VALUE.content(), ADD_VALUE.val(), this.index - 1);
                   matchLen = ADD_VALUE.content().length;
                 }
-                else if(this.cvar && this.rule.keyWords().hasOwnProperty(s)) {
-                  token.type(Token.KEYWORD);
-                  this.cvar = false;
-                }
-                else if(this.rule.colors().hasOwnProperty(s)) {
+                if(this.rule.colors().hasOwnProperty(s)) {
                   token.type(Token.COLOR);
                   this.url = false;
                   this.var = false;
@@ -237,10 +272,9 @@ var CssLexer = Lexer.extend(function(rule) {
               this.kf = false;
               this.ns = false;
               this.doc = false;
-
               break;
             case Token.PSEUDO:
-              if((this.kw || this.value)
+              if((this.kw || this.value || this.cvar)
                 && !this.page) {
                 token.cancel();
                 continue;
@@ -281,10 +315,24 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.var = false;
                   break;
                 case '(':
+                  this.parenthese = true;
                   if(this.media || this.import || this.doc) {
                     this.value = false;
                   }
-                  this.parenthese = true;
+                  //fncall只会出现在block中
+                  else if(this.depth > 0) {
+                    //向前确定此(之后是fncall的param
+                    for(var j = this.tokenList.length - 1; j >= 2; j--) {
+                      var t = this.tokenList[j];
+                      if([Token.IGNORE, Token.BLANK, Token.LINE, Token.VIRTUAL, Token.COMMENT].indexOf(t.type()) == -1) {
+                        if(t.type() == Token.VARS) {
+                          this.param = true;
+                          this.parenthese = false;
+                        }
+                        break;
+                      }
+                    }
+                  }
                   this.sel = false;
                   break;
                 case ')':
@@ -297,6 +345,7 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.var = false;
                   //)之后可能跟单位，比如margin:(1+2)px
                   this.number = true;
+                  this.param = false;
                   break;
                 case '[':
                   if(!this.value) {
@@ -335,6 +384,7 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.var = false;
                   this.cvar = false;
                   this.extend = false;
+                  this.param = false;
                   break;
                 case '{':
                   this.depth++;
@@ -347,6 +397,7 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.supports = false;
                   this.cvar = false;
                   this.extend = false;
+                  this.param = false;
                   break;
                 case '}':
                   this.value = false;
@@ -358,42 +409,60 @@ var CssLexer = Lexer.extend(function(rule) {
                   this.var = false;
                   this.cvar = false;
                   this.extend = false;
+                  this.param = false;
                   break;
                 case '*':
-                  if(this.depth) {
-                    if(!this.value) {
-                      //LL2确定是selector还是hack
-                      for(var j = this.index; j < length; j++) {
-                        var c = this.code.charAt(j);
-                        if(!S.hasOwnProperty(c)) {
-                          if(':{,+([#>.'.indexOf(c) > -1) {
-                            token.type(Token.SELECTOR);
-                            this.sel = true;
-                          }
-                          else {
-                            token.type(Token.HACK);
-                            this.sel = false;
-                          }
-                          break;
+                  if(this.cvar && !this.value) {
+                    token.type(Token.HACK);
+                  }
+                  else if(this.param) {
+                    //向前如果是(则为hack
+                    for(var j = this.tokenList.length - 1; j >= 2; j--) {
+                      var t = this.tokenList[j];
+                      if([Token.IGNORE, Token.BLANK, Token.LINE, Token.VIRTUAL, Token.COMMENT].indexOf(t.type()) == -1) {
+                        if(t.content() == '(') {
+                          token.type(Token.HACK);
                         }
+                        break;
                       }
                     }
                   }
-                  else {
+                  else if(this.depth && !this.value) {
+                    //LL2确定是selector还是hack
+                    for(var j = this.index; j < length; j++) {
+                      var c = this.code.charAt(j);
+                      if(!S.hasOwnProperty(c)) {
+                        if(':{,+([#>.'.indexOf(c) > -1) {
+                          token.type(Token.SELECTOR);
+                          this.sel = true;
+                        }
+                        else {
+                          token.type(Token.HACK);
+                          this.sel = false;
+                        }
+                        break;
+                      }
+                    }
+                  }
+                  else if(!this.value) {
                     token.type(Token.SELECTOR);
                     this.sel = true;
                   }
                   this.var = false;
                   break;
                 case '-':
-                case '_':
-                  if(this.depth && !this.value) {
+                case '/':
+                  if(!this.value) {
                     token.type(Token.HACK);
                   }
                   this.url = false;
                   this.sel = false;
                   this.var = false;
                   break;
+                case '~':
+                  if(!this.value) {
+                    token.type(Token.HACK);
+                  }
                 default:
                   this.url = false;
                   this.var = false;
@@ -406,21 +475,23 @@ var CssLexer = Lexer.extend(function(rule) {
               this.doc = false;
               break;
             case Token.NUMBER:
-              if(!this.value && token.content().charAt(0) == '#') {
-                token.type(Token.SELECTOR);
-              }
-              else {
-                this.number = true;
-              }
+              this.number = true;
               this.url = false;
               this.var = false;
               this.page = false;
               this.kf = false;
               this.ns = false;
               this.doc = false;
+              if(this.cvar || this.param) {
+                this.value = true;
+              }
+              break;
+            case Token.STRING:
+              if(this.cvar || this.param) {
+                this.value = true;
+              }
               break;
             case Token.VARS:
-              this.kw = true;
               this.sel = false;
               this.url = false;
               this.number = false;
@@ -429,7 +500,14 @@ var CssLexer = Lexer.extend(function(rule) {
               this.kf = false;
               this.ns = false;
               this.doc = false;
-              this.cvar = true;
+              //vardecl时作为值
+              if(this.cvar) {
+                this.value = true;
+              }
+              //非值时的$是声明
+              else if(!this.value) {
+                this.cvar = true;
+              }
               break;
           }
 
