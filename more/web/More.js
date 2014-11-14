@@ -185,7 +185,7 @@ var global = {
         eventbus.emit(node.nid());
         var token = node.token();
         //标识下一个string是否自动拆分
-        if(token.content() == '~') {
+        if(token.content() == '~' && token.type() != Token.HACK) {
           self.autoSplit = true;
           ignore(token, self.ignores, self.index);
         }
@@ -207,7 +207,9 @@ var global = {
           }
           else {
             var str = getVar(token, self.varHash, global.vars);
-            if(token.import) {
+            //有@import url(xxx.css?xxx)的写法，需忽略
+            if(token.import && str.indexOf('.css?') == -1) {
+              //非.xxx结尾加上.css，非.css结尾替换掉.xxx为.css
               if(!/\.\w+['"]?$/.test(str)) {
                 str = str.replace(/(['"]?)$/, '.css$1');
               }
@@ -252,9 +254,10 @@ var global = {
         case Node.MTPLEXPR:
         case Node.PRMREXPR:
           var parent = node.parent();
-          if([Node.ADDEXPR, Node.MTPLEXPR, Node.PRMREXPR].indexOf(parent.name()) == -1
+          if([Node.CALC, Node.ADDEXPR, Node.MTPLEXPR, Node.PRMREXPR].indexOf(parent.name()) == -1
             && [Node.VARDECL, Node.CPARAMS].indexOf(parent.parent().name()) == -1
-            && !inFn(parent)) {
+            && !inFn(parent)
+            && parent.parent().name() != Node.EXPR) {
             var opt = operate(node, self.varHash, global.vars);
             self.res += opt.value + opt.unit;
             ignore(node, self.ignores, self.index);
@@ -336,14 +339,14 @@ var global = {
     var last = node.last();
     var prev = last.prev();
     //当多级block的最后一个是styleset或}，会造成空白样式
-    if(prev.name() == Node.STYLESET) {
+    if(prev.name() == Node.STYLESET && node.parent().name() == Node.STYLESET) {
       eventbus.on(last.nid(), function() {
         ignore(last, self.ignores, self.index);
       });
     }
     var s = concatSelector(this.selectorStack);
     var first = node.leaf(1);
-    if(first.name() == Node.STYLESET) {
+    if(first.name() == Node.STYLESET && node.parent().name() == Node.STYLESET) {
       eventbus.on(first.prev().nid(), function() {
         ignore(first.prev(), self.ignores, self.index);
       });
@@ -510,7 +513,7 @@ var global = {
     if(o) {
       if(mix) {
         Object.keys(o).forEach(function(k) {
-          global.var[k] = o[k];
+          global.vars[k] = o[k];
         });
       }
       else {
@@ -547,6 +550,9 @@ var global = {
   }
   More.config=function(str, mix) {
     if(str) {
+      if(!mix) {
+        More.clean();
+      }
       var more = new More();
       more.parse(str);
       More.vars(more.vars(), mix);
@@ -559,13 +565,9 @@ var global = {
     return More.config(fs.readFileSync(file, { encoding: 'utf-8' }), mix);
   }
   More.clean=function() {
-    global = {
-      vars: {},
-      fns: {},
-      styles: {},
-      suffix: 'css',
-      root: ''
-    };
+    global.vars = {};
+    global.fns = {};
+    global.styles = {};
     return global;
   }
   More.addKeyword=function(kw) {
@@ -578,8 +580,8 @@ var global = {
 
 exports.default=More;
 
-function inFn(node, res) {
-  if(res===void 0)res={res:false};while(node = node.parent()) {
+function inFn(node) {
+  while(node = node.parent()) {
     if(node.name() == Node.FN) {
       return true;
     }
