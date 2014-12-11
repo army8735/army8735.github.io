@@ -4,7 +4,7 @@ var LineParse = require('../match/LineParse');
 var CompleteEqual = require('../match/CompleteEqual');
 var CharacterSet = require('../match/CharacterSet');
 var RegMatch = require('../match/RegMatch');
-var Token = require('../Token');
+var Token = require('../CssToken');
 var character = require('../../util/character');
 var CssRule = Rule.extend(function() {
   var self = this;
@@ -98,7 +98,11 @@ var CssRule = Rule.extend(function() {
       '@top-left': true,
       '@top-center': true,
       '@top-right': true,
-      '@extend': true
+      '@extend': true,
+      '@if': true,
+      '@elseif': true,
+      '@else': true,
+      '@for': true
     }.hasOwnProperty(s)) {
       token.type(Token.VARS);
     }

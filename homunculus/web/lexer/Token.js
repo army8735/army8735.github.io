@@ -69,8 +69,12 @@ var Token = Class(function(type, content, val, sIndex) {
   },
   cancel: function() {
     tid--;
+  },
+  isVirtual: function() {
+    return this.t == Token.VIRTUAL;
   }
 }).statics({
+  //公用
   IGNORE: -2,
   VIRTUAL: -1,
   OTHER: 0,
@@ -82,34 +86,29 @@ var Token = Class(function(type, content, val, sIndex) {
   COMMENT: 6,
   STRING: 7,
   SIGN: 8,
-  REG: 9,
   KEYWORD: 10,
-  ANNOT: 11,
-  HEAD: 12,
+  //js部分
+  REG: 9,
+  //es6
   TEMPLATE: 13,
+  //仅java
+  ANNOT: 11,
+  //基本无用
   ENTER: 14,
-  PROPERTY: 15,
-  VARS: 16,
-  HACK: 17,
-  IMPORTANT: 18,
-  PSEUDO: 19,
-  UNITS: 20,
-  SELECTOR: 21,
-  ATTR: 22,
-  COLOR: 23,
-  DATA: 24,
-  TEXT: 25,
-  MARK: 26,
   type: function(tag) {
+    var self = this;
     if(character.isUndefined(types)) {
       types = [];
-      Object.keys(Token).forEach(function(o) {
-        if(typeof Token[o] == 'number') {
-          types[Token[o]] = o;
+      Object.keys(self).forEach(function(o) {
+        if(typeof self[o] == 'number') {
+          types[self[o]] = o;
         }
       });
     }
     return types[tag];
+  },
+  reset: function() {
+    tid = 0;
   }
 });
 module.exports = Token;});

@@ -1,7 +1,7 @@
 define(function(require, exports, module){var homunculus=require('homunculus');
 var operate=function(){var _0=require('./operate');return _0.hasOwnProperty("operate")?_0.operate:_0.hasOwnProperty("default")?_0.default:_0}();
 
-var Token = homunculus.getClass('token');
+var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
 var index;
@@ -55,11 +55,9 @@ exports.default=function(node, ignores, i, varHash, globalHash) {
 };
 
 function recursion(res, node, ignores, varHash, globalHash) {
-  var isToken = node.name() == Node.TOKEN;
-  var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-  if(isToken) {
-    if(!isVirtual) {
-      var token = node.token();
+  if(node.isToken()) {
+    var token = node.token();
+    if(!token.isVirtual()) {
       res.value += token.content();
       while(ignores[++index]) {
         var s = ignores[index].content();

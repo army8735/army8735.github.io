@@ -2,9 +2,8 @@ define(function(require, exports, module) {var IParser = require('../Parser');
 var character = require('../../util/character');
 var Lexer = require('../../lexer/Lexer');
 var Rule = require('../../lexer/rule/CssRule');
-var Token = require('../../lexer/Token');
+var Token = require('../../lexer/CssToken');
 var Node = require('./Node');
-var needValue = require('./needValue');
 var S = {};
 S[Token.BLANK] = S[Token.TAB] = S[Token.COMMENT] = S[Token.LINE] = true;
 var MQL = {
@@ -138,8 +137,10 @@ var Parser = IParser.extend(function(lexer) {
         return this.supports();
       case '@extend':
         return this.extend();
+      case '@if':
+        return this.ifstmt();
       default:
-        this.error();
+        this.error('unknow head');
     }
   },
   extend: function() {
@@ -630,11 +631,8 @@ var Parser = IParser.extend(function(lexer) {
     var k = this.key(name);
     node.add(k);
     name = k.first().token().content().toLowerCase();
-    if(needValue(k)
-      || this.look && this.look.content() == ':') {
-      node.add(this.match(':'));
-      node.add(this.value(name, noC));
-    }
+    node.add(this.match(':'));
+    node.add(this.value(name, noC));
     while(this.look && this.look.type() == Token.HACK) {
       node.add(this.match());
     }
@@ -1322,6 +1320,25 @@ var Parser = IParser.extend(function(lexer) {
       node.add(this.addexpr());
     }
     node.add(this.match(')'));
+    return node;
+  },
+  ifstmt: function() {
+    var node = new Node(Node.IFSTMT);
+    node.add(
+      this.match(),
+      this.match('('),
+      this.addexpr(),
+      this.match(')'),
+      this.block()
+    );
+    if(this.look) {
+      if(this.look.content() == '@elseif') {
+        node.add(this.ifstmt());
+      }
+      else if(this.look.content() == '@else') {
+        node.add(this.match(), this.block());
+      }
+    }
     return node;
   },
   match: function(type, msg) {

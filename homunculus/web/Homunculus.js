@@ -9,6 +9,8 @@ var CRule = require('./lexer/rule/CRule');
 var HtmlRule = require('./lexer/rule/HtmlRule');
 
 var Token = require('./lexer/Token');
+var CssToken = require('./lexer/CssToken');
+var HtmlToken = require('./lexer/HtmlToken');
 
 var JsParser = require('./parser/js/Parser');
 var Es6Parser = require('./parser/es6/Parser');
@@ -21,6 +23,8 @@ var CssNode = require('./parser/css/Node');
 var HtmlNode = require('./parser/html/Node');
 
 var JsContext = require('./parser/js/Context');
+
+var walk = require('./util/walk');
 
 exports.getClass = function (type, lan) {
   type = (type || '').toLowerCase();
@@ -97,13 +101,22 @@ exports.getClass = function (type, lan) {
       }
       break;
     case 'token':
-      return Token;
+      switch (lan) {
+        case 'css':
+          return CssToken;
+        case 'htm':
+        case 'html':
+          return HtmlToken;
+        default:
+          return Token;
+      }
     case 'rule':
       switch (lan) {
         case 'js':
         case 'javascript':
         case 'es':
         case 'es5':
+        case 'es6':
         case 'ecmascript':
           return EcmascriptRule;
         case 'css':
@@ -114,6 +127,8 @@ exports.getClass = function (type, lan) {
         default:
           throw new Error('Unsupport Language Context: ' + lan);
       }
+    case 'walk':
+      return walk;
     default:
       throw new Error('Unsupport Class Type: ' + type);
   }
@@ -181,4 +196,8 @@ exports.getContext = function (lan) {
     default:
       throw new Error('Unsupport Language Context: ' + lan);
   }
+};
+
+exports.reset = function() {
+  Token.reset();
 };});

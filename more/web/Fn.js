@@ -6,7 +6,7 @@ var clone=function(){var _3=require('./clone');return _3.hasOwnProperty("clone")
 var calculate=function(){var _4=require('./calculate');return _4.hasOwnProperty("calculate")?_4.calculate:_4.hasOwnProperty("default")?_4.default:_4}();
 var operate=function(){var _5=require('./operate');return _5.hasOwnProperty("operate")?_5.operate:_5.hasOwnProperty("default")?_5.default:_5}();
 
-var Token = homunculus.getClass('token');
+var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
 
@@ -17,6 +17,7 @@ var Node = homunculus.getClass('node', 'css');
     this.index2 = index;
     this.params = [];
     this.flag = false;
+    this.autoSplit = false;
     this.res = '';
     this.preCompiler(node, ignores);
   }
@@ -33,6 +34,7 @@ var Node = homunculus.getClass('node', 'css');
     var self = this;
     self.index2 = self.index;
     self.flag = false;
+    this.autoSplit = false;
     self.res = '';
     var newVarHash = clone(varHash);
     var leaves = cParams.leaves();
@@ -52,13 +54,26 @@ var Node = homunculus.getClass('node', 'css');
   }
   Fn.prototype.recursion = function(node, ignores, newVarHash, globalHash) {
     var self = this;
-    var isToken = node.name() == Node.TOKEN;
-    var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-    if(isToken) {
-      if(!isVirtual) {
+    if(node.isToken()) {
+      var token = node.token();
+      if(!token.isVirtual()) {
         if(self.flag) {
-          var token = node.token();
-          self.res += getVar(token, newVarHash, globalHash);
+          if(token.content() == '~' && token.type() != Token.HACK) {
+            self.autoSplit = true;
+          }
+          else {
+            var s = getVar(token, newVarHash, globalHash);
+            if(self.autoSplit && token.type() == Token.STRING) {
+              var c = s.charAt(0);
+              if(c != "'" && c != '"') {
+                c = '"';
+                s = c + s + c;
+              }
+              s = s.replace(/,\s*/g, c + ',' + c);
+            }
+            self.res += s;
+            self.autoSplit = false;
+          }
         }
         while(self.ignores[++self.index2]) {
           var s = self.ignores[self.index2].content();

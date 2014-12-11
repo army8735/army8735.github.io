@@ -18,7 +18,7 @@ var normalize=function(){var _11=require('./normalize');return _11.hasOwnPropert
 var compress=function(){var _12=require('./compress');return _12.hasOwnProperty("compress")?_12.compress:_12.hasOwnProperty("default")?_12.default:_12}();
 var operate=function(){var _13=require('./operate');return _13.hasOwnProperty("operate")?_13.operate:_13.hasOwnProperty("default")?_13.default:_13}();
 
-var Token = homunculus.getClass('token');
+var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
 var global = {
@@ -178,12 +178,10 @@ var global = {
   }
   More.prototype.join = function(node) {
     var self = this;
-    var isToken = node.name() == Node.TOKEN;
-    var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-    if(isToken) {
-      if(!isVirtual) {
+    if(node.isToken()) {
+      var token = node.token();
+      if(!token.isVirtual()) {
         eventbus.emit(node.nid());
-        var token = node.token();
         //标识下一个string是否自动拆分
         if(token.content() == '~' && token.type() != Token.HACK) {
           self.autoSplit = true;
@@ -573,8 +571,8 @@ var global = {
   More.addKeyword=function(kw) {
     homunculus.getClass('rule', 'css').addKeyWord(kw);
   }
-  More.compress=function(code, radical) {
-    return compress(code, radical);
+  More.compress=function(code, options, radical) {
+    return compress(code, options, radical);
   }
 
 

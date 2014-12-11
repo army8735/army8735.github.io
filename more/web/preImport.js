@@ -2,15 +2,13 @@ define(function(require, exports, module){var homunculus=require('homunculus');
 var join=function(){var _0=require('./join');return _0.hasOwnProperty("join")?_0.join:_0.hasOwnProperty("default")?_0.default:_0}();
 var ignore=function(){var _1=require('./ignore');return _1.hasOwnProperty("ignore")?_1.ignore:_1.hasOwnProperty("default")?_1.default:_1}();
 
-var Token = homunculus.getClass('token');
+var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
 var index;
 
 function recursion(node, ignores) {
-  var isToken = node.name() == Node.TOKEN;
-  var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-  if(!isToken) {
+  if(!node.isToken()) {
     if(node.name() == Node.STYLESET) {
       return;
     }
@@ -23,7 +21,7 @@ function recursion(node, ignores) {
       });
     }
   }
-  else if(!isVirtual) {
+  else if(!node.token().isVirtual()) {
     while(ignores[++index]) {}
   }
 }

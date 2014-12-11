@@ -1,17 +1,15 @@
 define(function(require, exports, module){var homunculus=require('homunculus');
 
-var Token = homunculus.getClass('token');
+var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
 var index;
 var str;
 
 function recursion(node, ignores, excludeLine) {
-  var isToken = node.name() == Node.TOKEN;
-  var isVirtual = isToken && node.token().type() == Token.VIRTUAL;
-  if(isToken) {
-    if(!isVirtual) {
-      var token = node.token();
+  if(node.isToken()) {
+    var token = node.token();
+    if(!token.isVirtual()) {
       str += token.content();
       while(ignores[++index]) {
         var s = ignores[index].content();

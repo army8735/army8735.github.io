@@ -119,6 +119,12 @@ var Node = Class(function(type, children) {
       this.ne = ne;
     }
     return this.ne;
+  },
+  isToken: function() {
+    return this.type == Node.TOKEN;
+  },
+  toString: function() {
+    return this.name();
   }
 }).statics({
   TOKEN: 'token'
