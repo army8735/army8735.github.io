@@ -630,7 +630,11 @@ var Parser = IParser.extend(function(lexer) {
     var node = new Node(Node.STYLE);
     var k = this.key(name);
     node.add(k);
-    name = k.first().token().content().toLowerCase();
+    var first = k.first();
+    if(first.token().type() == Token.HACK) {
+      first = first.next();
+    }
+    name = first.token().content().toLowerCase();
     node.add(this.match(':'));
     node.add(this.value(name, noC));
     while(this.look && this.look.type() == Token.HACK) {
@@ -764,7 +768,7 @@ var Parser = IParser.extend(function(lexer) {
           if(fncall) {
             node.add(this.fnc());
           }
-          else if(name == 'font') {
+          else if(name == 'font' || name == 'border-image') {
             node.add(this.addexpr(undefined, null, true));
           }
           else {
@@ -877,7 +881,7 @@ var Parser = IParser.extend(function(lexer) {
             if(fncall) {
               node.add(this.fnc());
             }
-            else if(name == 'font') {
+            else if(name == 'font' || name == 'border-image') {
               node.add(this.addexpr(undefined, null, true));
             }
             else {
