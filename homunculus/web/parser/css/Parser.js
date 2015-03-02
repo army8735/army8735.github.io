@@ -4,8 +4,10 @@ var Lexer = require('../../lexer/Lexer');
 var Rule = require('../../lexer/rule/CssRule');
 var Token = require('../../lexer/CssToken');
 var Node = require('./Node');
+
 var S = {};
 S[Token.BLANK] = S[Token.TAB] = S[Token.COMMENT] = S[Token.LINE] = true;
+
 var MQL = {
   'only': true,
   'not': true,
@@ -21,6 +23,7 @@ var MQL = {
   'tv': true,
   '(': true
 };
+
 var MT = {
   'all': true,
   'aural': true,
@@ -33,6 +36,18 @@ var MT = {
   'embossed': true,
   'tv': true
 };
+
+var NO_MTPL = {
+  'font': true,
+  'border-image': true,
+  'device-aspect-ratio': true,
+  'device-pixel-ratio': true,
+  'min-device-pixel-ratio': true,
+  'max-device-pixel-ratio': true,
+  'min--moz-device-pixel-ratio': true,
+  'max--moz-device-pixel-ratio': true
+};
+
 var Parser = IParser.extend(function(lexer) {
   IParser.call(this, lexer);
   this.init(lexer);
@@ -293,10 +308,15 @@ var Parser = IParser.extend(function(lexer) {
     node.add(this.match('('));
     var k = this.key();
     node.add(k);
+    var first = k.first();
+    if(first.token().type() == Token.HACK) {
+      first = first.next();
+    }
+    var name = first.token().content().toLowerCase();
     //有可能整个变量作为一个键值，无需再有:value部分
     if(this.look && this.look.content() == ':') {
       node.add(this.match(':'));
-      node.add(this.value());
+      node.add(this.value(name));
     }
     node.add(this.match(')'));
     return node;
@@ -768,7 +788,7 @@ var Parser = IParser.extend(function(lexer) {
           if(fncall) {
             node.add(this.fnc());
           }
-          else if(name == 'font' || name == 'border-image') {
+          else if(NO_MTPL.hasOwnProperty(name)) {
             node.add(this.addexpr(undefined, null, true));
           }
           else {
@@ -881,7 +901,7 @@ var Parser = IParser.extend(function(lexer) {
             if(fncall) {
               node.add(this.fnc());
             }
-            else if(name == 'font' || name == 'border-image') {
+            else if(NO_MTPL.hasOwnProperty(name)) {
               node.add(this.addexpr(undefined, null, true));
             }
             else {
