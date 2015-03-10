@@ -17,6 +17,9 @@ var checkLevel=function(){var _10=require('./checkLevel');return _10.hasOwnPrope
 var normalize=function(){var _11=require('./normalize');return _11.hasOwnProperty("normalize")?_11.normalize:_11.hasOwnProperty("default")?_11.default:_11}();
 var compress=function(){var _12=require('./compress');return _12.hasOwnProperty("compress")?_12.compress:_12.hasOwnProperty("default")?_12.default:_12}();
 var operate=function(){var _13=require('./operate');return _13.hasOwnProperty("operate")?_13.operate:_13.hasOwnProperty("default")?_13.default:_13}();
+var ifstmt=function(){var _14=require('./ifstmt');return _14.hasOwnProperty("ifstmt")?_14.ifstmt:_14.hasOwnProperty("default")?_14.default:_14}();
+var forstmt=function(){var _15=require('./forstmt');return _15.hasOwnProperty("forstmt")?_15.forstmt:_15.hasOwnProperty("default")?_15.default:_15}();
+var body=function(){var _16=require('./body');return _16.hasOwnProperty("body")?_16.body:_16.hasOwnProperty("default")?_16.default:_16}();
 
 var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
@@ -26,7 +29,8 @@ var global = {
   fns: {},
   styles: {},
   suffix: 'css',
-  root: ''
+  root: '',
+  map: null
 };
 
 
@@ -74,6 +78,15 @@ var global = {
       };
       var list = [];
       self.imports().forEach(function(im) {
+        if(global.map) {
+          //映射类型可能是回调
+          if(typeof global.map == 'function') {
+            im = global.map(im);
+          }
+          else if(global.map.hasOwnProperty(im)){
+            im = global.map[im];
+          }
+        }
         if(global.suffix != 'css') {
           im = im.replace(/\.\w+$/, '.' + global.suffix);
         }
@@ -139,6 +152,7 @@ var global = {
       data.fns[k] = fns[k];
     });
   }
+  //预分析变量和函数，因为允许后声明
   More.prototype.preParse = function(ignoreImport) {
     this.parser = homunculus.getParser('css');
     try {
@@ -205,6 +219,25 @@ var global = {
           }
           else {
             var str = getVar(token, self.varHash, global.vars);
+            //map映射url
+            if(token.import && global.map) {
+              var quote = /^['"']/.test(str) ? str.charAt(0) : '';
+              var val = quote ? str.slice(1, str.length - 1) : str;
+              //映射类型可能是回调
+              if(typeof global.map == 'function') {
+                str = global.map(val);
+                //如有引号，需处理转义
+                if(quote) {
+                  str = quote + str + quote;
+                }
+              }
+              else if(global.map.hasOwnProperty(token.val())){
+                str = global.map[val];
+                if(quote) {
+                  str = quote + str + quote;
+                }
+              }
+            }
             //有@import url(xxx.css?xxx)的写法，需忽略
             if(token.import && str.indexOf('.css?') == -1) {
               //非.xxx结尾加上.css，非.css结尾替换掉.xxx为.css
@@ -261,6 +294,12 @@ var global = {
             ignore(node, self.ignores, self.index);
           }
           break;
+        case Node.IFSTMT:
+          self.res += ifstmt(node, self.ignores, self.index, self.fnHash, global.fns, self.varHash, global.vars);
+          break;
+        case Node.FORSTMT:
+          self.res += forstmt(node, self.ignores, self.index, self.fnHash, global.fns, self.varHash, global.vars);
+          break;
       }
       //递归子节点
       var leaves = node.leaves();
@@ -302,7 +341,7 @@ var global = {
         }
       }
       //存储当前层级父选择器集合
-      var s = join(node.first(), self.ignores, self.index, true);
+      var s = join(node.first(), self.ignores, self.index, true).str;
       self.selectorStack.push(s.split(','));
     }
     else {
@@ -363,7 +402,7 @@ var global = {
     ignore(node, self.ignores, self.index);
     var i = self.index;
     while(self.ignores[++i]) {}
-    var s = normalize(join(node.leaf(1), self.ignores, i));
+    var s = normalize(join(node.leaf(1), self.ignores, i).str);
     var targets = s.split(',');
     targets.forEach(function(se) {
       self.res += self.styleHash[se] || '';
@@ -573,6 +612,12 @@ var global = {
   }
   More.compress=function(code, options, radical) {
     return compress(code, options, radical);
+  }
+  More.map=function(data) {
+    if(typeof data != 'undefined') {
+      global.map = data;
+    }
+    return global.map;
   }
 
 

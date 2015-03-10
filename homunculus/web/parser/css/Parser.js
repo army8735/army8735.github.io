@@ -110,7 +110,7 @@ var Parser = IParser.extend(function(lexer) {
             break;
           }
         }
-        return isFn ? this.fn() : this.vardecl();
+        return isFn ? this.fn() : this.varstmt();
       case Token.SELECTOR:
       case Token.PSEUDO:
         return this.styleset();
@@ -154,6 +154,8 @@ var Parser = IParser.extend(function(lexer) {
         return this.extend();
       case '@if':
         return this.ifstmt();
+      case '@for':
+        return this.forstmt();
       default:
         this.error('unknow head');
     }
@@ -425,8 +427,7 @@ var Parser = IParser.extend(function(lexer) {
     var node = new Node(Node.FNC);
     node.add(
       this.match(),
-      this.cparams(),
-      this.match(';')
+      this.cparams()
     );
     return node;
   },
@@ -525,13 +526,18 @@ var Parser = IParser.extend(function(lexer) {
     if(!this.look) {
       this.error();
     }
-    if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
-      node.add(this.style(null, true));
+    if(this.look.content() == '[') {
+      node.add(this.arrltr());
+    }
+    else if(this.look.content() == '@dir') {
+      node.add(this.dir());
+    }
+    else if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
+      node.add(this.style(null, true, true));
     }
     else {
-      node.add(this.value());
+      node.add(this.value(null, true));
     }
-    node.add(this.match(';'));
     return node;
   },
   styleset: function(kf) {
@@ -624,7 +630,7 @@ var Parser = IParser.extend(function(lexer) {
           node.add(this.fnc());
         }
         else if(isDecl) {
-          node.add(this.vardecl());
+          node.add(this.varstmt());
         }
         else {
           node.add(this.addexpr());
@@ -638,6 +644,9 @@ var Parser = IParser.extend(function(lexer) {
             node.add(this.match(';'));
           }
         }
+      }
+      else if(this.look.content() == ';') {
+        node.add(this.match());
       }
       else {
         node.add(this.style());
@@ -693,38 +702,41 @@ var Parser = IParser.extend(function(lexer) {
     }
     var s = this.look.content().toLowerCase();
     var pCount = 0;
+    var bCount = 0;
     if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
       && [';', '}'].indexOf(s) == -1) {
+      //内置函数必须后跟(
+      var next = this.tokens[this.index] && this.tokens[this.index].content() == '(';
       switch(s) {
         case 'var':
-          node.add(this.vars());
+          node.add(next ? this.vars() : this.match());
           break;
         case 'url':
-          node.add(this.url());
+          node.add(next ? this.url() : this.match());
           break;
         case 'format':
-          node.add(this.format());
+          node.add(next ? this.format() : this.match());
           break;
         case 'rgb':
-          node.add(this.rgb());
+          node.add(next ? this.rgb() : this.match());
           break;
         case 'rgba':
-          node.add(this.rgb(true));
+          node.add(next ? this.rgb(true) : this.match());
           break;
         case 'hsl':
-          node.add(this.hsl());
+          node.add(next ? this.hsl() : this.match());
           break;
         case 'hsla':
-          node.add(this.hsl(true));
+          node.add(next ? this.hsl(true) : this.match());
           break;
         case 'max':
-          node.add(this.minmax(true));
+          node.add(next ? this.minmax(true) : this.match());
           break;
         case 'min':
-          node.add(this.minmax());
+          node.add(next ? this.minmax() : this.match());
           break;
         case 'calc':
-          node.add(this.calc());
+          node.add(next ? this.calc() : this.match());
           break;
         //这几个语法完全一样
         //cycle是toggle的老版本写法
@@ -735,15 +747,28 @@ var Parser = IParser.extend(function(lexer) {
         case 'translate':
         case 'rect':
         case 'translate3d':
-          node.add(this.counter(s));
+        case 'translatex':
+        case 'translatey':
+        case 'translatez':
+        case 'rotate':
+        case 'rotate3d':
+        case 'rotatex':
+        case 'rotatey':
+        case 'rotatez':
+        case 'scale':
+        case 'scale3d':
+        case 'scalex':
+        case 'scaley':
+        case 'scalez':
+          node.add(next ? this.counter(s) : this.match());
           break;
         case 'linear-gradient':
         case 'repeating-linear-gradient':
-          node.add(this.lg());
+          node.add(next ? this.lg() : this.match());
           break;
         case 'radial-gradient':
         case 'repeating-radial-gradient':
-          node.add(this.rg());
+          node.add(next ? this.rg() : this.match());
           break;
         case 'alpha':
         case 'blur':
@@ -760,7 +785,7 @@ var Parser = IParser.extend(function(lexer) {
         case 'wave':
         case 'xray':
         case 'dximagetransform.microsoft.gradient':
-          node.add(this.filter());
+          node.add(next ? this.filter() : this.match());
           break;
         default:
           if(s == '(') {
@@ -771,6 +796,15 @@ var Parser = IParser.extend(function(lexer) {
           }
           else if(noComma && s == ',') {
             this.error();
+          }
+          else if(s == '[') {
+            bCount++;
+          }
+          else if(s == ']') {
+            if(bCount == 0) {
+              return node;
+            }
+            bCount--;
           }
           //LL2确定是否是fncall
           var fncall = false;
@@ -805,36 +839,38 @@ var Parser = IParser.extend(function(lexer) {
       s = this.look.content().toLowerCase();
       if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.KEYWORD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
         && [';', '}'].indexOf(this.look.content()) == -1) {
+        //内置函数必须后跟(
+        var next = this.tokens[this.index] && this.tokens[this.index].content() == '(';
         switch(s) {
           case 'var':
-            node.add(this.vars());
+            node.add(next ? this.vars() : this.match());
             break;
           case 'url':
-            node.add(this.url());
+            node.add(next ? this.url() : this.match());
             break;
           case 'format':
-            node.add(this.format());
+            node.add(next ? this.format() : this.match());
             break;
           case 'rgb':
-            node.add(this.rgb());
+            node.add(next ? this.rgb() : this.match());
             break;
           case 'rgba':
-            node.add(this.rgb(true));
+            node.add(next ? this.rgb(true) : this.match());
             break;
           case 'hsl':
-            node.add(this.hsl());
+            node.add(next ? this.hsl() : this.match());
             break;
           case 'hsla':
-            node.add(this.hsl(true));
+            node.add(next ? this.hsl(true) : this.match());
             break;
           case 'min':
-            node.add(this.minmax());
+            node.add(next ? this.minmax() : this.match());
             break;
           case 'max':
-            node.add(this.minmax(true));
+            node.add(next ? this.minmax(true) : this.match());
             break;
           case 'calc':
-            node.add(this.calc());
+            node.add(next ? this.calc() : this.match());
             break;
           //这几个语法完全一样
           //cycle是toggle的老版本写法
@@ -845,15 +881,28 @@ var Parser = IParser.extend(function(lexer) {
           case 'translate':
           case 'rect':
           case 'translate3d':
-            node.add(this.counter(s));
+          case 'translatex':
+          case 'translatey':
+          case 'translatez':
+          case 'rotate':
+          case 'rotate3d':
+          case 'rotatex':
+          case 'rotatey':
+          case 'rotatez':
+          case 'scale':
+          case 'scale3d':
+          case 'scalex':
+          case 'scaley':
+          case 'scalez':
+            node.add(next ? this.counter(s) : this.match());
             break;
           case 'linear-gradient':
           case 'repeating-linear-gradient':
-            node.add(this.lg());
+            node.add(next ? this.lg() : this.match());
             break;
           case 'radial-gradient':
           case 'repeating-radial-gradient':
-            node.add(this.rg());
+            node.add(next ? this.rg() : this.match());
             break;
           case 'alpha':
           case 'blur':
@@ -870,7 +919,7 @@ var Parser = IParser.extend(function(lexer) {
           case 'wave':
           case 'xray':
           case 'dximagetransform.microsoft.gradient':
-            node.add(this.filter());
+            node.add(next ? this.filter() : this.match());
             break;
           default:
             if(s == '(') {
@@ -884,6 +933,15 @@ var Parser = IParser.extend(function(lexer) {
             }
             else if(noComma && s == ',') {
               break outer;
+            }
+            else if(s == '[') {
+              bCount++;
+            }
+            else if(s == ']') {
+              if(bCount == 0) {
+                return node;
+              }
+              bCount--;
             }
             //LL2确定是否是fncall
             var fncall = false;
@@ -1351,7 +1409,7 @@ var Parser = IParser.extend(function(lexer) {
     node.add(
       this.match(),
       this.match('('),
-      this.addexpr(),
+      this.eqstmt(),
       this.match(')'),
       this.block()
     );
@@ -1363,6 +1421,245 @@ var Parser = IParser.extend(function(lexer) {
         node.add(this.match(), this.block());
       }
     }
+    return node;
+  },
+  forstmt: function() {
+    var node = new Node(Node.FORSTMT);
+    node.add(
+      this.match(),
+      this.match('(')
+    );
+    var type = 0; //0为普通，1为in，2为of
+    //in和of和普通语句三种区分
+    //debugger
+    for(var i = this.index; i < this.length; i++) {
+      var token = this.tokens[i];
+      if(!S[token.type()]) {
+        if(token.content() == 'in') {
+          type = 1;
+        }
+        else if(token.content() == 'of') {
+          type = 2;
+        }
+        break;
+      }
+    }
+    if(type == 0) {
+      //@for(varstmt ; expr ; epxr)
+      if(this.look.content() != ';') {
+        node.add(this.varstmt());
+      }
+      else {
+        node.add(this.match(';'));
+      }
+      if(this.look.content() != ';') {
+        node.add(this.eqstmt());
+      }
+      node.add(this.match(';'));
+      if(this.look.content() != ')') {
+        node.add(this.eqstmt());
+      }
+    }
+    else if(type == 1) {
+      //@for($var in expr)
+      node.add(
+        this.match(Token.VARS),
+        this.match('in'),
+        this.exprstmt()
+      );
+    }
+    else if(type == 2) {
+      //@for($var of expr)
+      node.add(
+        this.match(Token.VARS),
+        this.match('of'),
+        this.exprstmt()
+      );
+    }
+    node.add(this.match(')'));
+    node.add(this.block());
+    return node;
+  },
+  varstmt: function() {
+    var node = new Node(Node.VARSTMT);
+    node.add(this.vardecl());
+    while(this.look && this.look.content() == ',') {
+      node.add(this.match(), this.vardecl());
+    }
+    node.add(this.match(';'));
+    return node;
+  },
+  exprstmt: function() {
+    if(!this.look) {
+      this.error();
+    }
+    if(this.look.content() == '@dir') {
+      return this.dir();
+    }
+    return this.eqstmt();
+  },
+  eqstmt: function() {
+    var node = new Node(Node.EQSTMT);
+    var relstmt = this.relstmt();
+    if(this.look && {
+        '==': true,
+        '!=': true
+      }.hasOwnProperty(this.look.content())) {
+      node.add(
+        relstmt,
+        this.match(),
+        this.relstmt()
+      );
+    }
+    else {
+      return relstmt;
+    }
+    return node;
+  },
+  relstmt: function() {
+    var node = new Node(Node.RELSTMT);
+    var addstmt = this.addstmt();
+    if(this.look && {
+        '>': true,
+        '<': true,
+        '>=': true,
+        '<=': true
+      }.hasOwnProperty(this.look.content())) {
+      node.add(
+        addstmt,
+        this.match(),
+        this.addstmt()
+      );
+    }
+    else {
+      return addstmt;
+    }
+    return node;
+  },
+  addstmt: function() {
+    var node = new Node(Node.ADDSTMT);
+    var mtplstmt = this.mtplstmt();
+    if(this.look && {
+        '+': true,
+        '-': true
+      }.hasOwnProperty(this.look.content())) {
+      node.add(
+        mtplstmt,
+        this.match(),
+        this.mtplstmt()
+      );
+      while(this.look && {
+        '+': true,
+        '-': true
+      }.hasOwnProperty(this.look.content())) {
+        node.add(
+          mtplstmt,
+          this.match(),
+          this.mtplstmt()
+        );
+      }
+    }
+    else {
+      return mtplstmt;
+    }
+    return node;
+  },
+  mtplstmt: function() {
+    var node = new Node(Node.MTPLSTMT);
+    var postfixstmt = this.postfixstmt();
+    if(this.look && {
+        '*': true,
+        '/': true
+      }.hasOwnProperty(this.look.content())) {
+      node.add(
+        postfixstmt,
+        this.match(),
+        this.postfixstmt()
+      );
+      while(this.look && {
+        '*': true,
+        '/': true
+      }.hasOwnProperty(this.look.content())) {
+        node.add(
+          postfixstmt,
+          this.match(),
+          this.postfixstmt()
+        );
+      }
+    }
+    else {
+      return postfixstmt;
+    }
+    return node;
+  },
+  postfixstmt: function() {
+    var node = new Node(Node.POSTFIXSTMT);
+    var prmrstmt = this.prmrstmt();
+    if(this.look && {
+        '++': true,
+        '--': true
+      }.hasOwnProperty(this.look.content())) {
+      node.add(
+        prmrstmt,
+        this.match()
+      );
+    }
+    else {
+      return prmrstmt;
+    }
+    return node;
+  },
+  prmrstmt: function() {
+    var node = new Node(Node.PRMRSTMT);
+    switch(this.look.type()) {
+      case Token.VARS:
+      case Token.NUMBER:
+      case Token.STRING:
+        node.add(this.match());
+        break;
+      default:
+        switch(this.look.content()) {
+          case '(':
+            node.add(
+              this.match(),
+              this.eqstmt(),
+              this.match(')')
+            );
+            break;
+          case '[':
+            return this.arrltr();
+          default:
+            this.error();
+        }
+    }
+    return node;
+  },
+  arrltr: function() {
+    var node = new Node(Node.ARRLTR);
+    node.add(this.match('['));
+    while(this.look && this.look.content() != ']') {
+      if(this.look.content() == ',') {
+        node.add(this.match());
+      }
+      if(!this.look) {
+        this.error();
+      }
+      if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
+        node.add(this.style(null, true, true));
+      }
+      else {
+        node.add(this.value(null, true));
+      }
+    }
+    node.add(this.match(']'));
+    return node;
+  },
+  dir: function() {
+    var node = new Node(Node.DIR);
+    node.add(
+      this.match(),
+      this.cparams()
+    );
     return node;
   },
   match: function(type, msg) {
