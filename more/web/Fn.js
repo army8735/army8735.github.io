@@ -44,10 +44,20 @@ var Node = homunculus.getClass('node', 'css');
         if(idx < self.params.length) {
           var k = self.params[idx];
           k = k.replace(/^[$@]\{?/, '').replace(/}$/, '');
-          newVarHash[k] = calculate(leaf, ignores, index, varHash, globalHash);
+          switch(leaf.name()) {
+            case Node.UNBOX:
+              newVarHash[k] = {
+                value: leaf.last().token().val(),
+                unit: ''
+              };
+              break;
+            default:
+              newVarHash[k] = calculate(leaf, ignores, index, varHash, globalHash);
+              break;
+          }
         }
       }
-      index = ignore(leaf, ignores, index);
+      index = ignore(leaf, ignores, index).index;
     });
     self.recursion(self.node, ignores, newVarHash, globalHash);
     return self.res.replace(/^{/, '').replace(/}$/, '');
@@ -95,7 +105,7 @@ var Node = homunculus.getClass('node', 'css');
           if(parent.name() != Node.CALC && parent.parent().name() != Node.EXPR) {
             var opt = operate(node, newVarHash, globalHash);
             self.res += opt.value + opt.unit;
-            self.index2 = ignore(node, ignores, self.index2);
+            self.index2 = ignore(node, ignores, self.index2).index;
             return;
           }
           break;

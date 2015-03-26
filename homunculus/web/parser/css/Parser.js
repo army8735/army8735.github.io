@@ -435,7 +435,12 @@ var Parser = IParser.extend(function(lexer) {
     var node = new Node(Node.CPARAMS);
     node.add(this.match('('));
     while(this.look && this.look.content() != ')') {
-      if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
+      if(this.look.content() == '~'
+        && this.tokens[this.index]
+        && this.tokens[this.index].type() == Token.STRING) {
+        node.add(this.unbox());
+      }
+      else if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
         node.add(this.style(null, true, true));
       }
       else {
@@ -532,6 +537,11 @@ var Parser = IParser.extend(function(lexer) {
     else if(this.look.content() == '@dir') {
       node.add(this.dir());
     }
+    else if(this.look.content() == '~'
+      && this.tokens[this.index]
+      && this.tokens[this.index].type() == Token.STRING) {
+      node.add(this.unbox());
+    }
     else if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
       node.add(this.style(null, true, true));
     }
@@ -582,7 +592,7 @@ var Parser = IParser.extend(function(lexer) {
         node.add(this.match(']'));
       }
       else {
-        node.add(this.match([Token.SELECTOR, Token.PSEUDO, Token.HACK]));
+        node.add(this.match([Token.SELECTOR, Token.PSEUDO, Token.HACK, Token.VARS]));
       }
       while(this.look && [',', ';', '{', '}'].indexOf(this.look.content()) == -1) {
         if(this.look.content() == '[' && this.look.type() != Token.HACK) {
@@ -593,7 +603,7 @@ var Parser = IParser.extend(function(lexer) {
           node.add(this.match(']'));
         }
         else {
-          node.add(this.match([Token.SELECTOR, Token.PSEUDO, Token.SIGN, Token.HACK]));
+          node.add(this.match([Token.SELECTOR, Token.PSEUDO, Token.SIGN, Token.HACK, Token.VARS]));
         }
       }
     }
@@ -1452,13 +1462,9 @@ var Parser = IParser.extend(function(lexer) {
       else {
         node.add(this.match(';'));
       }
-      if(this.look.content() != ';') {
-        node.add(this.eqstmt());
-      }
+      node.add(this.eqstmt());
       node.add(this.match(';'));
-      if(this.look.content() != ')') {
-        node.add(this.eqstmt());
-      }
+      node.add(this.eqstmt());
     }
     else if(type == 1) {
       //@for($var in expr)
@@ -1659,6 +1665,14 @@ var Parser = IParser.extend(function(lexer) {
     node.add(
       this.match(),
       this.cparams()
+    );
+    return node;
+  },
+  unbox: function() {
+    var node = new Node(Node.UNBOX);
+    node.add(
+      this.match('~'),
+      this.match(Token.STRING)
     );
     return node;
   },
