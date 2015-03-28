@@ -53,17 +53,17 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
     block = node.leaf(6);
     //区分首次循环，后续忽略换行和初始化
     var k = node.leaf(2).token().content().replace(/^[$@]\{?/, '').replace(/}$/, '');
-    var arr = exprstmt(node.leaf(4), fnHash, globalFn, varHash, globalVar, file);
-    var tIndex;
+    var arr = exprstmt(node.leaf(4), varHash, globalVar, file);
+    var tIndex = index;
     for(var i = 0, lens = arr.length; i < lens; i++) {
+      index = tIndex;
+      temp = ignore(block.first(), ignores, index);
       //block的{
       if(first2) {
-        temp = ignore(block.first(), ignores, index);
         s += checkLine(temp.res, first && first2);
-        index = temp.index;
         res = s;
-        tIndex = index;
       }
+      index = temp.index;
       //for in中每次赋值给健变量
       varHash[k] = {
         value: i,
@@ -73,7 +73,7 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
       for(var j = 1, len = block.size(); j < len - 1; j++) {
         var tree = new Tree(
           ignores,
-          tIndex,
+          index,
           varHash,
           globalVar,
           fnHash,
@@ -116,17 +116,17 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
     block = node.leaf(6);
     //区分首次循环，后续忽略换行和初始化
     var k = node.leaf(2).token().content().replace(/^[$@]\{?/, '').replace(/}$/, '');
-    var arr = exprstmt(node.leaf(4), fnHash, globalFn, varHash, globalVar, file);
-    var tIndex;
+    var arr = exprstmt(node.leaf(4), varHash, globalVar, file);
+    var tIndex = index;
     for(var i = 0, lens = arr.length; i < lens; i++) {
+      index = tIndex;
+      temp = ignore(block.first(), ignores, index);
       //block的{
       if(first2) {
-        temp = ignore(block.first(), ignores, index);
         s += checkLine(temp.res, first && first2);
-        index = temp.index;
         res = s;
-        tIndex = index;
       }
+      index = temp.index;
       //for in中每次赋值给健变量
       varHash[k] = {
         value: arr[i],
@@ -136,7 +136,7 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
       for(var j = 1, len = block.size(); j < len - 1; j++) {
         var tree = new Tree(
           ignores,
-          tIndex,
+          index,
           varHash,
           globalVar,
           fnHash,
@@ -164,7 +164,7 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
     //执行for的3个语句，判断是否循环用最后1个
     //先进行第1个赋值语句，可能为空
     if(node.leaf(2).name() == Node.VARSTMT) {
-      preVar(node.leaf(2), ignores, index, varHash, globalVar);
+      preVar(node.leaf(2), ignores, index, varHash, globalVar, true);
     }
     temp = ignore(node.leaf(2), ignores, index);
     s += checkLine(temp.res, first && first2);
@@ -173,7 +173,7 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
     temp = ignore(node.leaf(3), ignores, index);
     s += checkLine(temp.res, first && first2);
     index = temp.index;
-    var loop = exprstmt(node.leaf(3), fnHash, globalFn, varHash, globalVar, file);
+    var loop = exprstmt(node.leaf(3), varHash, globalVar, file);
     temp = ignore(node.leaf(4), ignores, index);
     s += checkLine(temp.res, first && first2);
     index = temp.index;
@@ -188,21 +188,21 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
     //{block}
     block = node.leaf(7);
     //区分首次循环，后续忽略换行和初始化
-    var tIndex;
+    var tIndex = index;
     while(loop) {
+      index = tIndex;
+      temp = ignore(block.first(), ignores, index);
       if(first2) {
         //block的{
-        temp = ignore(block.first(), ignores, index);
         s += checkLine(temp.res, first && first2);
-        index = temp.index;
         res = s;
-        tIndex = index;
       }
+      index = temp.index;
       //block内容
       for(var j = 1, len = block.size(); j < len - 1; j++) {
         var tree = new Tree(
           ignores,
-          tIndex,
+          index,
           varHash,
           globalVar,
           fnHash,
@@ -225,8 +225,8 @@ exports.default=function forstmt(node, ignores, index, varHash, globalVar, fnHas
       res += first ? temp.res : temp.res.replace(/\n/g, '');
       index = temp.index;
       //执行循环exprstmt2，判断循环是否继续
-      exprstmt(node.leaf(5), fnHash, globalFn, varHash, globalVar, file);
-      loop = exprstmt(node.leaf(3), fnHash, globalFn, varHash, globalVar, file);
+      exprstmt(node.leaf(5), varHash, globalVar, file);
+      loop = exprstmt(node.leaf(3), varHash, globalVar, file);
       first = first2 = false;
     }
   }

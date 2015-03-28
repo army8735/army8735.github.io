@@ -1,4 +1,7 @@
 define(function(require, exports, module){var homunculus=require('homunculus');
+var images=require('images');
+var glob=require('glob');
+
 var fs=require('fs');
 var path=require('path');
 
@@ -8,117 +11,245 @@ var ignore=function(){var _1=require('./ignore');return _1.hasOwnProperty("ignor
 var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
 
-function exprstmt(node, fnHash, globalFn, varHash, globalVar, file) {
+function exprstmt(node, varHash, globalVar, file) {
   switch(node.name()) {
     case Node.DIR:
-      return dir(node, fnHash, globalFn, varHash, globalVar, file);
+      return dir(node, varHash, globalVar, file);
+    case Node.BASENAME:
+      return basename(node, varHash, globalVar, file);
+    case Node.EXTNAME:
+      return extname(node, varHash, globalVar, file);
+    case Node.WIDTH:
+      return width(node, varHash, globalVar, file);
+    case Node.HEIGHT:
+      return height(node, varHash, globalVar, file);
     default:
-      return eqstmt(node, fnHash, globalFn, varHash, globalVar);
+      return eqstmt(node, varHash, globalVar);
   }
 }
 
-function dir(node, fnHash, globalFn, varHash, globalVar, file) {
+function dir(node, varHash, globalVar, file) {
   var cparam = node.last();
   var s = '';
+  var onlyBase = false;
   if(cparam.size() > 2) {
     var p = cparam.leaf(1).first();
     if(p.isToken()) {
       var token = p.token();
-      if(token.type() == Token.STRING) {
-        s = token.val();
+      switch(token.type()) {
+        case Token.STRING:
+          s = token.val();
+          break;
+        case Token.VARS:
+          s = token.content();
+          var k = s.replace(/^[$@]\{?/, '').replace(/}$/, '');
+          s = (varHash[k] || globalVar[k] || {}).value;
+          break;
       }
     }
+    onlyBase = !!cparam.leaf(3);
   }
   s = path.resolve(file, s);
-  if(!fs.existsSync(s)) {
-    throw new Error('no such file or directory: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
-  };
-  var state = fs.lstatSync(s);
-  if(state.isFile()) {
-    s = path.dirname(s);
-  }
-  else if(!state.isDirectory()) {
-    throw new Error('no such file or directory: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
-  }
-  var arr = fs.readdirSync(s);
-  var res = [];
-  arr.forEach(function(item) {
-    var s2 = path.join(s, item);
-    state = fs.lstatSync(s2);
+  var res;
+  if(fs.existsSync(s)) {
+    var state = fs.lstatSync(s);
     if(state.isFile()) {
-      res.push(path.relative(file, s2));
+      s = path.dirname(s);
     }
-  });
+    else if(!state.isDirectory()) {
+      throw new Error('no such file or directory: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
+    }
+    var arr = fs.readdirSync(s);
+    var res = [];
+    arr.forEach(function(item) {
+      var s2 = path.join(s, item);
+      state = fs.lstatSync(s2);
+      if(state.isFile()) {
+        onlyBase ? res.push(path.relative(file, s2)) : res.push(s2);
+      }
+    });
+  }
+  else {
+    res = glob.sync(s);
+    if(onlyBase) {
+      res = res.map(function(s) {
+        return path.relative(file, s);
+      });
+    }
+  }
   return res;
 }
 
-function eqstmt(node, fnHash, globalFn, varHash, globalVar) {
+function basename(node, varHash, globalVar, file) {
+  var cparam = node.last();
+  var s = '';
+  if(cparam.size() == 0) {
+    throw new Error('@basename requires a param: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
+  }
+  var p = cparam.leaf(1).first();
+  if(p.isToken()) {
+    var token = p.token();
+    switch(token.type()) {
+      case Token.STRING:
+        s = token.val();
+        break;
+      case Token.VARS:
+        s = token.content();
+        var k = s.replace(/^[$@]\{?/, '').replace(/}$/, '');
+        s = (varHash[k] || globalVar[k] || {}).value;
+        break;
+    }
+  }
+  var ext = cparam.leaf(3);
+  if(ext) {
+    ext = ext.first().token().val();
+  }
+  else {
+    ext = undefined;
+  }
+  s = path.resolve(file, s);
+  return path.basename(s, ext);
+}
+
+function extname(node, varHash, globalVar, file) {
+  var cparam = node.last();
+  var s = '';
+  if(cparam.size() == 0) {
+    throw new Error('@extname requires a param: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
+  }
+  var p = cparam.leaf(1).first();
+  if(p.isToken()) {
+    var token = p.token();
+    switch(token.type()) {
+      case Token.STRING:
+        s = token.val();
+        break;
+      case Token.VARS:
+        s = token.content();
+        var k = s.replace(/^[$@]\{?/, '').replace(/}$/, '');
+        s = (varHash[k] || globalVar[k] || {}).value;
+        break;
+    }
+  }
+  s = path.resolve(file, s);
+  return path.extname(s);
+}
+
+function width(node, varHash, globalVar, file) {
+  var cparam = node.last();
+  var s = '';
+  if(cparam.size() == 0) {
+    throw new Error('@width requires a param: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
+  }
+  var p = cparam.leaf(1).first();
+  if(p.isToken()) {
+    var token = p.token();
+    switch(token.type()) {
+      case Token.STRING:
+        s = token.val();
+        break;
+      case Token.VARS:
+        s = token.content();
+        var k = s.replace(/^[$@]\{?/, '').replace(/}$/, '');
+        s = (varHash[k] || globalVar[k] || {}).value;
+        break;
+    }
+  }
+  s = path.resolve(file, s);
+  return images(s).width();
+}
+
+function height(node, varHash, globalVar, file) {
+  var cparam = node.last();
+  var s = '';
+  if(cparam.size() == 0) {
+    throw new Error('@height requires a param: ' + s + '\nline ' + node.first().token().line() + ', col ' + node.first().token().col());
+  }
+  var p = cparam.leaf(1).first();
+  if(p.isToken()) {
+    var token = p.token();
+    switch(token.type()) {
+      case Token.STRING:
+        s = token.val();
+        break;
+      case Token.VARS:
+        s = token.content();
+        var k = s.replace(/^[$@]\{?/, '').replace(/}$/, '');
+        s = (varHash[k] || globalVar[k] || {}).value;
+        break;
+    }
+  }
+  s = path.resolve(file, s);
+  return images(s).height();
+}
+
+function eqstmt(node, varHash, globalVar) {
   if(node.name() == Node.EQSTMT) {
-    var rel = relstmt(node.first(), fnHash, globalFn, varHash, globalVar);
+    var rel = relstmt(node.first(), varHash, globalVar);
     var next = node.leaf(1);
     var token = next.token();
     switch(token.content()) {
       case '==':
-        return rel == relstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return rel == relstmt(node.last(), varHash, globalVar);
       case '!=':
-        return rel != relstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return rel != relstmt(node.last(), varHash, globalVar);
     }
   }
-  return relstmt(node, fnHash, globalFn, varHash, globalVar);
+  return relstmt(node, varHash, globalVar);
 }
 
-function relstmt(node, fnHash, globalFn, varHash, globalVar) {
+function relstmt(node, varHash, globalVar) {
   if(node.name() == Node.RELSTMT) {
-    var add = addstmt(node.first(), fnHash, globalFn, varHash, globalVar);
+    var add = addstmt(node.first(), varHash, globalVar);
     var next = node.leaf(1);
     var token = next.token();
     switch(token.content()) {
       case '>':
-        return add > addstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return add > addstmt(node.last(), varHash, globalVar);
       case '>=':
-        return add >= addstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return add >= addstmt(node.last(), varHash, globalVar);
       case '<':
-        return add < addstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return add < addstmt(node.last(), varHash, globalVar);
       case '<=':
-        return add <= addstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return add <= addstmt(node.last(), varHash, globalVar);
     }
   }
-  return addstmt(node, fnHash, globalFn, varHash, globalVar);
+  return addstmt(node, varHash, globalVar);
 }
 
-function addstmt(node, fnHash, globalFn, varHash, globalVar) {
+function addstmt(node, varHash, globalVar) {
   if(node.name() == Node.ADDSTMT) {
-    var mtpl = mtplstmt(node.first(), fnHash, globalFn, varHash, globalVar);
+    var mtpl = mtplstmt(node.first(), varHash, globalVar);
     var next = node.leaf(1);
     var token = next.token();
     switch(token.content()) {
       case '+':
-        return mtpl + mtplstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return mtpl + mtplstmt(node.last(), varHash, globalVar);
       case '-':
-        return mtpl + mtplstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return mtpl + mtplstmt(node.last(), varHash, globalVar);
     }
   }
-  return mtplstmt(node, fnHash, globalFn, varHash, globalVar);
+  return mtplstmt(node, varHash, globalVar);
 }
 
-function mtplstmt(node, fnHash, globalFn, varHash, globalVar) {
+function mtplstmt(node, varHash, globalVar) {
   if(node.name() == Node.MTPLSTMT) {
-    var postfix = postfixstmt(node.first(), fnHash, globalFn, varHash, globalVar);
+    var postfix = postfixstmt(node.first(), varHash, globalVar);
     var next = node.leaf(1);
     var token = next.token();
     switch(token.content()) {
       case '*':
-        return postfix * mtplstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return postfix * mtplstmt(node.last(), varHash, globalVar);
       case '/':
-        return postfix / mtplstmt(node.last(), fnHash, globalFn, varHash, globalVar);
+        return postfix / mtplstmt(node.last(), varHash, globalVar);
     }
   }
-  return postfixstmt(node, fnHash, globalFn, varHash, globalVar);
+  return postfixstmt(node, varHash, globalVar);
 }
 
-function postfixstmt(node, fnHash, globalFn, varHash, globalVar) {
+function postfixstmt(node, varHash, globalVar) {
   if(node.name() == Node.POSTFIXSTMT) {
-    var prmr = prmrstmt(node.first(), fnHash, globalFn, varHash, globalVar);
+    var prmr = prmrstmt(node.first(), varHash, globalVar);
     var next = node.leaf(1);
     var token = next.token();
     switch(token.content()) {
@@ -128,10 +259,10 @@ function postfixstmt(node, fnHash, globalFn, varHash, globalVar) {
         return prmr.value--;
     }
   }
-  return prmrstmt(node, fnHash, globalFn, varHash, globalVar).value;
+  return prmrstmt(node, varHash, globalVar).value;
 }
 
-function prmrstmt(node, fnHash, globalFn, varHash, globalVar) {
+function prmrstmt(node, varHash, globalVar) {
   var token = node.first().token();
   var s = token.content();
   switch(token.type()) {
@@ -144,7 +275,7 @@ function prmrstmt(node, fnHash, globalFn, varHash, globalVar) {
       return { value: s };
     default:
       if(s == '(') {
-        return { value: exprstmt(node.leaf(1), fnHash, globalFn, varHash, globalVar) };
+        return { value: exprstmt(node.leaf(1), varHash, globalVar) };
       }
       else if(s == '[') {
         var arr = [];
