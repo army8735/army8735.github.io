@@ -440,6 +440,12 @@ var Parser = IParser.extend(function(lexer) {
         && [Token.VARS, Token.STRING].indexOf(this.tokens[this.index].type()) > -1) {
         node.add(this.unbox());
       }
+      else if(this.look.content() == '[') {
+        node.add(this.arrltr());
+      }
+      else if(this.look.content() == '@dir') {
+        node.add(this.dir());
+      }
       else if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
         node.add(this.style(null, true, true));
       }
@@ -536,23 +542,6 @@ var Parser = IParser.extend(function(lexer) {
     }
     else if(this.look.content() == '@dir') {
       node.add(this.dir());
-    }
-    else if(this.look.content() == '@basename') {
-      node.add(this.basename());
-    }
-    else if(this.look.content() == '@extname') {
-      node.add(this.extname());
-    }
-    else if(this.look.content() == '@width') {
-      node.add(this.width());
-    }
-    else if(this.look.content() == '@height') {
-      node.add(this.height());
-    }
-    else if(this.look.content() == '~'
-      && this.tokens[this.index]
-      && [Token.VARS, Token.STRING].indexOf(this.tokens[this.index].type()) > -1) {
-      node.add(this.unbox());
     }
     else if(this.look.type() == Token.KEYWORD || this.look.type() == Token.HACK) {
       node.add(this.style(null, true, true));
@@ -723,6 +712,12 @@ var Parser = IParser.extend(function(lexer) {
       this.error();
     }
     var s = this.look.content().toLowerCase();
+    if(s == '~'
+      && this.tokens[this.index]
+      && [Token.VARS, Token.STRING].indexOf(this.tokens[this.index].type()) > -1) {
+      node.add(this.unbox());
+      return node;
+    }
     var pCount = 0;
     var bCount = 0;
     if([Token.COLOR, Token.HACK, Token.VARS, Token.ID, Token.PROPERTY, Token.NUMBER, Token.STRING, Token.HEAD, Token.SIGN, Token.UNITS, Token.KEYWORD].indexOf(this.look.type()) > -1
@@ -827,12 +822,6 @@ var Parser = IParser.extend(function(lexer) {
               return node;
             }
             bCount--;
-          }
-          else if(s == '~'
-            && this.tokens[this.index]
-            && [Token.VARS, Token.STRING].indexOf(this.tokens[this.index].type()) > -1) {
-            node.add(this.unbox());
-            break;
           }
           //LL2确定是否是fncall
           var fncall = false;
@@ -1221,10 +1210,14 @@ var Parser = IParser.extend(function(lexer) {
     );
     var count = 0;
     while(this.look) {
-      if(this.look.content() == '(') {
+      var s = this.look.content();
+      if([';', '}'].indexOf(s) > -1) {
+        this.error();
+      }
+      else if(s == '(') {
         count++;
       }
-      else if(this.look.content() == ')') {
+      else if(s == ')') {
         if(count-- == 0) {
           break;
         }
