@@ -228,12 +228,34 @@ IGNORE[Node.IFSTMT]
           break;
         case Node.UNBOX:
           var s = getVar(node.last().token(), self.varHash, self.globalVar);
+          var isFontFamily = false;
+          var parent = node.parent();
+          if(parent.name() == Node.VALUE) {
+            parent = parent.parent();
+            if(parent.name() == Node.STYLE) {
+              if(parent.first().name() == Node.KEY) {
+                var t = parent.first().last();
+                if(t.isToken()) {
+                  t = t.token();
+                  //TODO:vars可以作为key
+                  if(t.type() == Token.KEYWORD && t.content().toLowerCase() == 'font-family') {
+                    isFontFamily = true;
+                  }
+                }
+              }
+            }
+          }
           var c = s.charAt(0);
           if(c != "'" && c != '"') {
             c = '"';
             s = c + s + c;
           }
-          s = s.replace(/,\s*/g, c + ',' + c);
+          if(isFontFamily) {
+            s = s.replace(/,\s*/g, c + ',' + c);
+          }
+          else {
+            s = s.replace(/^['"]/, '').replace(/['"]$/, '');
+          }
           self.res += s;
           var temp = ignore(node, self.ignores, self.index, true);
           self.res += temp.res;
