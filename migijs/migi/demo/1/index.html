@@ -9,31 +9,8 @@
 </head>
 <body>
 <div id="example"></div>
-<pre><code class="brush:jsx">class MyComponent extends migi.Component {
-  constructor(...data) {
-    super(...data);
-  this.text = 'like';
-  }
-  get txt() {
-    return this.text;
-  }
-  set txt(v) {
-    this.text = v;
-  }
-  handleClick() {
-    this.txt = this.txt == 'like' ? 'unlike' : 'like';
-  }
-  render() {
-    return (
-      &lt;p onClick={this.handleClick}>
-        You {this.txt} this. Click to toggle.
-      &lt;/p>
-    );
-  }
-}
-
-migi.render(
-  &lt;MyComponent />,
+<pre><code class="brush:jsx">migi.render(
+  &lt;h1>Hello, world!&lt;/h1>,
   '#example'
 );</code></pre>
 <script type="text/jsx">
