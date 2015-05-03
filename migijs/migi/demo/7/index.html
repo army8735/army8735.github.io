@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>demo6</title>
+  <title>demo7</title>
   <link href="../style.css" media="all" rel="stylesheet"/>
   <script src="../es6-shim.js"></script>
   <script src="../sea.js"></script>
@@ -12,16 +12,22 @@
 <pre><code class="brush:jsx">class MyComponent extends migi.Component {
   constructor(...data) {
     super(...data);
+    this.text = 'like';
+  }
+  get txt() {
+    return this.text;
+  }
+  set txt(v) {
+    this.text = v;
   }
   handleClick() {
-    this.element.querySelector('[ref]').focus();
+    this.txt = this.txt == 'like' ? 'unlike' : 'like';
   }
   render() {
     return (
-      &lt;div>
-        &lt;input type="text" ref="myTextInput" />
-        &lt;input type="button" value="Focus the text input" onClick={this.handleClick} />
-      &lt;/div>
+      &lt;p onClick={this.handleClick}>
+        You {this.txt} this. Click to toggle.
+      &lt;/p>
     );
   }
 }
@@ -34,16 +40,22 @@ migi.render(
   class MyComponent extends migi.Component {
 		constructor(...data) {
 			super(...data);
+      this.text = 'like';
 		}
+    get txt() {
+      return this.text;
+    }
+    set txt(v) {
+      this.text = v;
+    }
     handleClick() {
-      this.element.querySelector('[ref]').focus();
+      this.txt = this.txt == 'like' ? 'unlike' : 'like';
     }
 		render() {
 			return (
-        <div>
-          <input type="text" ref="myTextInput" />
-          <input type="button" value="Focus the text input" onClick={this.handleClick} />
-        </div>
+        <p onClick={this.handleClick}>
+          You {this.txt} this. Click to toggle.
+        </p>
       );
 		}
 	}
