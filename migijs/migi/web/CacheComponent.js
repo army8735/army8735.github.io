@@ -11,6 +11,11 @@ var Component=function(){var _1=require('./Component');return _1.hasOwnProperty(
     var self = this;
     function cb() {
       self.htmlComponent.emit(Event.DATA, target, k);
+      self.children.forEach(function(child) {
+        if(child instanceof Component) {
+          child.emit(Event.DATA, target, k);
+        }
+      });
     }
     var temp;
     if(!self.__handler.hasOwnProperty(k)) {
@@ -26,11 +31,6 @@ var Component=function(){var _1=require('./Component');return _1.hasOwnProperty(
         temp.timeout = null;
       }, 1);
     }
-    self.children.forEach(function(child) {
-      if(child instanceof Component) {
-        child.emit(Event.DATA, target, k);
-      }
-    });
   }
 Object.keys(Component).forEach(function(k){CachedComponent[k]=Component[k]});
 
