@@ -1,6 +1,8 @@
 define(function(require, exports, module){var homunculus=function(){var _0=require('homunculus');return _0.hasOwnProperty("homunculus")?_0.homunculus:_0.hasOwnProperty("default")?_0.default:_0}();
 var Tree=function(){var _1=require('./Tree');return _1.hasOwnProperty("Tree")?_1.Tree:_1.hasOwnProperty("default")?_1.default:_1}();
-var join=function(){var _2=require('./join');return _2.hasOwnProperty("join")?_2.join:_2.hasOwnProperty("default")?_2.default:_2}();
+var linkage=function(){var _2=require('./linkage');return _2.hasOwnProperty("linkage")?_2.linkage:_2.hasOwnProperty("default")?_2.default:_2}();
+var join=function(){var _3=require('./join');return _3.hasOwnProperty("join")?_3.join:_3.hasOwnProperty("default")?_3.default:_3}();
+var ignore=function(){var _4=require('./ignore');return _4.hasOwnProperty("ignore")?_4.ignore:_4.hasOwnProperty("default")?_4.default:_4}();
 
 var Token = homunculus.getClass('token', 'jsx');
 var Node = homunculus.getClass('node', 'jsx');
@@ -40,6 +42,9 @@ function elem(node, cHash) {
     }
   }
   res += ')';
+  if(node.last().name() == Node.JSXClosingElement) {
+    res += ignore(node.last()).res;
+  }
   return res;
 }
 function selfClose(node, cHash) {
@@ -86,7 +91,12 @@ function attr(node) {
   }
   else {
     v = join(v.leaf(1));
-    res += 'new migi.Obj("' + v.replace(/"/g, '\\"') + '",' + v + ')';
+    if(/^on[A-Z]/.test(key)) {
+      res += v;
+    }
+    else {
+      res += 'new migi.Obj("' + v.replace(/"/g, '\\"') + '",' + v + ')';
+    }
   }
   return res;
 }
@@ -97,8 +107,14 @@ function child(node, cHash) {
   var tree = new Tree(cHash);
   var res = tree.parse(node);
   res = res.slice(1, res.length - 1);
-  if(/^this\.[\w$]+$/.test(res)) {
-    return 'new migi.Obj("' + res.slice(5).replace(/"/g, '\\"') + '",' + res + ')';
+  var list = linkage(node.leaf(1));
+  if(list.length) {
+    if(list.length == 1) {
+      return 'new migi.Obj("' + list[0] + '",' + res + ',function(){return ' + res + '})';
+    }
+    else {
+      return 'new migi.Obj(' + JSON.stringify(list) + ',' + res + ',function(){return ' + res + '})';
+    }
   }
   return res;
 }
