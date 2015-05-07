@@ -1,7 +1,8 @@
 define(function(require, exports, module){
-  function Obj(k, v, cb) {
+  function Obj(k, context, cb) {
     this.k = k;
-    this.v = v;
+    this.context = context;
+    this.v = cb.call(context);
     this.cb = cb;
   }
   Obj.prototype.toString = function() {
