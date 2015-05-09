@@ -1,12 +1,12 @@
- /*!
-  * https://github.com/paulmillr/es6-shim
-  * @license es6-shim Copyright 2013-2015 by Paul Miller (http://paulmillr.com)
-  *   and contributors,  MIT License
-  * es6-shim: v0.27.1
-  * see https://github.com/paulmillr/es6-shim/blob/0.27.1/LICENSE
-  * Details and documentation:
-  * https://github.com/paulmillr/es6-shim/
-  */
+/*!
+ * https://github.com/paulmillr/es6-shim
+ * @license es6-shim Copyright 2013-2015 by Paul Miller (http://paulmillr.com)
+ *   and contributors,  MIT License
+ * es6-shim: v0.27.1
+ * see https://github.com/paulmillr/es6-shim/blob/0.27.1/LICENSE
+ * Details and documentation:
+ * https://github.com/paulmillr/es6-shim/
+ */
 
 // UMD (Universal Module Definition)
 // see https://github.com/umdjs/umd/blob/master/returnExports.js
@@ -53,6 +53,11 @@
   };
   var supportsDescriptors = !!Object.defineProperty && arePropertyDescriptorsSupported();
 
+  var _forEach = Function.call.bind(Array.prototype.forEach);
+  var _map = Function.call.bind(Array.prototype.map);
+  var _reduce = Function.call.bind(Array.prototype.reduce);
+  var _filter = Function.call.bind(Array.prototype.filter);
+
   var defineProperty = function (object, name, value, force) {
     if (!force && name in object) { return; }
     if (supportsDescriptors) {
@@ -70,7 +75,7 @@
   // Define configurable, writable and non-enumerable props
   // if they don’t exist.
   var defineProperties = function (object, map) {
-    Object.keys(map).forEach(function (name) {
+    _forEach(Object.keys(map), function (name) {
       var method = map[name];
       defineProperty(object, name, method, false);
     });
@@ -79,14 +84,14 @@
   // Simple shim for Object.create on ES3 browsers
   // (unlike real shim, no attempt to support `prototype === null`)
   var create = Object.create || function (prototype, properties) {
-    function Prototype() {}
-    Prototype.prototype = prototype;
-    var object = new Prototype();
-    if (typeof properties !== 'undefined') {
-      defineProperties(object, properties);
-    }
-    return object;
-  };
+      function Prototype() {}
+      Prototype.prototype = prototype;
+      var object = new Prototype();
+      if (typeof properties !== 'undefined') {
+        defineProperties(object, properties);
+      }
+      return object;
+    };
 
   var supportsSubclassing = function (C, f) {
     if (!Object.setPrototypeOf) { return false; /* skip test on IE < 11 */ }
@@ -105,9 +110,9 @@
 
   var startsWithRejectsRegex = function () {
     return String.prototype.startsWith && throwsError(function () {
-      /* throws if spec-compliant */
-      '/a/'.startsWith(/a/);
-    });
+        /* throws if spec-compliant */
+        '/a/'.startsWith(/a/);
+      });
   };
   var startsWithHandlesInfinity = (function () {
     return String.prototype.startsWith && 'abc'.startsWith('a', Infinity) === false;
@@ -139,16 +144,16 @@
   };
 
   var numberIsNaN = Number.isNaN || function isNaN(value) {
-    // NaN !== NaN, but they are identical.
-    // NaNs are the only non-reflexive value, i.e., if x !== x,
-    // then x is NaN.
-    // isNaN is broken: it converts its argument to number, so
-    // isNaN('foo') => true
-    return value !== value;
-  };
+      // NaN !== NaN, but they are identical.
+      // NaNs are the only non-reflexive value, i.e., if x !== x,
+      // then x is NaN.
+      // isNaN is broken: it converts its argument to number, so
+      // isNaN('foo') => true
+      return value !== value;
+    };
   var numberIsFinite = Number.isFinite || function isFinite(value) {
-    return typeof value === 'number' && globalIsFinite(value);
-  };
+      return typeof value === 'number' && globalIsFinite(value);
+    };
 
   var Value = {
     getter: function (object, name, getter) {
@@ -646,9 +651,9 @@
   // Our ArrayIterator is private; see
   // https://github.com/paulmillr/es6-shim/issues/252
   ArrayIterator = function (array, kind) {
-      this.i = 0;
-      this.array = array;
-      this.kind = kind;
+    this.i = 0;
+    this.array = array;
+    this.kind = kind;
   };
 
   defineProperties(ArrayIterator.prototype, {
@@ -888,6 +893,60 @@
     overrideNative(Array, 'from', ArrayShims.from);
   }
 
+  var toLengthsCorrectly = function (method, reversed) {
+    var obj = { length: -1 };
+    obj[reversed ? ((-1 >>> 0) - 1) : 0] = true;
+    return valueOrFalseIfThrows(function () {
+      method.call(obj, function () {
+        // note: in nonconforming browsers, this will be called
+        // -1 >>> 0 times, which is 4294967295, so the throw matters.
+        throw new RangeError('should not reach here');
+      }, []);
+    });
+  };
+  if (!toLengthsCorrectly(Array.prototype.forEach)) {
+    var originalForEach = Array.prototype.forEach;
+    overrideNative(Array.prototype, 'forEach', function forEach(callbackFn) {
+      if (this.length >= 0) { return originalForEach.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.map)) {
+    var originalMap = Array.prototype.map;
+    overrideNative(Array.prototype, 'map', function map(callbackFn) {
+      if (this.length >= 0) { return originalMap.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.filter)) {
+    var originalFilter = Array.prototype.filter;
+    overrideNative(Array.prototype, 'filter', function filter(callbackFn) {
+      if (this.length >= 0) { return originalFilter.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.some)) {
+    var originalSome = Array.prototype.some;
+    overrideNative(Array.prototype, 'some', function some(callbackFn) {
+      if (this.length >= 0) { return originalSome.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.every)) {
+    var originalEvery = Array.prototype.every;
+    overrideNative(Array.prototype, 'every', function every(callbackFn) {
+      if (this.length >= 0) { return originalEvery.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.reduce)) {
+    var originalReduce = Array.prototype.reduce;
+    overrideNative(Array.prototype, 'reduce', function reduce(callbackFn) {
+      if (this.length >= 0) { return originalReduce.apply(this, arguments); }
+    }, true);
+  }
+  if (!toLengthsCorrectly(Array.prototype.reduceRight, true)) {
+    var originalReduceRight = Array.prototype.reduceRight;
+    overrideNative(Array.prototype, 'reduceRight', function reduceRight(callbackFn) {
+      if (this.length >= 0) { return originalReduceRight.apply(this, arguments); }
+    }, true);
+  }
+
   var maxSafeInteger = Math.pow(2, 53) - 1;
   defineProperties(Number, {
     MAX_SAFE_INTEGER: maxSafeInteger,
@@ -948,9 +1007,9 @@
     var keys = Object.keys(Object(source));
     var symbols;
     if (ES.IsCallable(Object.getOwnPropertySymbols)) {
-      symbols = Object.getOwnPropertySymbols(Object(source)).filter(isEnumerableOn(source));
+      symbols = _filter(Object.getOwnPropertySymbols(Object(source)), isEnumerableOn(source));
     }
-    return keys.concat(symbols || []).reduce(assignTo(source), target);
+    return _reduce(keys.concat(symbols || []), assignTo(source), target);
   };
 
   var ObjectShims = {
@@ -959,7 +1018,7 @@
       if (!ES.TypeIsObject(target)) {
         throw new TypeError('target must be an object');
       }
-      return Array.prototype.reduce.call(sliceArgs.apply(0, arguments), assignReducer);
+      return _reduce(sliceArgs.apply(0, arguments), assignReducer);
     },
 
     // Added in WebKit in https://bugs.webkit.org/show_bug.cgi?id=143865
@@ -968,15 +1027,15 @@
     }
   };
   var assignHasPendingExceptions = Object.assign && Object.preventExtensions && (function () {
-    // Firefox 37 still has "pending exception" logic in its Object.assign implementation,
-    // which is 72% slower than our shim, and Firefox 40's native implementation.
-    var thrower = Object.preventExtensions({ 1: 2 });
-    try {
-      Object.assign(thrower, 'xy');
-    } catch (e) {
-      return thrower[1] === 'y';
-    }
-  }());
+      // Firefox 37 still has "pending exception" logic in its Object.assign implementation,
+      // which is 72% slower than our shim, and Firefox 40's native implementation.
+      var thrower = Object.preventExtensions({ 1: 2 });
+      try {
+        Object.assign(thrower, 'xy');
+      } catch (e) {
+        return thrower[1] === 'y';
+      }
+    }());
   if (assignHasPendingExceptions) {
     overrideNative(Object, 'assign', ObjectShims.assign);
   }
@@ -1023,9 +1082,9 @@
           // in these cases we should probably throw an error
           // or at least be informed about the issue
           setPrototypeOf.polyfill = setPrototypeOf(
-            setPrototypeOf({}, null),
-            Object.prototype
-          ) instanceof Object;
+              setPrototypeOf({}, null),
+              Object.prototype
+            ) instanceof Object;
           // setPrototypeOf.polyfill === true means it works as meant
           // setPrototypeOf.polyfill === false means it's not 100% reliable
           // setPrototypeOf.polyfill === undefined
@@ -1044,8 +1103,8 @@
   // Workaround bug in Opera 12 where setPrototypeOf(x, null) doesn't work,
   // but Object.create(null) does.
   if (Object.setPrototypeOf && Object.getPrototypeOf &&
-      Object.getPrototypeOf(Object.setPrototypeOf({}, null)) !== null &&
-      Object.getPrototypeOf(Object.create(null)) === null) {
+    Object.getPrototypeOf(Object.setPrototypeOf({}, null)) !== null &&
+    Object.getPrototypeOf(Object.create(null)) === null) {
     (function () {
       var FAKENULL = Object.create(null);
       var gpo = Object.getPrototypeOf, spo = Object.setPrototypeOf;
@@ -1191,6 +1250,10 @@
   if (!regExpSupportsFlagsWithRegex && supportsDescriptors) {
     var OrigRegExp = RegExp;
     var RegExpShim = function RegExp(pattern, flags) {
+      var calledWithNew = this instanceof RegExp;
+      if (!calledWithNew && (Type.regex(pattern) || pattern.constructor === RegExp)) {
+        return pattern;
+      }
       if (Type.regex(pattern) && Type.string(flags)) {
         return new RegExp(pattern.source, flags);
       }
@@ -1201,7 +1264,7 @@
       // sets up proper prototype chain where possible
       Object.setPrototypeOf(OrigRegExp, RegExpShim);
     }
-    Object.getOwnPropertyNames(OrigRegExp).forEach(function (key) {
+    _forEach(Object.getOwnPropertyNames(OrigRegExp), function (key) {
       if (key === '$input') { return; } // Chrome < v39 & Opera < 26 have a nonstandard "$input" property
       if (key in noop) { return; }
       Value.proxy(OrigRegExp, key, RegExpShim);
@@ -1222,7 +1285,7 @@
       leftContext: '$`',
       rightContext: '$\''
     };
-    Object.keys(regexGlobals).forEach(function (prop) {
+    _forEach(Object.keys(regexGlobals), function (prop) {
       if (prop in RegExp && !(regexGlobals[prop] in RegExp)) {
         Value.getter(RegExp, regexGlobals[prop], function get() {
           return RegExp[prop];
@@ -1353,8 +1416,8 @@
       if (allZero) { return 0; }
 
       var largest = Math.max.apply(Math, numbers);
-      var divided = numbers.map(function (number) { return number / largest; });
-      var sum = divided.map(square).reduce(add);
+      var divided = _map(numbers, function (number) { return number / largest; });
+      var sum = _reduce(_map(divided, square), add);
       return largest * Math.sqrt(sum);
     },
 
@@ -1567,8 +1630,8 @@
       // https://github.com/Raynos/observ-hash/issues/2#issuecomment-35857671
       var P = globals.Promise;
       return P && P.resolve && function (task) {
-        return P.resolve().then(task);
-      };
+          return P.resolve().then(task);
+        };
     };
     /*global process */
     var enqueue = ES.IsCallable(globals.setImmediate) ?
@@ -1576,7 +1639,7 @@
       typeof process === 'object' && process.nextTick ? process.nextTick :
       makePromiseAsap() ||
       (ES.IsCallable(makeZeroTimeout) ? makeZeroTimeout() :
-      function (task) { setTimeout(task, 0); }); // fallback
+        function (task) { setTimeout(task, 0); }); // fallback
 
     var updatePromiseFromPotentialThenable = function (x, capability) {
       if (!ES.TypeIsObject(x)) {
@@ -1595,7 +1658,7 @@
     };
 
     var triggerPromiseReactions = function (reactions, x) {
-      reactions.forEach(function (reaction) {
+      _forEach(reactions, function (reaction) {
         enqueue(function () {
           // PromiseReactionTask
           var handler = reaction.handler;
@@ -1865,7 +1928,7 @@
   // Their fast path also requires that the environment preserve
   // property insertion order, which is not guaranteed by the spec.
   var testOrder = function (a) {
-    var b = Object.keys(a.reduce(function (o, k) {
+    var b = Object.keys(_reduce(a, function (o, k) {
       o[k] = true;
       return o;
     }, {}));
@@ -2019,7 +2082,7 @@
 
         defineProperties(Map.prototype, {
           get: function (key) {
-		    requireMapSlot(this, 'get');
+            requireMapSlot(this, 'get');
             var fkey = fastkey(key);
             if (fkey !== null) {
               // fast O(1) path
@@ -2055,7 +2118,7 @@
           },
 
           set: function (key, value) {
-		    requireMapSlot(this, 'set');
+            requireMapSlot(this, 'set');
             var head = this._head, i = head, entry;
             var fkey = fastkey(key);
             if (fkey !== null) {
@@ -2088,7 +2151,7 @@
           },
 
           'delete': function (key) {
-		    requireMapSlot(this, 'delete');
+            requireMapSlot(this, 'delete');
             var head = this._head, i = head;
             var fkey = fastkey(key);
             if (fkey !== null) {
@@ -2113,7 +2176,7 @@
           },
 
           clear: function clear() {
-		    requireMapSlot(this, 'clear');
+            requireMapSlot(this, 'clear');
             this._size = 0;
             this._storage = emptyObject();
             var head = this._head, i = head, p = i.next;
@@ -2126,22 +2189,22 @@
           },
 
           keys: function keys() {
-		    requireMapSlot(this, 'keys');
+            requireMapSlot(this, 'keys');
             return new MapIterator(this, 'key');
           },
 
           values: function values() {
-		    requireMapSlot(this, 'values');
+            requireMapSlot(this, 'values');
             return new MapIterator(this, 'value');
           },
 
           entries: function entries() {
-		    requireMapSlot(this, 'entries');
+            requireMapSlot(this, 'entries');
             return new MapIterator(this, 'key+value');
           },
 
           forEach: function forEach(callback) {
-		    requireMapSlot(this, 'forEach');
+            requireMapSlot(this, 'forEach');
             var context = arguments.length > 1 ? arguments[1] : null;
             var it = this.entries();
             for (var entry = it.next(); !entry.done; entry = it.next()) {
@@ -2216,7 +2279,7 @@
         var ensureMap = function ensureMap(set) {
           if (!set['[[SetData]]']) {
             var m = set['[[SetData]]'] = new collectionShims.Map();
-            Object.keys(set._storage).forEach(function (k) {
+            _forEach(Object.keys(set._storage), function (k) {
               // fast check for leading '$'
               if (k.charCodeAt(0) === 36) {
                 k = k.slice(1);
@@ -2329,7 +2392,7 @@
             iterable = arguments[0];
           }
           if (Array.isArray(iterable) || Type.string(iterable)) {
-            Array.prototype.forEach.call(iterable, function (entry) {
+            _forEach(iterable, function (entry) {
               m.set(entry[0], entry[1]);
             });
           } else if (iterable instanceof Map) {
@@ -2461,12 +2524,12 @@
         return (new Map()).keys().next().done;
       });
       /*
-        - In Firefox < 23, Map#size is a function.
-        - In all current Firefox, Set#entries/keys/values & Map#clear do not exist
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=869996
-        - In Firefox 24, Map and Set do not implement forEach
-        - In Firefox 25 at least, Map and Set are callable without "new"
-      */
+       - In Firefox < 23, Map#size is a function.
+       - In all current Firefox, Set#entries/keys/values & Map#clear do not exist
+       - https://bugzilla.mozilla.org/show_bug.cgi?id=869996
+       - In Firefox 24, Map and Set do not implement forEach
+       - In Firefox 25 at least, Map and Set are callable without "new"
+       */
       if (
         typeof globals.Map.prototype.clear !== 'function' ||
         new globals.Set().size !== 0 ||
@@ -2785,7 +2848,7 @@
     sup: function sub() { return ES.CreateHTML(this, 'sup', '', ''); }
   };
   defineProperties(String.prototype, stringHTMLshims);
-  Object.keys(stringHTMLshims).forEach(function (key) {
+  _forEach(Object.keys(stringHTMLshims), function (key) {
     var method = String.prototype[key];
     var shouldOverwrite = false;
     if (ES.IsCallable(method)) {
