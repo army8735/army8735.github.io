@@ -1,18 +1,28 @@
-define(function(require, exports, module){function clone(obj) {
+define(function(require, exports, module){var VirtualDom=function(){var _0=require('./VirtualDom');return _0.hasOwnProperty("VirtualDom")?_0.VirtualDom:_0.hasOwnProperty("default")?_0.default:_0}();
+
+function clone(obj) {
   var o = Array.isArray(obj) ? [] : {};
   for(var i in obj) {
     if(obj.hasOwnProperty(i)) {
-      o[i] = typeof obj[i] === 'object' ? clone(obj[i]) : obj[i];
+      if(obj[i] instanceof VirtualDom) {
+        o[i] = obj[i];
+      }
+      else if(util.isDate(obj[i])) {
+        o[i] = new Date(obj[i]);
+      }
+      else {
+        o[i] = util.isObject(obj[i]) ? clone(obj[i]) : obj[i];
+      }
     }
   }
   return o;
 }
 
-var count = 0;
+var uid = 0;
 
 function isType(type) {
   return function(obj) {
-    return {}.toString.call(obj) == "[object " + type + "]";
+    return {}.toString.call(obj) == '[object ' + type + ']';
   }
 }
 
@@ -56,7 +66,7 @@ function equal(a, b) {
       return false;
     }
     for(var i = 0, len = ka.length; i < len; i++) {
-      if(!(i in b) || !equal(a[i], b[i])) {
+      if(!b.hasOwnProperty(i) || !equal(a[i], b[i])) {
         return false;
       }
     }
@@ -66,27 +76,45 @@ function equal(a, b) {
 
 var util = {
   clone:function(obj) {
+    //fix循环依赖
+    if(VirtualDom.hasOwnProperty('default')) {
+      VirtualDom = VirtualDom.default;
+    }
     if(typeof obj != 'object') {
       return obj;
     }
     return clone(obj);
   },
   uid:function() {
-    return count++;
+    return uid++;
   },
-  isObject: isType("Object"),
-  isString: isType("String"),
-  isArray: Array.isArray || isType("Array"),
-  isFunction: isType("Function"),
-  isUndefined: isType("Undefined"),
-  isNumber: isType("Number"),
-  isNull: isType("Null"),
-  isBoolean: isType("Boolean"),
-  isDate: isType("Date"),
-  isDom: function(obj) {
-    return obj instanceof HTMLElement;
+  isObject: isType('Object'),
+  isString: isType('String'),
+  isArray: Array.isArray || isType('Array'),
+  isFunction: isType('Function'),
+  isUndefined: isType('Undefined'),
+  isNumber: isType('Number'),
+  isNull: isType('Null'),
+  isBoolean: isType('Boolean'),
+  isDate: isType('Date'),
+  equal:function(a, b) {
+    //fix循环依赖
+    if(VirtualDom.hasOwnProperty('default')) {
+      VirtualDom = VirtualDom.default;
+    }
+    return equal(a, b);
   },
-  equal:equal
+  escape: function(s) {
+    var xmlchar = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      ' ': '&nbsp;'
+    };
+    return s.replace(/[<>&]/g, function($1){
+      return xmlchar[$1];
+    });
+  }
 };
 
 exports.default=util;});

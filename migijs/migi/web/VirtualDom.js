@@ -1,10 +1,16 @@
 define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0.default:_0}();
-var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1.default:_1}();
-var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Obj:_2.hasOwnProperty("default")?_2.default:_2}();
+var Component=function(){var _1=require('./Component');return _1.hasOwnProperty("Component")?_1.Component:_1.hasOwnProperty("default")?_1.default:_1}();
+var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2.util:_2.hasOwnProperty("default")?_2.default:_2}();
+var Obj=function(){var _3=require('./Obj');return _3.hasOwnProperty("Obj")?_3.Obj:_3.hasOwnProperty("default")?_3.default:_3}();
+var single=function(){var _4=require('./single');return _4.hasOwnProperty("single")?_4.single:_4.hasOwnProperty("default")?_4.default:_4}();
 
-!function(){var _3=Object.create(Event.prototype);_3.constructor=VirtualDom;VirtualDom.prototype=_3}();
+!function(){var _5=Object.create(Event.prototype);_5.constructor=VirtualDom;VirtualDom.prototype=_5}();
   function VirtualDom(name, props, children) {
-    if(props===void 0)props={};children=[].slice.call(arguments, 2);Event.call(this);
+    //fix循环依赖
+    if(props===void 0)props={};children=[].slice.call(arguments, 2);if(Component.hasOwnProperty('default')) {
+      Component = Component.default;
+    }
+    Event.call(this);
     var self = this;
     self.__name = name;
     self.__props = props;
@@ -22,44 +28,20 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
   VirtualDom.prototype.toString = function() {
     var self = this;
     var res = '<' + self.name;
-    Object.keys(self.props).forEach(function(k) {
-      if(/^on[A-Z]/.test(k)) {
+    Object.keys(self.props).forEach(function(prop) {
+      if(/^on[A-Z]/.test(prop)) {
         self.on(Event.DOM, function() {
-          var name = k.slice(2).replace(/[A-Z]/g, function(Up) {
+          var name = prop.slice(2).replace(/[A-Z]/g, function(Up) {
             return Up.toLowerCase();
           });
           self.element.addEventListener(name, function(event) {
-            var item = self.props[k];
+            var item = self.props[prop];
             item.cb.call(item.context, event);
           });
         });
       }
       else {
-        var v = self.props[k];
-        if(v instanceof Obj) {
-          if(util.isString(v.v)) {
-            res += ' ' + k + '="' + v.toString() + '"';
-          }
-          else if(!!v.v) {
-            res += ' ' + k;
-          }
-        }
-        else {
-          res += ' ' + k + '="' + v.toString() + '"';
-        }
-        if(k == 'value' && self.name == 'input' && self.props[k] instanceof Obj) {
-          var item = self.props[k];
-          self.on(Event.DOM, function() {
-            function cb() {
-              item.v = this.value;
-              var key = item.k;
-              item.context[key] = this.value;
-            }
-            self.element.addEventListener('input', cb);
-            self.element.addEventListener('paste', cb);
-            self.element.addEventListener('cut', cb);
-          });
-        }
+        res += self.__renderProp(prop);
       }
     });
     res += ' migi-id="' + self.id + '"';
@@ -81,44 +63,82 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
       });
     }
     self.children.forEach(function(child) {
-      res += self.renderChild(child);
+      res += self.__renderChild(child);
     });
     res +='</' + self.name + '>';
     return res;
   }
-  VirtualDom.prototype.renderChild = function(child) {
+  VirtualDom.prototype.__renderProp = function(prop) {
     var self = this;
-    if(child instanceof VirtualDom || child instanceof Obj) {
-      return child.toString();
-    }
-    else if(util.isArray(child)) {
-      var res = '';
-      child.forEach(function(item) {
-        res += self.renderChild(item);
+    var v = self.props[prop];
+    if(prop == 'value' && self.name == 'input' && self.props[prop] instanceof Obj) {
+      var item = self.props[prop];
+      self.on(Event.DOM, function() {
+        function cb() {
+          item.v = this.value;
+          var key = item.k;
+          item.context[key] = this.value;
+        }
+        self.element.addEventListener('input', cb);
+        self.element.addEventListener('paste', cb);
+        self.element.addEventListener('cut', cb);
       });
-      return res;
+    }
+    if(v instanceof Obj) {
+      if(util.isString(v.v)) {
+        return ' ' + prop + '="' + v.toString() + '"';
+      }
+      else if(!!v.v) {
+        return ' ' + prop;
+      }
     }
     else {
-      return child.toString();
+      return ' ' + prop + '="' + v.toString() + '"';
+    }
+  }
+  VirtualDom.prototype.__renderChild = function(child, noEscape) {
+    if(child instanceof VirtualDom || child instanceof Obj || child instanceof Component) {
+      return child.toString(noEscape);
+    }
+    else {
+      return noEscape ? child.toString() : util.escape(child.toString());
+    }
+  }
+  VirtualDom.prototype.__reRender = function() {
+    var self = this;
+    var res = '';
+    self.children.forEach(function(child) {
+      res += self.__renderChild(child);
+    });
+    self.element.innerHTML = res;
+  }
+
+  VirtualDom.prototype.append = function(dom) {
+    var s = this.toString();
+    if(util.isString(dom)) {
+      document.querySelector(dom).innerHTML = s;
+    }
+    else if(dom) {
+      dom.innerHTML = s;
     }
   }
 
-  var _4={};_4.name={};_4.name.get =function() {
+  var _6={};_6.name={};_6.name.get =function() {
     return this.__name;
   }
-  _4.props={};_4.props.get =function() {
+  _6.props={};_6.props.get =function() {
     return this.__props;
   }
-  _4.children={};_4.children.get =function() {
+  _6.children={};_6.children.get =function() {
     return this.__children;
   }
-  _4.element={};_4.element.get =function() {
+  _6.element={};_6.element.get =function() {
     return this.__element;
   }
-  _4.parent={};_4.parent.get =function() {
+  _6.parent={};_6.parent.get =function() {
     return this.__parent;
   }
-  _4.id={};_4.id.get =function() {
+  _6.id={};_6.id.get =function() {
     return this.__id;
   }
 
@@ -126,7 +146,7 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
     var self = this;
     self.__element = document.body.querySelector('[migi-id="' + self.id + '"]');
     self.children.forEach(function(child) {
-      if(!util.isString(child) && child instanceof Event) {
+      if(child instanceof VirtualDom || child instanceof Component) {
         child.emit(Event.DOM);
       }
     });
@@ -154,27 +174,41 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
         }
       }
     }
-    //联动html和子节点
-    //利用索引更新，子节点只可能为：文本（包括变量）、组件、html
-    //其中只有文本节点需要自己更新，记录其索引
-    //由于渲染时变量和文本同为一个文本节点，因此start为真实DOM的索引
+    //利用索引更新，子节点只可能为：文本（包括变量）、组件、VirtualDom
+    //其中只有文本节点需要自己更新，记录其索引，组件和VirtualDom递归通知更新
+    //由于渲染时相邻的文本变量和String文本同为一个文本节点，因此start为真实DOM的索引
     var start = 0;
     var range = [];
-    self.children.forEach(function(child, i) {
-      //文本节点变量
+    for(var index = 0, len = self.children.length; index < len; index++) {
+      var child = self.children[index];
+      //节点变量，可能为文本，也可能为VirtualDom，以及混合的数组
       if(child instanceof Obj) {
         var change = false;
+        var ot = child.type;
+        if(ot == Obj.VIRTUALDOM) {
+          start++;
+        }
+        else if(index > 0
+          && (self.children[index - 1] instanceof VirtualDom
+          || self.children[index - 1] instanceof Obj
+          && self.children[index - 1].type == Obj.VIRTUALDOM)) {
+          start++;
+        }
         if(Array.isArray(child.k)) {
           change = child.k.indexOf(k) > -1;
         }
         else if(k == child.k) {
           change = true;
         }
+        //当可能发生变化时进行比对
         if(change && self.__updateChild(child)) {
-          range.push({
-            start: start,
-            index: i
-          });
+          //类型一旦发生变化，直接父层重绘
+          if(ot != child.type || child.type == Obj.VIRTUALDOM) {
+            self.__reRender();
+            return;
+          }
+          //记录真实索引和child索引
+          range.push({ start:start, index:index });
         }
       }
       //递归通知，增加索引
@@ -182,32 +216,38 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
         child.emit(Event.DATA, k);
         start++;
       }
-      //else其它情况为普通文本节点忽略
-    });
+      //else其它情况为普通静态文本节点忽略
+    }
     if(range.length && self.element) {
+      self.__merge(range);
       range.forEach(function(item) {
         //利用虚拟索引向前向后找文本节点，拼接后更新到真实索引上
         for(var first = item.index; first > 0; first--) {
           var prev = self.children[first - 1];
-          if(!util.isString(prev) && !prev instanceof Obj) {
+          if(!util.isString(prev)
+            && (!prev instanceof Obj
+              || prev.type != Obj.TEXT)) {
             break;
           }
         }
         for(var last = item.index, len = self.children.length; last < len - 1; last++) {
           var next = self.children[last + 1];
-          if(!util.isString(next) && !next instanceof Obj) {
+          if(!util.isString(next)
+            && (!next instanceof Obj
+              || next.type != Obj.TEXT)) {
             break;
           }
         }
         var res = '';
         for(var i = first; i <= last; i++) {
-          res += self.renderChild(self.children[i]);
+          res += self.__renderChild(self.children[i], true);
         }
         var textNode = self.element.childNodes[item.start];
         //当仅有1个变量节点且变量为空时DOM无节点
         if(!textNode) {
           textNode = document.createTextNode('');
           self.element.appendChild(textNode);
+          //TODO:可能不是第一个
         }
         var now = textNode.textContent;
         if(res != now) {
@@ -238,6 +278,17 @@ var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("Obj")?_2.Ob
         this.element.setAttribute(k, v);
     }
   }
-Object.keys(_4).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_4[k])});Object.keys(Event).forEach(function(k){VirtualDom[k]=Event[k]});
+  VirtualDom.prototype.__merge = function(range) {
+    //合并相邻更新的文本节点
+    for(var i = 0, len = range.length; i < len; i++) {
+      var now = range[i];
+      var next = range[i + 1];
+      if(next && now.start == next.start && now.index == next.index - 1) {
+        range.splice(i, 1);
+        i--;
+      }
+    }
+  }
+Object.keys(_6).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_6[k])});Object.keys(Event).forEach(function(k){VirtualDom[k]=Event[k]});
 
 exports.default=VirtualDom;});
