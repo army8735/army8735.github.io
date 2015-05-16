@@ -6,6 +6,9 @@
   <link href="style.css" media="all" rel="stylesheet"/>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
+  <style>
+    div ul span{color:#CCC;}
+  </style>
 </head>
 <body>
 <div id="example"></div>
@@ -22,12 +25,12 @@
     set list(arr) {
       this.arr = arr;
     }
-    click() {
-      var num = Math.round(Math.random() * 100);
+    add() {
+      var num = Math.round(Math.random() * 10);
       this.list.push(num);
       this.list = this.list;
     }
-    click2() {
+    del() {
       this.list.pop();
       this.list = this.list;
     }
