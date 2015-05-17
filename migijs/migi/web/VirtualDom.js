@@ -49,6 +49,27 @@ var SELF_CLOSE = {
     self.on(Event.DOM, self.__onDom);
     self.on(Event.DATA, self.__onData);
   }
+  VirtualDom.prototype.find = function(name) {
+    return this.findAll(name)[0];
+  }
+  VirtualDom.prototype.findAll = function(name) {
+    var res = [];
+    for(var i = 0, len = this.children.length; i < len; i++) {
+      var child = this.children[i];
+      if(child instanceof Component) {
+        if(child.name == name) {
+          res.push(child);
+        }
+      }
+      else if(child instanceof VirtualDom) {
+        if(child.name == name) {
+          res.push(child);
+          res = res.concat(child.findAll(name));
+        }
+      }
+    }
+    return res;
+  }
   VirtualDom.prototype.toString = function() {
     var self = this;
     var res = '<' + self.name;
@@ -142,6 +163,8 @@ var SELF_CLOSE = {
       return res;
     }
     else {
+      //TODO: 空变量
+      //TODO: encode/decode
       return unEscape ? child.toString() : util.escape(child.toString());
     }
   }
@@ -156,7 +179,7 @@ var SELF_CLOSE = {
     self.__childrenDom();
   }
 
-  VirtualDom.prototype.append = function(dom) {
+  VirtualDom.prototype.inTo = function(dom) {
     var s = this.toString();
     if(util.isString(dom)) {
       document.querySelector(dom).innerHTML = s;
@@ -190,9 +213,58 @@ var SELF_CLOSE = {
     this.__childrenDom();
   }
   VirtualDom.prototype.__childrenDom = function() {
-    this.children.forEach(function(child) {
+    var self = this;
+    var length = self.children.length;
+    self.children.forEach(function(child, index) {
       if(child instanceof VirtualDom || child instanceof Component) {
         child.emit(Event.DOM);
+      }
+      //初始化时插入空文本的占位节点，更新时方便索引，包括动态文本和静态文本
+      else if(child instanceof Obj && child.type == Obj.TEXT && child.empty || !child.toString()) {
+        //前后如有非空文本节点，无需插入
+        if(index) {
+          for(var i = index - 1; i >=0; i--) {
+            var prev = self.children[i];
+            if(!(prev instanceof VirtualDom) && !(prev instanceof Component)) {
+              if(prev instanceof Obj) {
+                if(prev.type == Obj.TEXT && !prev.empty) {
+                  return;
+                }
+              }
+              else if(!!prev.toString()) {
+                return;
+              }
+            }
+            else {
+              break;
+            }
+          }
+        }
+        for(var i = index + 1; i < length; i++) {
+          var next = self.children[i];
+          if(!(next instanceof VirtualDom) && !(next instanceof Component)) {
+            if(next instanceof Obj) {
+              if(next.type == Obj.TEXT && !next.empty) {
+                return;
+              }
+            }
+            else if(!!next.toString()) {
+              return;
+            }
+          }
+          else {
+            break;
+          }
+        }
+        var blank = document.createTextNode('');
+        //可能仅一个空文本节点，或最后一个空文本节点
+        if(!self.element.childNodes.length || index >= self.element.length) {
+          self.element.appendChild(blank);
+        }
+        //插入
+        else {
+          self.element.insertBefore(blank, self.element.childNodes[index]);
+        }
       }
     });
   }
@@ -294,7 +366,7 @@ var SELF_CLOSE = {
         }
       }
       //递归通知，增加索引
-      else if(child instanceof VirtualDom ||  child instanceof Component) {
+      else if(child instanceof VirtualDom) {
         child.emit(Event.DATA, k);
         start++;
         //静态文本节点
@@ -334,11 +406,6 @@ var SELF_CLOSE = {
           res += self.__renderChild(self.children[i]);
         }
         var textNode = self.element.childNodes[item.start];
-        //当仅有1个变量节点且变量为空时DOM无节点
-        if(!textNode) {
-          textNode = document.createTextNode('');
-          self.element.appendChild(textNode);
-        }
         var now = textNode.textContent;
         if(res != now) {
           textNode.textContent = res;

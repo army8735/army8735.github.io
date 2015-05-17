@@ -8,6 +8,7 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     var self = this;
     self.__name = name;
     self.__props = props;
+    self.__style = null;
     Object.keys(props).forEach(function(k) {
       if(/^on[A-Z]/.test(k)) {
         var name = k.slice(2).replace(/[A-Z]/g, function(Up) {
@@ -21,24 +22,6 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     });
 
     self.__children = children;
-    self.__childMap = {};
-    children.forEach(function(child) {
-      if(child instanceof Component) {
-        if(self.childMap.hasOwnProperty(child.name)) {
-          var temp = self.childMap[child.name];
-          if(Array.isArray(temp)) {
-            temp.push(child);
-          }
-          else {
-            self.childMap[child.name] = [temp, child];
-          }
-        }
-        else {
-          self.childMap[child.name] = child;
-        }
-      }
-    });
-
     self.__virtualDom = null;
     self.__element = null;
     self.__parent = null;
@@ -56,7 +39,7 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     this.virtualDom.__parent = this;
     return this.virtualDom.toString();
   }
-  Component.prototype.append = function(dom) {
+  Component.prototype.inTo = function(dom) {
     var s = this.toString();
     if(util.isString(dom)) {
       document.querySelector(dom).innerHTML = s;
@@ -64,6 +47,32 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     else if(dom) {
       dom.innerHTML = s;
     }
+  }
+  Component.prototype.find = function(name) {
+    return this.findAll(name)[0];
+  }
+  Component.prototype.findAll = function(name) {
+    var res = [];
+    for(var i = 0, len = this.children.length; i < len; i++) {
+      var child = this.children[i];
+      if(child instanceof Component || child instanceof VirtualDom) {
+        if(child instanceof Component) {
+          if(child.name == name) {
+            res.push(child);
+          }
+        }
+        else if(child instanceof VirtualDom) {
+          if(child.name == name) {
+            res.push(child);
+            res = res.concat(child.findAll(name));
+          }
+        }
+      }
+    }
+    if(this.virtualDom) {
+      res = res.concat(this.virtualDom.findAll(name));
+    }
+    return res;
   }
 
   var _4={};_4.name={};_4.name.get =function() {
@@ -74,9 +83,6 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
   }
   _4.children={};_4.children.get =function() {
     return this.__children;
-  }
-  _4.childMap={};_4.childMap.get =function() {
-    return this.__childMap;
   }
   _4.virtualDom={};_4.virtualDom.get =function() {
     return this.__virtualDom;
@@ -95,7 +101,7 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     var self = this;
     self.virtualDom.emit(Event.DOM);
     self.__element = self.virtualDom.element;
-    self.__element.setAttribute('migi-name', this.name);
+    self.element.setAttribute('migi-name', this.name);
     self.children.forEach(function(child) {
       if(child instanceof Component) {
         child.emit(Event.DOM);
@@ -103,7 +109,9 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     });
     //将所有组件DOM事件停止冒泡，形成shadow特性，但不能阻止捕获
     function stopPropagation(e) {
-      e.stopPropagation();
+      if(e.target != self.element) {
+        e.stopPropagation();
+      }
     }
     ['click', 'dblclick', 'focus', 'blur', 'change', 'abort', 'error', 'load', 'mousedown', 'mousemove', 'mouseover',
       'mouseup', 'mouseout', 'reset', 'resize', 'scroll', 'select', 'submit', 'unload', 'DOMActivate',
@@ -115,11 +123,6 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("util")?_2
     if(this.virtualDom) {
       this.virtualDom.emit(Event.DATA, k);
     }
-    this.children.forEach(function(child) {
-      if(child instanceof Component) {
-        child.emit(Event.DATA, k);
-      }
-    });
   }
 Object.keys(_4).forEach(function(k){Object.defineProperty(Component.prototype,k,_4[k])});Object.keys(Event).forEach(function(k){Component[k]=Event[k]});
 
