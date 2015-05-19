@@ -7,18 +7,18 @@ var Node = homunculus.getClass('node', 'css');
 
 function parse(node) {
   var res = {};
-  node.leaves().forEach(function(leaf) {
-    styleset(leaf, res);
+  node.leaves().forEach(function(leaf, i) {
+    styleset(leaf, i, res);
   });
   depth(res);
   return res;
 }
 
-function styleset(node, res) {
+function styleset(node, i, res) {
   var sels = selectors(node.first());
   var styles = block(node.last());
   sels.forEach(function(sel) {
-    record(sel, styles, res);
+    record(sel, i, styles, res);
   });
 }
 function selectors(node) {
@@ -46,31 +46,33 @@ function block(node) {
 }
 function style(node) {
   var s = join(node, true).trim();
-  if(s.charAt(s.length - 1) != ';') {
-    s += ';';
-  }
+  s = s.replace(/;$/, '');
   return s;
 }
 
-function record(sel, styles, res) {
+function record(sel, idx, styles, res) {
   var first = sel[0];
   //没有选择器直接属性或伪类为省略*
   if(first.type() != Token.SELECTOR) {
     sel.unshift(new Token(Token.SELECTOR, '*'));
   }
+  var _p = 0;
   var now = res;
   for(var i = sel.length - 1; i >= 0; i--) {
     var t = sel[i];
     var s = t.content();
+    _p += priority(t, s);
     switch(t.type()) {
       case Token.SELECTOR:
         if(t.prev() && t.prev().type() == Token.SELECTOR) {
           var prev = t.prev();
           var list = [s];
           do {
-            list.push(prev.content());
+            s = prev.content();
+            list.push(s);
             prev = prev.next();
             i++;
+            _p += priority(prev, s);
           }
           while(prev && prev.type() == Token.SELECTOR);
           sort(list, function(a, b) {
@@ -87,17 +89,35 @@ function record(sel, styles, res) {
   }
   now._v = now._v || [];
   styles.forEach(function(style) {
-    if(now._v.indexOf(style) == -1) {
-      now._v.push(style);
-    }
+    now._v.push({
+      i: idx,
+      v: style
+    });
   });
-  now._v = now._v.join('');
+  now._p = _p;
+}
+
+function priority(token, s) {
+  switch(token.type()) {
+    case Token.SELECTOR:
+      if(s.charAt(0) == '#') {
+        return 100;
+      }
+      else if(s.charAt(0) == '.') {
+        return 10;
+      }
+      return 1;
+    case Token.PSEUDO:
+      return 1;
+    default:
+      return 0;
+  }
 }
 
 function depth(res) {
   var keys = Object.keys(res);
   keys = keys.filter(function(k) {
-    return k != '_v';
+    return k.charAt(0) != '_';
   });
   if(keys.length) {
     var i = 1;
