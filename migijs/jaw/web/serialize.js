@@ -80,19 +80,75 @@ function record(sel, idx, styles, res) {
           });
           s = list.join('');
         }
-      case Token.PSEUDO:
-      case Token.SIGN:
         now[s] = now[s] || {};
         now = now[s];
+        break;
+      case Token.PSEUDO:
+        var list = [s.replace(/^:+/, '')];
+        var prev = t.prev();
+        while(prev && prev.type() == Token.PSEUDO) {
+          _p += priority(prev, s);
+          list.push(prev.content().replace(/^:+/, ''));
+          prev = prev.prev();
+          i--;
+        }
+        //省略*
+        if(prev.type() != Token.SELECTOR) {
+          now['*'] = now['*'] || {};
+          now = now['*'];
+        }
+        else {
+          s = prev.content();
+          now[s] = now[s] || {};
+          now = now[s];
+          i--;
+          _p += priority(prev, s);
+        }
+        now['_:'] = now['_:'] || [];
+        now['_:'][0] = now['_:'][0] || [];
+        list.forEach(function(item) {
+          //防止多次重复
+          if(now['_:'][0].indexOf(item) == -1) {
+            now['_:'][0].push(item);
+          }
+          now['_:'][1] = now['_:'][1] || {};
+          now = now['_:'][1];
+        });
+        break;
+      case Token.SIGN:
+        switch(s) {
+          case '>':
+          case '+':
+          case '~':
+            now['_' + s] = now['_' + s] || {};
+            now = now['_' + s];
+            i--;
+            var prev = t.prev();
+            //省略*
+            if(prev.type() != Token.SELECTOR) {
+              now['*'] = now['*'] || {};
+              now = now['*'];
+            }
+            else {
+              s = prev.content();
+              now[s] = now[s] || {};
+              now = now[s];
+              i--;
+              _p += priority(prev, s);
+            }
+            break;
+          //TODO: 属性和CSS3伪类
+          case ')':
+            break;
+          case ']':
+            break;
+        }
         break;
     }
   }
   now._v = now._v || [];
   styles.forEach(function(style) {
-    now._v.push({
-      i: idx,
-      v: style
-    });
+    now._v.push([idx, style]);
   });
   now._p = _p;
 }
