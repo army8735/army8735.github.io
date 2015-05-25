@@ -9,7 +9,9 @@ var Cb=function(){var _7=require('./Cb');return _7.hasOwnProperty("Cb")?_7.Cb:_7
 
 var migi = {
   render:function(component, dom) {
-    component.inTo(dom);
+    if(dom) {
+      component.inTo(dom);
+    }
     return component;
   },
   createElement:function(name, props, children) {

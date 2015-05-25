@@ -1,7 +1,17 @@
-define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0.default:_0}();
-var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1.default:_1}();
+define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0["default"]:_0}();
+var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1["default"]:_1}();
 
 var uid = 0;
+
+function getDom(dom) {
+  if(util.isString(dom)) {
+    return document.querySelector(dom);
+  }
+  return dom;
+}
+function tempNode() {
+  return document.createElement('div');
+}
 
 !function(){var _2=Object.create(Event.prototype);_2.constructor=Element;Element.prototype=_2}();
   function Element(name, props, children) {
@@ -41,41 +51,48 @@ var uid = 0;
 
   Element.prototype.inTo = function(dom) {
     var s = this.toString();
-    if(util.isString(dom)) {
-      document.querySelector(dom).innerHTML = s;
-    }
-    else if(dom) {
-      dom.innerHTML = s;
-    }
+    getDom(dom).innerHTML = s;
     this.emit(Event.DOM);
   }
   Element.prototype.appendTo = function(dom) {
     var s = this.toString();
-    if(util.isString(dom)) {
-      document.querySelector(dom).innerHTML += s;
+    dom = getDom(dom);
+    if(dom.lastChild) {
+      var div = tempNode();
+      div.innerHTML = s;
+      dom.appendChild(div.firstChild);
     }
-    else if(dom) {
-      dom.innerHTML += s;
+    else {
+      dom.innerHTML = s;
+    }
+    this.emit(Event.DOM);
+  }
+  Element.prototype.prependTo = function(dom) {
+    var s = this.toString();
+    dom = getDom(dom);
+    if(dom.firstChild) {
+      var div = tempNode();
+      div.innerHTML = s;
+      dom.insertBefore(div.firstChild, dom.firstChild);
+    }
+    else {
+      dom.innerHTML = s;
     }
     this.emit(Event.DOM);
   }
   Element.prototype.before = function(dom) {
     var s = this.toString();
-    var div = document.createElement('div');
+    var div = tempNode();
     div.innerHTML = s;
-    if(util.isString(dom)) {
-      dom = document.querySelector(dom);
-    }
+    dom = getDom(dom);
     dom.parentNode.insertBefore(div.firstChild, dom);
     this.emit(Event.DOM);
   }
   Element.prototype.after = function(dom) {
     var s = this.toString();
-    var div = document.createElement('div');
+    var div = tempNode();
     div.innerHTML = s;
-    if(util.isString(dom)) {
-      dom = document.querySelector(dom);
-    }
+    dom = getDom(dom);
     var next = dom.nextSibling;
     if(next) {
       dom.parentNode.insertBefore(div.firstChild, next);
@@ -85,26 +102,14 @@ var uid = 0;
     }
     this.emit(Event.DOM);
   }
-  Element.prototype.insertBefore = function(dom) {
-    var s = this.toString();
-    var div = document.createElement('div');
-    div.innerHTML = s;
-    if(util.isString(dom)) {
-      dom = document.querySelector(dom);
-    }
-    dom.parentNode.insertBefore(div.firstChild, dom);
-    this.emit(Event.DOM);
-  }
   Element.prototype.replace = function(dom) {
     var s = this.toString();
-    var div = document.createElement('div');
+    var div = tempNode();
     div.innerHTML = s;
-    if(util.isString(dom)) {
-      dom = document.querySelector(dom);
-    }
+    dom = getDom(dom);
     dom.parentNode.replaceChild(div.firstChild, dom);
     this.emit(Event.DOM);
   }
 Object.keys(_3).forEach(function(k){Object.defineProperty(Element.prototype,k,_3[k])});Object.keys(Event).forEach(function(k){Element[k]=Event[k]});
 
-exports.default=Element;});
+exports["default"]=Element;});

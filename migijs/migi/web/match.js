@@ -1,4 +1,4 @@
-define(function(require, exports, module){var sort=function(){var _0=require('./sort');return _0.hasOwnProperty("sort")?_0.sort:_0.hasOwnProperty("default")?_0.default:_0}();
+define(function(require, exports, module){var sort=function(){var _0=require('./sort');return _0.hasOwnProperty("sort")?_0.sort:_0.hasOwnProperty("default")?_0["default"]:_0}();
 
 function match(names, classes, ids, style) {
   var res = [];
@@ -9,10 +9,10 @@ function match(names, classes, ids, style) {
   var s = '';
   res.forEach(function(item) {
     sort(item._v, function(a, b) {
-      return a.i > b.i;
+      return a[0] > b[0];
     });
     item._v.forEach(function(style) {
-      s += style.v + ';';
+      s += style[1] + ';';
     });
   });
   return s;
@@ -60,4 +60,4 @@ function matchSel(i, names, classes, ids, style, res) {
   }
 }
 
-exports.default=match;});
+exports["default"]=match;});
