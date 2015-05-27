@@ -2,84 +2,43 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>css组件</title>
+  <title>伪类</title>
   <link href="style.css" media="all" rel="stylesheet"/>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
-
 </head>
 <body>
 <div id="example"></div>
 <pre><code class="brush:css"></code></pre>
 <pre><code class="brush:jsx"></code></pre>
 <style type="text/jsx">
-  span{
-    position:relative;
-    display:inline-block;
-    width:40px;
-    height:20px;
-    background:#6AF;
-    border-radius:10px;
-    transition:background-color 0.3s;
-  }
-  span i{
-    position:absolute;
-    display:block;
-    left:2px;
-    top:2px;
-    width:16px;
-    height:16px;
-    background:#FFF;
-    border-radius:25px;
-    box-shadow:2px 2px 4px rgba(0, 0, 0, 0.1);
-    cursor:pointer;
-    transition:left 0.3s;
-  }
-  .off{
-    background-color:#CCC;
-  }
-  .off i{
-    left:20px;
-  }
+  a{color:#F00}
+  a span{font-style:italic}
+  a:hover{color:#00F}
+  a:hover span{font-style:normal}
+  a:active{background:#CF9}
+  a:active span{border-top:1px dashed #666}
 </style>
 <script type="text/jsx">
   import jaw from 'jaw';
   var style = document.querySelector('style[type="text/jsx"]').textContent;
 
-  class Switch extends migi.Component {
+  class Link extends migi.Component {
     constructor(...data) {
       super(...data);
-      this._state = !!this.props.state;
       this.style = jaw.parse(style);
-    }
-    get state() {
-      return this._state;
-    }
-    set state(v) {
-      this._state = v;
-    }
-    click() {
-      this.state = !this.state;
-      this.emit('change', this.state);
     }
     render() {
       return (
-        <span onClick={this.click} class={this.state ? '' : 'off'}>
-          <i></i>
-          <input type="radio" checked={this.state}/>
-        </span>
+        <p>
+          <a href="#"><span>link</span></a>
+        </p>
       );
     }
   }
 
-  function change(v) {
-    console.log(v);
-  }
   migi.render(
-    <ol>
-      <li><Switch state={true} onChange={change}/></li>
-      <li><Switch state={false} onChange={change}/></li>
-    </ol>,
+    <Link />,
     '#example'
   );
 </script>

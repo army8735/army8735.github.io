@@ -1,11 +1,11 @@
-define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0["default"]:_0}();
-var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("Element")?_1.Element:_1.hasOwnProperty("default")?_1["default"]:_1}();
-var Component=function(){var _2=require('./Component');return _2.hasOwnProperty("Component")?_2.Component:_2.hasOwnProperty("default")?_2["default"]:_2}();
-var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3.util:_3.hasOwnProperty("default")?_3["default"]:_3}();
-var Obj=function(){var _4=require('./Obj');return _4.hasOwnProperty("Obj")?_4.Obj:_4.hasOwnProperty("default")?_4["default"]:_4}();
-var Cb=function(){var _5=require('./Cb');return _5.hasOwnProperty("Cb")?_5.Cb:_5.hasOwnProperty("default")?_5["default"]:_5}();
-var match=function(){var _6=require('./match');return _6.hasOwnProperty("match")?_6.match:_6.hasOwnProperty("default")?_6["default"]:_6}();
-var sort=function(){var _7=require('./sort');return _7.hasOwnProperty("sort")?_7.sort:_7.hasOwnProperty("default")?_7["default"]:_7}();
+define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0.default:_0}();
+var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("Element")?_1.Element:_1.hasOwnProperty("default")?_1.default:_1}();
+var Component=function(){var _2=require('./Component');return _2.hasOwnProperty("Component")?_2.Component:_2.hasOwnProperty("default")?_2.default:_2}();
+var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3.util:_3.hasOwnProperty("default")?_3.default:_3}();
+var Obj=function(){var _4=require('./Obj');return _4.hasOwnProperty("Obj")?_4.Obj:_4.hasOwnProperty("default")?_4.default:_4}();
+var Cb=function(){var _5=require('./Cb');return _5.hasOwnProperty("Cb")?_5.Cb:_5.hasOwnProperty("default")?_5.default:_5}();
+var match=function(){var _6=require('./match');return _6.hasOwnProperty("match")?_6.match:_6.hasOwnProperty("default")?_6.default:_6}();
+var sort=function(){var _7=require('./sort');return _7.hasOwnProperty("sort")?_7.sort:_7.hasOwnProperty("default")?_7.default:_7}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -44,6 +44,8 @@ var SELF_CLOSE = {
     self.__ids = null;
     self.__inline = null;
     self.__selfClose = SELF_CLOSE.hasOwnProperty(name);
+    self.__hover = false;
+    self.__active = false;
     children.forEach(function(child) {
       child.__parent = self;
     });
@@ -72,14 +74,20 @@ var SELF_CLOSE = {
       else {
         var s = self.__renderProp(prop);
         //使用jaw导入样式时不输出class属性
-        if(prop != 'class' || !self.__style) {
-          res += s;
+        if(self.__style) {
+          switch(prop) {
+            case 'class':
+            case 'id':
+              s = ' ' + 'migi-' + s.slice(1);
+              break;
+          }
         }
+        res += s;
       }
     });
     //使用jaw内联css需解析
     if(self.__style) {
-      var s = self.__match();
+      var s = self.__match(true);
       if(s) {
         if(res.indexOf(' style="') > 1) {
           res = res.replace(/ style="[^"]*"/, ' style="' + s + '"');
@@ -89,7 +97,7 @@ var SELF_CLOSE = {
         }
       }
     }
-    res += ' migi-id="' + self.id + '"';
+    res += ' migi-uid="' + self.uid + '"';
     //自闭合标签特殊处理
     if(self.__selfClose) {
       return res + '/>';
@@ -186,7 +194,7 @@ var SELF_CLOSE = {
   }
 
   var _9={};_9.element={};_9.element.get =function() {
-    this.__element = this.__element || document.querySelector('[migi-id="' + this.id + '"]');
+    this.__element = this.__element || document.querySelector('[migi-uid="' + this.uid + '"]');
     return this.__element;
   }
   _9.names={};_9.names.get =function() {
@@ -210,6 +218,7 @@ var SELF_CLOSE = {
   }
 
   VirtualDom.prototype.__onDom = function() {
+    Element.prototype.__onDom.call(this);
     var self = this;
     var length = self.children.length;
     self.children.forEach(function(child, index) {
@@ -299,8 +308,7 @@ var SELF_CLOSE = {
     var first = self.children[0];
     if(first instanceof Obj) {
       switch(first.type) {
-        case Obj.VIRTUALDOM:
-        case Obj.COMPONENT:
+        case Obj.ELEMENT:
           start = first.count;
           break;
       }
@@ -333,7 +341,7 @@ var SELF_CLOSE = {
       if(child instanceof Obj) {
         var ot = child.type;
         //当Component和VirtualDom则++，且前面是非空文本节点时再++，因为有2个节点
-        if(ot == Obj.VIRTUALDOM || ot == Obj.COMPONENT) {
+        if(ot == Obj.ELEMENT) {
           start++;
           //静态文本节点
           if(!(prev instanceof Element)) {
@@ -425,30 +433,25 @@ var SELF_CLOSE = {
       case 'checked':
       case 'selected':
         this.element[k] = v;
-        if(this.__style) {
-          this.__cache[k] = v;
-        }
-        break;
-      case 'class':
-        //使用了jaw内联解析css后不再设置类名
+        //使用了jaw内联解析css
         if(this.__style) {
           this.__cache[k] = v;
           this.__updateStyle();
-        }
-        else {
-          this.element.className = v;
         }
         break;
       case 'id':
-        //使用了jaw内联解析css后不再设置id
+      case 'class':
         if(this.__style) {
+          this.element.setAttribute('migi-' + k, v);
           this.__cache[k] = v;
           this.__updateStyle();
+          break;
         }
       default:
         this.element.setAttribute(k, v);
         if(this.__style) {
           this.__cache[k] = v;
+          this.__updateStyle();
         }
         break;
     }
@@ -464,7 +467,7 @@ var SELF_CLOSE = {
       }
     }
   }
-  VirtualDom.prototype.__match = function() {
+  VirtualDom.prototype.__match = function(first) {
     this.__inline = this.__cache.style || '';
     if(this.parent instanceof VirtualDom) {
       this.__classes = this.parent.__classes.slice(0);
@@ -493,7 +496,7 @@ var SELF_CLOSE = {
       this.__ids.push('');
     }
     //TODO: 属性、伪类
-    var matches = match(this.__names, this.__classes, this.__ids, this.__style);
+    var matches = match(this.__names, this.__classes, this.__ids, this.__style, this, first);
     //本身的inline最高优先级追加到末尾
     return matches + this.__inline;
   }
@@ -510,4 +513,4 @@ var SELF_CLOSE = {
   }
 Object.keys(_9).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_9[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
 
-exports["default"]=VirtualDom;});
+exports.default=VirtualDom;});

@@ -76,6 +76,7 @@ var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3
   }
 
   Component.prototype.__onDom = function() {
+    Element.prototype.__onDom.call(this);
     var self = this;
     self.virtualDom.emit(Event.DOM);
     self.__element = self.virtualDom.element;

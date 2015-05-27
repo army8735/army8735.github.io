@@ -1,5 +1,5 @@
-define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0["default"]:_0}();
-var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1["default"]:_1}();
+define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0.default:_0}();
+var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1.default:_1}();
 
 var uid = 0;
 
@@ -20,17 +20,20 @@ function tempNode() {
     this.__props = props;
     this.__children = children;
 
-    this.__id = uid++;
+    this.__uid = uid++;
     this.__element = null;
     this.__parent = null;
     this.__style = null;
+    this.__dom = false;
 
     this.on(Event.DOM, this.__onDom);
     this.on(Event.DATA, this.__onData);
   }
 
+  Element.prototype.__onDom = function() {
+    this.__dom = true;
+  }
   //@abstract
-  //__onDom() {}
   //__onData() {}
 
   var _3={};_3.name={};_3.name.get =function() {
@@ -45,8 +48,11 @@ function tempNode() {
   _3.parent={};_3.parent.get =function() {
     return this.__parent;
   }
-  _3.id={};_3.id.get =function() {
-    return this.__id;
+  _3.uid={};_3.uid.get =function() {
+    return this.__uid;
+  }
+  _3.dom={};_3.dom.get =function() {
+    return this.__dom;
   }
 
   Element.prototype.inTo = function(dom) {
@@ -112,4 +118,4 @@ function tempNode() {
   }
 Object.keys(_3).forEach(function(k){Object.defineProperty(Element.prototype,k,_3[k])});Object.keys(Event).forEach(function(k){Element[k]=Event[k]});
 
-exports["default"]=Element;});
+exports.default=Element;});
