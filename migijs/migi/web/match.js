@@ -92,8 +92,18 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
                   //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
                   document.body.addEventListener('mouseup', function(e) {
                     virtualDom.__active = false;
-                      virtualDom.__updateStyle();
+                    virtualDom.__updateStyle();
                   }, true);
+                  //window失焦时也需判断
+                  window.addEventListener('blur', function(e) {
+                    virtualDom.__active = false;
+                    virtualDom.__updateStyle();
+                  });
+                  //drag结束时也需判断
+                  window.addEventListener('dragend', function(e) {
+                    virtualDom.__active = false;
+                    virtualDom.__updateStyle();
+                  });
                 });
                 break;
             }
@@ -110,16 +120,32 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
           for(var j = 0, len = pseudos.length; j < len; j++) {
             switch(pseudos[j]) {
               case 'hover':
-                if(virtualDom.__hover == false) {
+                if(!virtualDom.__hover) {
                   isMatch = false;
                   break outer;
                 }
                 break;
               case 'active':
-                if(virtualDom.__active == false) {
+                if(!virtualDom.__active) {
                   isMatch = false;
                   break outer;
                 }
+                break;
+              case 'first-child':
+                if(!virtualDom.isFirst()) {
+                  isMatch = false;
+                  break outer;
+                }
+                break;
+              case 'last-child':
+                if(!virtualDom.isLast()) {
+                  isMatch = false;
+                  break outer;
+                }
+                break;
+              //TODO:其它伪类
+              default:
+                isMatch = false;
                 break;
             }
           }
