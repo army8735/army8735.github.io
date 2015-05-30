@@ -149,18 +149,18 @@
           <div class="place">
             {
               this.list.map(function(item) {
-                return <div>{ item.name }</div>;
-              })
+                  return <div>{ item.name }</div>;
+            })
             }
           </div>
-          <strong>{ this.list.length ? this.list[0].name : '&nbsp;' }</strong>
+          <strong>{ this.value || ' ' }</strong>
           <b></b>
           <ul class={ this.show ? 'c show' : 'c' }>
-          {
-            this.list.map(function(item) {
-              return <li>{ item.name }</li>;
+            {
+              this.list.map(function(item) {
+                  return <li>{ item.name }</li>;
             })
-          }
+            }
           </ul>
         </div>
       );

@@ -26,6 +26,8 @@ var SELF_CLOSE = {
   'track': true
 };
 
+var TEMP_NODE = document.createElement('div');
+
 !function(){var _8=Object.create(Element.prototype);_8.constructor=VirtualDom;VirtualDom.prototype=_8}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
@@ -228,7 +230,7 @@ var SELF_CLOSE = {
         if(self.__style) {
           self.__cache[prop] = s;
         }
-        return ' ' + prop + '="' + s + '"';
+        return ' ' + prop + '="' + util.encodeHtml(s) + '"';
       }
       else if(!!v.v) {
         if(self.__style) {
@@ -242,25 +244,27 @@ var SELF_CLOSE = {
       if(self.__style) {
         self.__cache[prop] = s;
       }
-      return ' ' + prop + '="' + s + '"';
+      return ' ' + prop + '="' + util.encodeHtml(s) + '"';
     }
   }
-  VirtualDom.prototype.__renderChild = function(child, unEscape) {
+  VirtualDom.prototype.__renderChild = function(child) {
     var self = this;
-    if(child instanceof Element || child instanceof Obj) {
-      return child.toString(unEscape);
+    if(child instanceof Element) {
+      return child.toString();
+    }
+    else if(child instanceof Obj) {
+      var s = child.toString();
+      return child.type == Obj.TEXT ? util.encodeHtml(s) : s;
     }
     else if(Array.isArray(child)) {
       var res = '';
       child.forEach(function(item) {
-        res += self.__renderChild(item, unEscape);
+        res += self.__renderChild(item);
       });
       return res;
     }
     else {
-      //TODO: 空变量
-      //TODO: encode/decode
-      return unEscape ? child.toString() : util.escape(child.toString());
+      return util.encodeHtml(child.toString());
     }
   }
   VirtualDom.prototype.__reRender = function() {
@@ -337,10 +341,10 @@ var SELF_CLOSE = {
     this.element.innerHTML = v;
   }
   _9.text={};_9.text.get =function() {
-    return this.element.innerText;
+    return this.element.textContent;
   }
   _9.text.set =function(v) {
-    this.element.innerText = v;
+    this.element.textContent = v;
   }
 
   VirtualDom.prototype.__onDom = function() {
@@ -539,7 +543,15 @@ var SELF_CLOSE = {
         var textNode = self.element.childNodes[item.start];
         var now = textNode.textContent;
         if(res != now) {
-          textNode.textContent = res;
+          //textContent自动转义，保留空白，但显式时仍是合并多个空白，故用临时节点的innerHTML再replace代替
+          //但当为innerHTML空时，没有孩子节点，所以特殊判断
+          if(res) {
+            TEMP_NODE.innerHTML = util.encodeHtml(res);
+            self.element.replaceChild(TEMP_NODE.firstChild, textNode);
+          }
+          else {
+            textNode.textContent = '';
+          }
         }
       });
     }
@@ -558,28 +570,31 @@ var SELF_CLOSE = {
       case 'value':
       case 'checked':
       case 'selected':
+      case 'selectedIndex':
+      case 'readOnly':
+      case 'multiple':
+      case 'defaultValue':
+      case 'autofocus':
+      case 'async':
+      case 'tagName':
+      case 'nodeName':
+      case 'nodeType':
         this.element[k] = v;
-        //使用了jaw内联解析css
-        if(this.__style) {
-          this.__cache[k] = v;
-          this.__updateStyle();
-        }
         break;
       case 'id':
       case 'class':
         if(this.__style) {
           this.element.setAttribute('migi-' + k, v);
-          this.__cache[k] = v;
-          this.__updateStyle();
           break;
         }
       default:
         this.element.setAttribute(k, v);
-        if(this.__style) {
-          this.__cache[k] = v;
-          this.__updateStyle();
-        }
         break;
+    }
+    //使用了jaw内联解析css
+    if(this.__style) {
+      this.__cache[k] = v;
+      this.__updateStyle();
     }
   }
   VirtualDom.prototype.__merge = function(range) {

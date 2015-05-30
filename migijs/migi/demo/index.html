@@ -12,6 +12,7 @@
     ol a{
       color:#39F;
       text-shadow:1px 1px 2px rgba(0,0,0, 0.1);
+      text-decoration:none;
     }
     ol a:hover{
       color:#F30;
@@ -33,6 +34,10 @@
     <span>当jsx变量遇到数组时，会自动遍历每项，这是个递归的过程</span>
   </li>
   <li>
+    <a href="encode.html" title="encode">转义编码</a>
+    <span>所有文本变量都会被自动转义</span>
+  </li>
+  <li>
     <a href="component.html" title="component">自定义组件</a>
     <span>当jsx中的html的tagName为一个继承自migi.Component的类时，将生产一个组件类的实例，并调用其render()方法渲染。它的props属性为第1个参数，来自于attribute</span>
   </li>
@@ -43,6 +48,10 @@
   <li>
     <a href="children.html" title="children">children属性</a>
     <span>自定义组件拥有children属性，是个数组，指向实际运行时其html的孩子节点</span>
+  </li>
+  <li>
+    <a href="shadow.html" title="shadow">shadow作用域隔离</a>
+    <span>如同WebComponent一样，组件内的事件是不向外冒泡的，但这并不能组织捕获。在下面的css组件中，如果使用了jaw构建，css也将shadow化</span>
   </li>
   <li>
     <a href="dom.html" title="dom">侦听操作DOM</a>
