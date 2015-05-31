@@ -28,8 +28,11 @@
     click() {
       alert('inner');
     }
+    click2() {
+      alert('p');
+    }
     render() {
-      return <p><span onClick={ this.click }>text</span></p>;
+      return <p class="p" onClick={ this.click2 }><span onClick={ this.click }>text</span></p>;
     }
   }
 
