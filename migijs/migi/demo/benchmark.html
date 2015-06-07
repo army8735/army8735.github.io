@@ -23,7 +23,8 @@
       var self = this;
       self._list = [];
       self.on(migi.Event.DOM, function() {
-        self.list = ENV.generateData().toArray();
+        var v = ENV.generateData().toArray();
+        self.list = v;
         Monitoring.renderRate.ping();
         setTimeout(arguments.callee, ENV.timeout);
       });
@@ -45,14 +46,11 @@
               {
                 this.list.map(function(database) {
                     return (
-                      < tr >
-                      < td
-                    class
-                    = "dbname" >
-                      { database.dbname
-                  }
-                  < / td >
-                  < td class="query-count">
+                      <tr>
+                      <td class="dbname">
+                      {database.dbname}
+                  </td>
+                  <td class="query-count">
                 <span class={database.lastSample.countClassName}>
               {database.lastSample.queries.length}
                 </span>
