@@ -1,9 +1,7 @@
-define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0["default"]:_0}();
-var util=function(){var _1=require('./util');return _1.hasOwnProperty("util")?_1.util:_1.hasOwnProperty("default")?_1["default"]:_1}();
+define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
+var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 
 var uid = 0;
-
-var TEMP_NODE = document.createElement('div');
 
 function getDom(dom) {
   if(util.isString(dom)) {
@@ -14,11 +12,12 @@ function getDom(dom) {
 
 !function(){var _2=Object.create(Event.prototype);_2.constructor=Element;Element.prototype=_2}();
   function Element(name, props, children) {
-    if(props===void 0)props={};children=[].slice.call(arguments, 2);Event.call(this);
+    Event.call(this);
     this.__name = name;
     this.__props = props;
     this.__children = children;
 
+    //TODO: 大数处理
     this.__uid = uid++;
     this.__element = null;
     this.__parent = null;
@@ -30,7 +29,10 @@ function getDom(dom) {
   }
 
   Element.prototype.__onDom = function() {
-    this.__dom = true;
+    var self = this;
+    self.__dom = true;
+    //触发后就移除
+    self.off(Event.DOM, self.__onDom);
   }
   //@abstract
   //__onData() {}
@@ -60,7 +62,7 @@ function getDom(dom) {
     this.element.innerHTML = v;
   }
   _3.text={};_3.text.get =function() {
-    return this.element.textContent;
+    return util.lie ? this.element.innerText : this.element.textContent;
   }
   _3.text.set =function(v) {
     this.element.innerHTML = util.encodeHtml(v);
@@ -75,8 +77,8 @@ function getDom(dom) {
     var s = this.toString();
     dom = getDom(dom);
     if(dom.lastChild) {
-      TEMP_NODE.innerHTML = s;
-      dom.appendChild(TEMP_NODE.firstChild);
+      util.NODE.innerHTML = s;
+      dom.appendChild(util.NODE.firstChild);
     }
     else {
       dom.innerHTML = s;
@@ -87,8 +89,8 @@ function getDom(dom) {
     var s = this.toString();
     dom = getDom(dom);
     if(dom.firstChild) {
-      TEMP_NODE.innerHTML = s;
-      dom.insertBefore(TEMP_NODE.firstChild, dom.firstChild);
+      util.NODE.innerHTML = s;
+      dom.insertBefore(util.NODE.firstChild, dom.firstChild);
     }
     else {
       dom.innerHTML = s;
@@ -97,27 +99,27 @@ function getDom(dom) {
   }
   Element.prototype.before = function(dom) {
     var s = this.toString();
-    TEMP_NODE.innerHTML = s;
+    util.NODE.innerHTML = s;
     dom = getDom(dom);
-    dom.parentNode.insertBefore(TEMP_NODE.firstChild, dom);
+    dom.parentNode.insertBefore(util.NODE.firstChild, dom);
     this.emit(Event.DOM);
   }
   Element.prototype.after = function(dom) {
     var s = this.toString();
-    TEMP_NODE.innerHTML = s;
+    util.NODE.innerHTML = s;
     dom = getDom(dom);
     var next = dom.nextSibling;
     if(next) {
-      dom.parentNode.insertBefore(TEMP_NODE.firstChild, next);
+      dom.parentNode.insertBefore(util.NODE.firstChild, next);
     }
     else {
-      dom.parentNode.appendChild(TEMP_NODE.firstChild);
+      dom.parentNode.appendChild(util.NODE.firstChild);
     }
     this.emit(Event.DOM);
   }
   Element.prototype.replace = function(dom) {
     var s = this.toString();
-    TEMP_NODE.innerHTML = s;
+    util.NODE.innerHTML = s;
     dom = getDom(dom);
     dom.parentNode.replaceChild(div.firstChild, dom);
     this.emit(Event.DOM);

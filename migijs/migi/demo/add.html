@@ -17,13 +17,13 @@
   class MyComponent extends migi.Component {
     constructor(...data) {
       super(...data);
-      this.arr = [];
+      this._list = [];
     }
     get list() {
-      return this.arr;
+      return this._list;
     }
-    set list(arr) {
-      this.arr = arr;
+    set list(_list) {
+      this._list = _list;
     }
     add() {
       var num = Math.floor(Math.random() * 10);
@@ -53,13 +53,6 @@
             <li title="变量+DOM">{this.list}<span>dom</span></li>
             <li title="变量+DOM+变量">{this.list}<span>dom</span>{this.list}</li>
           </ul>
-          <ol>
-            {
-              this.list.map(function(item) {
-                return <li>{item}</li>;
-              })
-            }
-          </ol>
         </div>
       );
     }

@@ -1,15 +1,14 @@
-define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("Event")?_0.Event:_0.hasOwnProperty("default")?_0["default"]:_0}();
-var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("Element")?_1.Element:_1.hasOwnProperty("default")?_1["default"]:_1}();
-var VirtualDom=function(){var _2=require('./VirtualDom');return _2.hasOwnProperty("VirtualDom")?_2.VirtualDom:_2.hasOwnProperty("default")?_2["default"]:_2}();
-var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3.util:_3.hasOwnProperty("default")?_3["default"]:_3}();
+define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
+var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("default")?_1["default"]:_1}();
+var VirtualDom=function(){var _2=require('./VirtualDom');return _2.hasOwnProperty("default")?_2["default"]:_2}();
+var util=function(){var _3=require('./util');return _3.hasOwnProperty("default")?_3["default"]:_3}();
 
 !function(){var _4=Object.create(Element.prototype);_4.constructor=Component;Component.prototype=_4}();
   function Component(props, children) {
-    if(props===void 0)props={};children=[].slice.call(arguments, 1);Element.call(this);
-    var self = this;
+    if(props===void 0)props={};if(children===void 0)children=[];var self = this;
     var name = self.constructor.toString();
     name = /^function\s+([\w$]+)/.exec(name)[1];
-    Element.apply(this,[name,props].concat(Array.from(children)));
+    Element.call(this,name, props, children);
 
     self.__virtualDom = null;
 
@@ -26,9 +25,11 @@ var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3
     });
   }
   //需要被子类覆盖
+  //@abstract
   Component.prototype.render = function() {
-    return new (Function.prototype.bind.apply(VirtualDom, [null,'div',this.props].concat(Array.from(this.children))));
+    return new VirtualDom('div', this.props, this.children);
   }
+  //@override
   Component.prototype.toString = function() {
     this.__virtualDom = this.render();
     this.virtualDom.__parent = this;
@@ -86,6 +87,7 @@ var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3
     this.__style = v;
   }
 
+  //@override
   Component.prototype.__onDom = function() {
     Element.prototype.__onDom.call(this);
     var self = this;
@@ -109,6 +111,7 @@ var util=function(){var _3=require('./util');return _3.hasOwnProperty("util")?_3
         self.element.addEventListener(name, stopPropagation);
       });
   }
+  //@override
   Component.prototype.__onData = function(k) {
     if(this.virtualDom) {
       this.virtualDom.emit(Event.DATA, k);

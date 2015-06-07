@@ -17,7 +17,7 @@ var Module = Class(function(jsdc) {
     this.jsdc.append(node.leaf(2).last().token().content());
     this.jsdc.append(');');
   },
-  import: function(node) {
+  imports: function(node) {
     var self = this;
     self.jsdc.ignore(node, 'module2');
     var one = node.leaf(1);
@@ -43,9 +43,8 @@ var Module = Class(function(jsdc) {
       self.jsdc.append('=require(');
       self.jsdc.append(last.last().token().content());
       self.jsdc.append(');return ');
-      self.jsdc.append(temp + '.hasOwnProperty("' + id + '")?');
-      self.jsdc.append(temp + '.' + id + ':' + temp + '.hasOwnProperty("default")?');
-      self.jsdc.append(temp + '.default:' + temp);
+      self.jsdc.append(temp + '.hasOwnProperty("default")?');
+      self.jsdc.append(temp + '["default"]:' + temp);
       self.jsdc.append('}();');
     }
     //import ids from "string",import {ids} from "string"
@@ -72,7 +71,7 @@ var Module = Class(function(jsdc) {
       self.jsdc.append('}();');
     }
   },
-  export: function(node) {
+  exports: function(node) {
     var s = node.leaf(1).name();
     switch(s) {
       case JsNode.TOKEN:
@@ -89,7 +88,7 @@ var Module = Class(function(jsdc) {
           this.jsdc.ignore(node, 'module3');
         }
         else if(s == 'default') {
-          this.jsdc.append('exports.default=');
+          this.jsdc.append('exports["default"]=');
           this.jsdc.ignore(node.leaf(0), 'module4');
           this.jsdc.ignore(node.leaf(1), 'module5');
         }
