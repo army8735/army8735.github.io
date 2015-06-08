@@ -372,7 +372,8 @@ var flag = true;
   //force强制查看prev，因为child为数组时会展开，当child不是第1个时其展开项都有prev
   VirtualDom.prototype.__domChild = function(child, index, len, option, force) {
     var self = this;
-    if(Array.isArray(child)) {
+    //防止空数组跳过逻辑，它应该是个空字符串
+    if(Array.isArray(child) && child.length) {
       child.forEach(function(item, i) {
         //第1个同时作为children的第1个要特殊处理
         index = self.__domChild(item, index, len, option, index || i);
@@ -389,43 +390,41 @@ var flag = true;
       }
       option.prev = child;
     }
-    //Obj类型时需判断是否TEXT
-    else if(child instanceof Obj && child.type != Obj.TEXT) {
+    else if(child instanceof Obj) {
       index = self.__domChild(child.v, index, len, option, force);
     }
-    else if(VirtualDom.isText(child)) {
-      if(VirtualDom.isEmptyText(child)) {
-        //前方如有兄弟文本节点，无需插入
-        if(index || force) {
-          var prev = self.children[index - 1];
-          if(VirtualDom.isText(prev)) {
+    else if(VirtualDom.isEmptyText(child)) {
+      //前方如有兄弟文本节点，无需插入
+      if(index || force) {
+        var prev = self.children[index - 1];
+        if(VirtualDom.isText(prev)) {
+          return index;
+        }
+      }
+      //后方如有非空兄弟文本节点，无需插入；同时设置索引，提高循环性能
+      for(var i = index + 1; i < len; i++) {
+        var next = self.children[i];
+        if(VirtualDom.isText(next)) {
+          index++;
+          prev = next;
+          if(!VirtualDom.isEmptyText(next)) {
             return index;
           }
         }
-        //后方如有非空兄弟文本节点，无需插入；同时设置索引，提高循环性能
-        for(var i = index + 1; i < len; i++) {
-          var next = self.children[i];
-          if(VirtualDom.isText(next)) {
-            index++;
-            prev = next;
-            if(!VirtualDom.isEmptyText(next)) {
-              return index;
-            }
-          }
-          else {
-            break;
-          }
-        }
-        var blank = document.createTextNode('');
-        //可能仅一个空文本节点，或最后一个空文本节点
-        var length = self.element.childNodes.length;
-        if(!length || option.start >= length) {
-          self.element.appendChild(blank);
-        }
-        //插入
         else {
-          self.element.insertBefore(blank, self.element.childNodes[option.start]);
+          break;
         }
+      }
+      var blank = document.createTextNode('');
+      //可能仅一个空文本节点，或最后一个空文本节点
+      var cns = self.element.childNodes;
+      var length = cns.length;
+      if(!length || option.start >= length) {
+        self.element.appendChild(blank);
+      }
+      //插入
+      else {
+        self.element.insertBefore(blank, cns[option.start]);
       }
     }
     return index;
@@ -925,7 +924,7 @@ var flag = true;
         return true;
       }
     }
-    //静态文本节点，包括空、undefined、null
+    //静态文本节点，包括空、undefined、null、空数组
     else if(!(item instanceof Element)) {
       return true;
     }
@@ -935,6 +934,7 @@ var flag = true;
     if(item instanceof Obj) {
       return item.empty;
     }
+    //静态文本节点，包括空、undefined、null、空数组
     return item === void 0 || !item.toString();
   }
 Object.keys(_12).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_12[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
