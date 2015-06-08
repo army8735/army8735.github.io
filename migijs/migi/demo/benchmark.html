@@ -23,8 +23,7 @@
       var self = this;
       self._list = [];
       self.on(migi.Event.DOM, function() {
-        var v = ENV.generateData().toArray();
-        self.list = v;
+        self.list = ENV.generateData().toArray();
         Monitoring.renderRate.ping();
         setTimeout(arguments.callee, ENV.timeout);
       });
@@ -45,32 +44,32 @@
             <tbody>
               {
                 this.list.map(function(database) {
-                    return (
-                      <tr>
+                  return (
+                    <tr>
                       <td class="dbname">
-                      {database.dbname}
-                  </td>
-                  <td class="query-count">
-                <span class={database.lastSample.countClassName}>
-              {database.lastSample.queries.length}
-                </span>
-                </td>
-              {
-                database.lastSample.topFiveQueries.map(function(query, index) {
-                return (
-                <td class={ "Query " + query.elapsedClassName}>
-              {query.formatElapsed}
-                <div class="popover left">
-                <div class="popover-content">{query.query}</div>
-                <div class="arrow"/>
-                </div>
-                </td>
-                );
-              })
-              }
-                </tr>
-                );
-              })
+                        {database.dbname}
+                      </td>
+                      <td class="query-count">
+                        <span class={database.lastSample.countClassName}>
+                          {database.lastSample.queries.length}
+                        </span>
+                      </td>
+                      {
+                        database.lastSample.topFiveQueries.map(function(query, index) {
+                          return (
+                            <td class={ "Query " + query.elapsedClassName}>
+                              {query.formatElapsed}
+                              <div class="popover left">
+                                <div class="popover-content">{query.query}</div>
+                                <div class="arrow"/>
+                              </div>
+                            </td>
+                          );
+                        })
+                      }
+                    </tr>
+                  );
+                })
               }
             </tbody>
           </table>
