@@ -31,14 +31,11 @@ function joinArray(arr) {
   return res;
 }
 
-var flag = true;
-
 
   function Obj(k, context, cb) {
     //fix循环依赖
-    if(flag && Element.hasOwnProperty('default')) {
+    if(Element.hasOwnProperty('default')) {
       Element = Element['default'];
-      flag = false;
     }
 
     this.__k = k;
@@ -110,6 +107,13 @@ var flag = true;
     var s = Array.isArray(this.v) ? joinArray(this.v) : this.v;
     //防止undefined的变量
     return s === void 0 ? '' : s.toString();
+  }
+  Obj.prototype.update = function(ov) {
+    var nv = this.cb.call(this.context);
+    if(!util.equal(ov, nv)) {
+      this.v = nv;
+      return true;
+    }
   }
 Object.keys(_2).forEach(function(k){Object.defineProperty(Obj.prototype,k,_2[k])});
 
