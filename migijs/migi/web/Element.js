@@ -30,6 +30,12 @@ function getDom(dom) {
     this.on(Event.DOM, this.__onDom);
     this.on(Event.DATA, this.__onData);
   }
+  //防止多次插入后重复，清除上次，永远只存在一个实例
+  Element.prototype.__clean = function() {
+    if(this.dom) {
+      this.element.parentNode.removeChild(this.element);
+    }
+  }
 
   Element.prototype.__onDom = function() {
     this.__dom = true;
@@ -54,6 +60,9 @@ function getDom(dom) {
   _3.uid={};_3.uid.get =function() {
     return this.__uid;
   }
+  _3.element={};_3.element.get =function() {
+    return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.uid + '"]'));
+  }
   _3.dom={};_3.dom.get =function() {
     return this.__dom;
   }
@@ -71,16 +80,19 @@ function getDom(dom) {
   }
 
   Element.prototype.inTo = function(dom) {
+    this.__clean();
     var s = this.toString();
     getDom(dom).innerHTML = s;
     this.emit(Event.DOM);
   }
   Element.prototype.appendTo = function(dom) {
+    this.__clean();
     var s = this.toString();
     dom = getDom(dom);
     if(dom.lastChild) {
-      util.NODE.innerHTML = s;
-      dom.appendChild(util.NODE.firstChild);
+      var node = util.getParent(this.name);
+      node.innerHTML = s;
+      dom.appendChild(node.firstChild);
     }
     else {
       dom.innerHTML = s;
@@ -88,11 +100,13 @@ function getDom(dom) {
     this.emit(Event.DOM);
   }
   Element.prototype.prependTo = function(dom) {
+    this.__clean();
     var s = this.toString();
     dom = getDom(dom);
     if(dom.firstChild) {
-      util.NODE.innerHTML = s;
-      dom.insertBefore(util.NODE.firstChild, dom.firstChild);
+      var node = util.getParent(this.name);
+      node.innerHTML = s;
+      dom.insertBefore(node.firstChild, dom.firstChild);
     }
     else {
       dom.innerHTML = s;
@@ -100,31 +114,40 @@ function getDom(dom) {
     this.emit(Event.DOM);
   }
   Element.prototype.before = function(dom) {
+    this.__clean();
     var s = this.toString();
-    util.NODE.innerHTML = s;
+    var node = util.getParent(this.name);
+    node.innerHTML = s;
     dom = getDom(dom);
-    dom.parentNode.insertBefore(util.NODE.firstChild, dom);
+    dom.parentNode.insertBefore(node.firstChild, dom);
     this.emit(Event.DOM);
   }
   Element.prototype.after = function(dom) {
+    this.__clean();
     var s = this.toString();
-    util.NODE.innerHTML = s;
+    var node = util.getParent(this.name);
+    node.innerHTML = s;
     dom = getDom(dom);
     var next = dom.nextSibling;
     if(next) {
-      dom.parentNode.insertBefore(util.NODE.firstChild, next);
+      dom.parentNode.insertBefore(node.firstChild, next);
     }
     else {
-      dom.parentNode.appendChild(util.NODE.firstChild);
+      dom.parentNode.appendChild(node.firstChild);
     }
     this.emit(Event.DOM);
   }
   Element.prototype.replace = function(dom) {
+    this.__clean();
     var s = this.toString();
-    util.NODE.innerHTML = s;
+    var node = util.getParent(this.name);
+    node.innerHTML = s;
     dom = getDom(dom);
-    dom.parentNode.replaceChild(div.firstChild, dom);
+    dom.parentNode.replaceChild(node.firstChild, dom);
     this.emit(Event.DOM);
+  }
+  Element.clean=function() {
+    uid = 0;
   }
 Object.keys(_3).forEach(function(k){Object.defineProperty(Element.prototype,k,_3[k])});Object.keys(Event).forEach(function(k){Element[k]=Event[k]});
 

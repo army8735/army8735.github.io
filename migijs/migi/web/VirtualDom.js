@@ -30,14 +30,25 @@ var SELF_CLOSE = {
   'track': true
 };
 
-var flag = true;
+var SPECIAL_PROP = {
+  'checked': true,
+  'selected': true,
+  'selectedIndex': true,
+  'readOnly': true,
+  'multiple': true,
+  'defaultValue': true,
+  'autofocus': true,
+  'async': true,
+  'tagName': true,
+  'nodeName': true,
+  'nodeType': true
+};
 
 !function(){var _12=Object.create(Element.prototype);_12.constructor=VirtualDom;VirtualDom.prototype=_12}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
-    if(props===void 0)props={};if(children===void 0)children=[];if(flag && Component.hasOwnProperty('default')) {
+    if(props===void 0)props={};if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
       Component = Component['default'];
-      flag = false;
     }
     //自闭合标签不能有children
     if(SELF_CLOSE.hasOwnProperty(name) && children.length) {
@@ -220,8 +231,8 @@ var flag = true;
     if(/^on[A-Z]/.test(prop)) {
       self.on(Event.DOM, function() {
         self.off(Event.DOM, arguments.callee);
-        var name = prop.slice(2).replace(/[A-Z]/g, function(Up) {
-          return Up.toLowerCase();
+        var name = prop.slice(2).replace(/[A-Z]/g, function(up) {
+          return up.toLowerCase();
         });
         self.element.addEventListener(name, function(event) {
           var item = self.props[prop];
@@ -236,30 +247,8 @@ var flag = true;
     }
     //Obj类型绑定处理
     else if(v instanceof Obj) {
-      if(util.isString(v.v)) {
-        var s = v.toString();
-        //特殊html不转义
-        if(prop == 'dangerouslySetInnerHTML') {
-          self.on(Event.DOM, function() {
-            self.off(Event.DOM, arguments.callee);
-            self.element.innerHTML = s;
-          });
-          return '';
-        }
-        if(self.__style) {
-          self.__cache[prop] = s;
-        }
-        res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
-      }
-      else if(!!v.v) {
-        if(self.__style) {
-          self.__cache[prop] = s;
-        }
-        res = ' ' + prop;
-      }
-    }
-    else {
       var s = v.toString();
+      //特殊html不转义
       if(prop == 'dangerouslySetInnerHTML') {
         self.on(Event.DOM, function() {
           self.off(Event.DOM, arguments.callee);
@@ -267,13 +256,27 @@ var flag = true;
         });
         return '';
       }
-      if(self.__style) {
-        self.__cache[prop] = s;
+      self.__cache[prop] = s;
+      if(!SPECIAL_PROP.hasOwnProperty(prop) || !!v.v) {
+        res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+      }
+    }
+    else {
+      var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 ? '' : v.toString());
+      if(prop == 'dangerouslySetInnerHTML') {
+        self.on(Event.DOM, function() {
+          self.off(Event.DOM, arguments.callee);
+          self.element.innerHTML = s;
+        });
+        return '';
       }
       if(prop == 'className') {
         prop = 'class';
       }
-      res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+      self.__cache[prop] = s;
+      if(!SPECIAL_PROP.hasOwnProperty(prop) || !!v) {
+        res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+      }
     }
     //使用jaw导入样式时不输出class和id，以migi-class和migi-id取代之
     if(self.__style) {
@@ -328,10 +331,7 @@ var flag = true;
     return res;
   }
 
-  var _13={};_13.element={};_13.element.get =function() {
-    return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.uid + '"]'));
-  }
-  _13.names={};_13.names.get =function() {
+  var _13={};_13.names={};_13.names.get =function() {
     return this.__names || (this.__names = []);
   }
   _13.style={};_13.style.set =function(v) {
@@ -579,9 +579,9 @@ var flag = true;
         }
         break;
     }
+    this.__cache[k] = v;
     //使用了jaw内联解析css
     if(this.__style) {
-      this.__cache[k] = v;
       this.__updateStyle();
     }
   }
@@ -608,7 +608,7 @@ var flag = true;
     }
     var id = (this.__cache.id || '').trim();
     if(id) {
-      this.__ids.push(id);
+      this.__ids.push('#' + id);
     }
     else {
       this.__ids.push('');
@@ -642,14 +642,13 @@ var flag = true;
     return this;
   }
   VirtualDom.prototype.__destroy = function() {
-    var self = this;
-    self.__cache = {};
-    self.__names = null;
-    self.__classes = null;
-    self.__ids = null;
-    self.__inline = null;
-    self.__hover = false;
-    self.__active = false;
+    this.__cache = {};
+    this.__names = null;
+    this.__classes = null;
+    this.__ids = null;
+    this.__inline = null;
+    this.__hover = false;
+    this.__active = false;
     return this;
   }
 

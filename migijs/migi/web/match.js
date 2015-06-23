@@ -2,37 +2,34 @@ define(function(require, exports, module){var VirtualDom=function(){var _0=requi
 var Event=function(){var _1=require('./Event');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var sort=function(){var _2=require('./sort');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 
-var flag = true;
-
 //names,classes,ids为从当前节点开始往上的列表
 //style为jaw传入的总样式对象
 //virtualDom当前传入的VirtualDom对象
 //first为初始化时第一次
 function match(names, classes, ids, style, virtualDom, first) {
   //fix循环依赖
-  if(flag && VirtualDom.hasOwnProperty('default')) {
+  if(VirtualDom.hasOwnProperty('default')) {
     VirtualDom = VirtualDom['default'];
-    flag = false;
   }
   var res = [];
-  matchSel(names.length - 1, names, classes, ids, style, virtualDom, res, first);
+  var history = {};
+  matchSel(names.length - 1, names, classes, ids, style, virtualDom, res, String(names.length - 1), history, first);
   sort(res, function(a, b) {
-    return a._p > b._p;
+    if(a[2] == b[2]) {
+      return a[0] > b[0];
+    }
+    return a[2] > b[2];
   });
   var s = '';
   res.forEach(function(item) {
-    sort(item._v, function(a, b) {
-      return a[0] > b[0];
-    });
-    item._v.forEach(function(style) {
-      s += style[1] + ';';
-    });
+    s += item[1] + ';';
   });
   return s;
 }
 //从底部往上匹配，即.a .b这样的选择器是.b->.a逆序对比
 //过程中只要不匹配就跳出，i从最大到0
-function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
+function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, first) {
+  history[cur] = true;
   //id、class、name可能单个或组合出现，每种都要匹配
   var combo = [];
   combo.push(names[i]);
@@ -58,16 +55,22 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
     var k = combo[j];
     if(style.hasOwnProperty(k)) {
       var item = style[k];
+      //_d记录着深度，没有深度（为0）不记录即不存在_d跳出
       if(i) {
-        //_d记录着深度，当i索引>深度跳出
-        if(item._d && i > item._d) {
-          break;
+        if(style._d) {
+          matchSel(i - 1, names, classes, ids, item, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
         }
-        matchSel(i - 1, names, classes, ids, item, virtualDom.parent, res);
+        //多层级时需递归所有层级组合，如<div><p><span>对应div span{}的样式时，并非一一对应
+        for(var l = i - 2; l >= 0; l--) {
+          var key = cur + ',' + l + ':' + j;
+          if(!history.hasOwnProperty(key)) {
+            matchSel(l, names, classes, ids, item, virtualDom.parent, res, key, history);
+          }
+        }
       }
       //i到0说明匹配完成，将值存入
-      else if(item.hasOwnProperty('_v')) {
-        res.push(item);
+      if(item.hasOwnProperty('_v')) {
+        dealStyle(res, item);
       }
       //首次进入处理:伪类
       if(first && item.hasOwnProperty('_:')) {
@@ -152,9 +155,15 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
                 break;
             }
           }
-          item = pseudoItem[1];
-          if(isMatch && item.hasOwnProperty('_v')) {
-            res.push(item);
+          if(isMatch) {
+            item2 = pseudoItem[1];
+            //同普通匹配一样
+            if(i) {
+              matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
+            }
+            if(item2.hasOwnProperty('_v')) {
+              dealStyle(res, item2);
+            }
           }
         });
       }
@@ -211,18 +220,27 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first) {
               }
             }
           }
-          item = attrItem[1];
-          if(isMatch && item.hasOwnProperty('_v')) {
-            res.push(item);
+          if(isMatch) {
+            item2 = attrItem[1];
+            //同普通匹配一样
+            if(i) {
+              matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
+            }
+            if(item2.hasOwnProperty('_v')) {
+              dealStyle(res, item2);
+            }
           }
         });
       }
     }
   }
-  //当前有样式值
-  if(style.hasOwnProperty('_v')) {
+}
+
+function dealStyle(res, item) {
+  item._v.forEach(function(style) {
+    style[2] = item._p;
     res.push(style);
-  }
+  });
 }
 
 exports["default"]=match;});
