@@ -61,14 +61,9 @@ var SPECIAL_PROP = {
     self.__classes = null;
     self.__ids = null;
     self.__inline = null;
-    self.__selfClose = SELF_CLOSE.hasOwnProperty(name);
     self.__hover = false;
     self.__active = false;
-    children.forEach(function(child) {
-      if(child !== void 0) {
-        child.__parent = self;
-      }
-    });
+    self.__init(name, children);
   }
 
   //@override
@@ -262,7 +257,7 @@ var SPECIAL_PROP = {
       }
     }
     else {
-      var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 ? '' : v.toString());
+      var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 || v === null ? '' : v.toString());
       if(prop == 'dangerouslySetInnerHTML') {
         self.on(Event.DOM, function() {
           self.off(Event.DOM, arguments.callee);
@@ -497,12 +492,14 @@ var SPECIAL_PROP = {
         var ov = child.v;
         //对比是否真正发生变更
         if(child.update(ov)) {
-          domDiff(this.element, ov, child.v, ranges, option, history);
+          domDiff.diff(this.element, ov, child.v, ranges, option, history);
         }
       }
     }
     //递归通知，增加索引
     else if(child instanceof Element) {
+      delete option.t2d;
+      delete option.d2t;
       child.emit(Event.DATA, k);
       option.start++;
       //前面的文本再加一次
@@ -524,13 +521,15 @@ var SPECIAL_PROP = {
       }
       //注意空数组算text类型
       else {
-        VirtualDom.record(history, option);
+        domDiff.check(option, this.element, child, ranges);
+        range.record(history, option);
         option.prev = type.TEXT;
       }
     }
     //else其它情况为文本节点或者undefined忽略
     else {
-      VirtualDom.record(history, option);
+      domDiff.check(option, this.element, child, ranges);
+      range.record(history, option);
       option.prev = type.TEXT;
     }
     option.first = false;
@@ -630,15 +629,18 @@ var SPECIAL_PROP = {
     });
   }
 
-  VirtualDom.prototype.__init = function(name, props, children) {
-    if(props===void 0)props={};if(children===void 0)children=[];Element.prototype.__init.call(this,name, props, children);
+  VirtualDom.prototype.__init = function(name, children) {
     var self = this;
     self.__selfClose = SELF_CLOSE.hasOwnProperty(name);
     children.forEach(function(child) {
-      if(child !== void 0) {
+      if(child instanceof Element) {
         child.__parent = self;
       }
     });
+  }
+  VirtualDom.prototype.__reset = function(name, props, children) {
+    if(props===void 0)props={};if(children===void 0)children=[];Element.prototype.__reset.call(this,name, props, children);
+    this.__init(name, children);
     return this;
   }
   VirtualDom.prototype.__destroy = function() {
@@ -654,10 +656,10 @@ var SPECIAL_PROP = {
 
   VirtualDom.isEmptyText=function(item) {
     //静态文本节点，包括空、undefined、null、空数组
-    return item === void 0 || !item.toString();
+    return item === void 0 || item === null || !item.toString();
   }
   VirtualDom.renderChild=function(child) {
-    if(child === void 0) {
+    if(child === void 0 || child === null) {
       return '';
     }
     if(child instanceof Element) {
@@ -674,12 +676,6 @@ var SPECIAL_PROP = {
       return res;
     }
     return util.encodeHtml(child.toString());
-  }
-  //记录第一个text出现的位置
-  VirtualDom.record=function(history, option) {
-    if(option.first || option.prev == type.DOM) {
-      option.record = history.slice();
-    }
   }
 Object.keys(_13).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_13[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
 

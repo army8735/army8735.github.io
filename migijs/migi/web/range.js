@@ -2,6 +2,7 @@ define(function(require, exports, module){var Element=function(){var _0=require(
 var VirtualDom=function(){var _1=require('./VirtualDom');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var Obj=function(){var _2=require('./Obj');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 var util=function(){var _3=require('./util');return _3.hasOwnProperty("default")?_3["default"]:_3}();
+var type=function(){var _4=require('./type');return _4.hasOwnProperty("default")?_4["default"]:_4}();
 
 exports.merge=merge;function merge(ranges) {
   //合并相邻更新的文本节点
@@ -33,14 +34,14 @@ function join(index, children) {
         break;
       }
       else {
-        res += child === void 0 ? '' : child.toString();
+        res += child === void 0 || child === null ? '' : child.toString();
       }
     }
     else if(child instanceof Element) {
       break;
     }
     else {
-      res += child === void 0 ? '' : child.toString();
+      res += child === void 0 || child === null ? '' : child.toString();
     }
   }
   return res;
@@ -55,6 +56,11 @@ exports.update=update;function update(item, children, elem) {
   var res = join(item.index, children);
   var cns = elem.childNodes;
   var textNode = cns[item.start];
+  //神奇的地方，更新的对象是个DOM而不是TEXT，会发生在混杂情况下的t2d变化
+  //如t1{t}t2{t}变为t1{d}t2{d}，t2记录的range的start在3，而其目前是第2个{d}的DOM，插入在t2d逻辑中
+  if(textNode.nodeType == 1) {
+    return;
+  }
   var now = util.lie ? textNode.innerText : textNode.textContent;
   if(res != now) {
     //textContent自动转义，保留空白
@@ -86,4 +92,10 @@ exports.value=value;function value(item, children) {
   }
   //从item的index开始往后找，直到不是text为止，拼接所有text进行更新
   return join(item.index, children);
+}
+
+exports.record=record;function record(history, option) {
+  if(option.first || option.prev == type.DOM) {
+    option.record = history.slice();
+  }
 }});
