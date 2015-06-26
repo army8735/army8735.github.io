@@ -55,67 +55,117 @@ function insertAt(elem, cns, index, vd, isText) {
   }
 }
 
-function add(elem, nvd, ranges, option, history) {
-  //可能第1个老的是空数组
-  if(option.first) {
-    var isDOM = nvd instanceof Element;
-    replaceWith(elem, elem.childNodes, 0, nvd, !isDOM);
-    option.state = isDOM ? TEXT_TO_DOM : TEXT_TO_TEXT;
-    if(!isDOM) {
-      range.record(history, option);
+function add(elem, vd, ranges, option, history) {
+  if(vd instanceof Element) {
+    switch(option.state) {
+      case DOM_TO_TEXT:
+        option.start++;
+        //d(t) -> td(t)
+        break;
+      case TEXT_TO_TEXT:
+        addRange(ranges, option);
+        option.start++;
+        //t(t) -> td(t)
+        option.t2d = true;
+        break;
+      case TEXT_TO_DOM:
+        //t(t) -> dd(t)
+        option.t2d = true;
+        break;
+      //case DOM_TO_DOM:
+        //d(t) -> dd(t)
     }
+    insertAt(elem, elem.childNodes, option.start++, vd);
+    option.state = DOM_TO_DOM;
+    option.prev = type.DOM;
   }
   else {
-    if(nvd instanceof Element) {
-      insertAt(elem, elem.childNodes, option.start++, nvd);
-      option.state = DOM_TO_DOM;
+    check(option, elem, vd, ranges, history);
+    switch(option.state) {
+      case DOM_TO_TEXT:
+        //d(t) -> tt(t)
+        option.d2t = true;
+      case TEXT_TO_TEXT:
+        addRange(ranges, option);
+        //t(t) -> tt(t)
+        break;
+      case TEXT_TO_DOM:
+        range.record(history, option);
+        insertAt(elem, elem.childNodes, option.start, vd, true);
+        addRange(ranges, option);
+        //t(t) -> dt(t)
+        break;
+      case DOM_TO_DOM:
+        range.record(history, option);
+        insertAt(elem, elem.childNodes, option.start, vd, true);
+        //d(t) -> dt(t)
+        option.d2t = true;
+        break;
     }
-    else {
-      switch(option.state) {
-        case DOM_TO_TEXT:
-        case TEXT_TO_TEXT:
-          addRange(ranges, option);
-          break;
-        case DOM_TO_DOM:
-        case TEXT_TO_DOM:
-          insertAt(elem, elem.childNodes, option.start, nvd, true);
-          break;
-      }
-      option.state = TEXT_TO_TEXT;
-    }
+    option.state = TEXT_TO_TEXT;
+    option.prev = type.TEXT;
   }
-  option.first = false;
 }
-function del(elem, ovd, ranges, option, history) {
-  //可能第1个新的是空数组
-  if(option.first) {
-    elem.removeChild(elem.childNodes[0]);
-    var isDOM = ovd instanceof Element;
-    option.state = isDOM ? TEXT_TO_TEXT : DOM_TO_TEXT;
-    if(!isDOM) {
-      range.record(history, option);
+function del(elem, vd, ranges, option, history) {
+  if(vd instanceof Element) {
+    switch(option.state) {
+      case DOM_TO_TEXT:
+        removeAt(elem, option.start + 1);
+        option.prev = type.TEXT;
+        //dd(t) -> t(t)
+        option.d2t = true;
+        break;
+      case TEXT_TO_TEXT:
+        removeAt(elem, option.start + 1);
+        option.prev = type.TEXT;
+        //td(t) -> t(t)
+        option.d2t = true;
+        break;
+      case TEXT_TO_DOM:
+        removeAt(elem, option.start);
+        option.state = DOM_TO_DOM;
+        option.prev = type.DOM;
+        //td(t) -> d(t)
+        break;
+      case DOM_TO_DOM:
+        removeAt(elem, option.start);
+        option.prev = type.DOM;
+        //dd(t) -> d(t)
+        break;
     }
+    //缓存对象池
+    cachePool.add(vd.__destroy());
   }
   else {
-    if(ovd instanceof Element) {
-      elem.removeChild(elem.childNodes[option.start]);
-      //缓存对象池
-      cachePool.add(ovd.__destroy());
-    }
-    else {
-      switch(option.state) {
-        case DOM_TO_TEXT:
-          elem.removeChild(elem.childNodes[option.start + 1]);
-        case TEXT_TO_TEXT:
-        case DOM_TO_DOM:
-          addRange(ranges, option);
-          break;
-        case TEXT_TO_DOM:
-          elem.removeChild(elem.childNodes[option.start]);
-          break;
-      }
+    switch(option.state) {
+      case DOM_TO_TEXT:
+        removeAt(elem, option.start + 1);
+        addRange(ranges, option);
+        option.state = TEXT_TO_TEXT;
+        option.prev = type.TEXT;
+        //dt(t) -> t(t)
+        break;
+      case TEXT_TO_TEXT:
+        addRange(ranges, option);
+        option.prev = type.TEXT;
+        //tt(t) -> t(t)
+        break;
+      case DOM_TO_DOM:
+        removeAt(elem, option.start);
+        option.prev = type.DOM;
+        //dt(t) -> d(t)
+        option.t2d = true;
+        break;
+      case TEXT_TO_DOM:
+        option.prev = type.DOM;
+        //tt(t) -> d(t)
+        option.t2d = true;
+        break;
     }
   }
+}
+function removeAt(elem, start) {
+  elem.removeChild(elem.childNodes[start]);
 }
 
 function equalText(a, b) {
@@ -205,17 +255,19 @@ exports.diff=diff;function diff(elem, ov, nv, ranges, option, history) {
       option.state = DOM_TO_DOM;
     }
   }
-  diffChild(elem, ov, nv, ranges, option, history);
+  diffChild(elem, ov, nv, ranges, option, history, true);
   //当最后一次对比是类型变换时记录，因为随后的text可能要更新
-  if(option.state == TEXT_TO_DOM) {
-    option.t2d = true;
-  }
-  else if(option.state == DOM_TO_TEXT) {
-    option.d2t = true;
+  if(!option.t2d && !option.d2t) {
+    if(option.state == TEXT_TO_DOM) {
+      option.t2d = true;
+    }
+    else if(option.state == DOM_TO_TEXT) {
+      option.d2t = true;
+    }
   }
 }
 
-function diffChild(elem, ovd, nvd, ranges, option, history) {
+function diffChild(elem, ovd, nvd, ranges, option, history, first) {
   //新老值是否是数组处理方式不同
   var oa = Array.isArray(ovd);
   var na = Array.isArray(nvd);
@@ -237,15 +289,16 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
         break;
       //有内容的数组变为空数组
       case 1:
-        diffChild(elem, ovd[0], nvd[0], ranges, option, history);
+        diffChild(elem, ovd[0], nvd[0], ranges, option, history, first);
         for(var i = 1; i < ol; i++) {
           del(elem, ovd[i], ranges, option, history);
         }
         break;
       //空数组变为有内容
       case 2:
-        diffChild(elem, ovd[0], nvd[0], ranges, option, history);
+        diffChild(elem, ovd[0], nvd[0], ranges, option, history, first);
         for(var i = 1; i < nl; i++) {
+          history[history.length - 1] = i;
           add(elem, nvd[i], ranges, option, history);
         }
         break;
@@ -253,7 +306,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
       case 3:
         for(var i = 0, len = Math.min(ol, nl); i < len; i++) {
           history[history.length - 1] = i;
-          diffChild(elem, ovd[i], nvd[i], ranges, option, history);
+          diffChild(elem, ovd[i], nvd[i], ranges, option, history, first && !i);
         }
         //老的多余的删除
         for(var j = i; j < ol; j++) {
@@ -261,6 +314,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
         }
         //新的多余的插入
         for(var j = i; j < nl; j++) {
+          history[history.length - 1] = i;
           add(elem, nvd[j], ranges, option, history);
         }
         break;
@@ -269,114 +323,24 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
   }
   //老的是数组新的不是
   else if(oa) {
-    var length = ovd.length;
     //将老的第1个和新的相比，注意老的第一个可能还是个数组，递归下去
-    if(length) {
-      diffChild(elem, ovd[0], nvd, ranges, option, history);
-      //移除剩余的老的
-      for(var i = 1; i < length; i++) {
-        del(elem, ovd[i], ranges, option, history);
-      }
-    }
-    //老的是个空数组，相当于空TEXT
-    else {
-      //新的是DOM
-      if(nvd instanceof Element) {
-        var cns = elem.childNodes;
-        //本身就是第1个，直接替换
-        if(option.first) {
-          replaceWith(elem, cns, option.start++, nvd);
-        }
-        else {
-          switch(option.state) {
-            case DOM_TO_TEXT:
-            case DOM_TO_DOM:
-              replaceWith(elem, cns, option.start++, nvd);
-              break;
-            case TEXT_TO_DOM:
-              insertAt(elem, cns, option.start++, nvd);
-              break;
-            case TEXT_TO_TEXT:
-              insertAt(elem, cns, ++option.start, nvd);
-              break;
-          }
-        }
-        option.state = TEXT_TO_DOM;
-      }
-      //新的是TEXT
-      else {
-        option.state = TEXT_TO_TEXT;
-        if(option.first) {
-          range.record(history, option);
-          if(ovd != nvd) {
-            if((ovd !== void 0 || nvd !== '')
-              && (ovd !== '' || nvd !== void 0)) {
-              addRange(ranges, option);
-            }
-          }
-        }
-        else {
-          var cns = elem.childNodes;
-          switch(option.state) {
-            case DOM_TO_TEXT:
-              addRange(ranges, option);
-              elem.removeChild(cns[option.start + 1]);
-              break;
-            case TEXT_TO_DOM:
-              insertAt(elem, cns, option.start, nvd, true);
-              break;
-            case DOM_TO_DOM:
-            case TEXT_TO_TEXT:
-              if(ovd != nvd) {
-                if((ovd !== void 0 || nvd !== '')
-                  && (ovd !== '' || nvd !== void 0)) {
-                  addRange(ranges, option);
-                }
-              }
-              break;
-          }
-        }
-      }
+    diffChild(elem, ovd[0], nvd, ranges, option, history, first);
+    //移除剩余的老的
+    for(var i = 1, len = ovd.length; i < len; i++) {
+      del(elem, ovd[i], ranges, option, history);
     }
   }
   //新的是数组老的不是
   else if(na) {
-    var length = nvd.length;
+    history.push(0);
     //将新的第1个和老的相比，注意新的第一个可能还是个数组，递归下去
-    if(length) {
-      diffChild(elem, ovd, nvd[0], ranges, option, history);
-      //增加剩余的新的
-      for(var i = 1; i < length; i++) {
-        add(elem, nvd[i], ranges, option, history);
-      }
+    diffChild(elem, ovd, nvd[0], ranges, option, history, first);
+    //增加剩余的新的
+    for(var i = 1, len = nvd.length; i < len; i++) {
+      history[history.length - 1] = i;
+      add(elem, nvd[i], ranges, option, history);
     }
-    //新的是个空数组，相当于空TEXT
-    else {
-      //老的是DOM
-      if(ovd instanceof Element) {
-        var cns = elem.childNodes;
-        //本身就是第1个，直接替换
-        if(option.first) {
-          range.record(history, option);
-          replaceWith(elem, cns, option.start, nvd, true);
-        }
-        else {
-          switch(option.state) {
-            case DOM_TO_TEXT:
-            case TEXT_TO_TEXT:
-              elem.removeChild(cns[option.start + 1]);
-              addRange(ranges, option);
-              break;
-            case TEXT_TO_DOM:
-              replaceWith(elem, cns, option.start++, nvd, true);
-              break;
-            case DOM_TO_DOM:
-              replaceWith(elem, cns, option.start, nvd, true);
-              break;
-          }
-        }
-      }
-    }
+    history.pop();
   }
   //都不是数组
   else {
@@ -386,6 +350,9 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
     switch(oe + ne) {
       //都是text时，根据上个节点类型和history设置range
       case 0:
+        if(!option.first && first) {
+          check(option, elem, nvd, ranges, history);
+        }
         range.record(history, option);
         var cns = elem.childNodes;
         if(option.first) {
@@ -400,6 +367,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
               elem.removeChild(cns[option.start + 1]);
               break;
             case TEXT_TO_DOM:
+              addRange(ranges, option);
               insertAt(elem, cns, option.start, nvd, true);
               break;
             case DOM_TO_DOM:
@@ -414,7 +382,12 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
         //不是第一个但text内容不变时，需根据之前的状态判断处理
         else {
           switch(option.state) {
+            case DOM_TO_TEXT:
+              addRange(ranges, option);
+              elem.removeChild(cns[option.start + 1]);
+              break;
             case TEXT_TO_DOM:
+              addRange(ranges, option);
               insertAt(elem, cns, option.start, nvd, true);
               break;
           }
@@ -445,6 +418,8 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
               break;
           }
         }
+        //缓存对象池
+        cachePool.add(ovd.__destroy());
         option.state = DOM_TO_TEXT;
         option.prev = type.TEXT;
         break;
@@ -483,6 +458,8 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
               option.start++;
               break;
           }
+          delete option.t2d;
+          delete option.d2t;
         }
         //DOM名没变递归diff
         if(ovd.name == nvd.name) {
@@ -493,6 +470,8 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
           var node = util.getParent(nvd.name);
           node.innerHTML = nvd.toString();
           elem.replaceChild(node.firstChild, elem.childNodes[option.start]);
+          //缓存对象池
+          cachePool.add(ovd.__destroy());
         }
         option.state = DOM_TO_DOM;
         option.prev = type.DOM;
@@ -503,13 +482,16 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
   option.first = false;
 }
 
-exports.check=check;function check(option, elem, vd, ranges) {
+exports.check=check;function check(option, elem, vd, ranges, history) {
   if(option.t2d) {
     delete option.t2d;
-    insertAt(elem, elem.childNodes, option.start++, vd, true);
+    range.record(history, option);
+    addRange(ranges, option);
+    insertAt(elem, elem.childNodes, option.start, vd, true);
   }
   else if(option.d2t) {
     delete option.d2t;
-    del(elem, vd, ranges, option);
+    addRange(ranges, option);
+    removeAt(elem, option.start + 1);
   }
 }});
