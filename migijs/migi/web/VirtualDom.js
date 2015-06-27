@@ -333,7 +333,7 @@ var SPECIAL_PROP = {
     var self = this;
     self.__style = v;
     if(self.parent instanceof VirtualDom) {
-      self.__names = self.parent.names.slice(0);
+      self.__names = self.parent.names.slice();
     }
     else {
       self.__names = [];
@@ -479,13 +479,32 @@ var SPECIAL_PROP = {
     //当Component和VirtualDom则start++，且前面是非空文本节点时再++，因为有2个节点
     //文本节点本身不会增加索引，因为可能有相邻的
     if(child instanceof Obj) {
-      //可能Obj的关联是个列表
+      //可能Obj的关联是个列表，触发的变量name也是列表
       var change = false;
-      if(Array.isArray(child.k)) {
-        change = child.k.indexOf(k) > -1;
-      }
-      else if(k == child.k) {
-        change = true;
+      var vk = Array.isArray(k) ? 1 : 0;
+      var ok = Array.isArray(child.k) ? 2 : 0;
+      switch(vk + ok) {
+        case 0:
+          change = k == child.k;
+          break;
+        case 1:
+          change = k.indexOf(child.k) > -1;
+          break;
+        case 2:
+          change = child.k.indexOf(k) > -1;
+          break;
+        case 3:
+          var hash = {};
+          k.forEach(function(item) {
+            hash[item] = true;
+          });
+          for(var temp = child.k, i = 0, len = temp.length; i < len; i++) {
+            if(hash.hasOwnProperty(temp[i])) {
+              change = true;
+              break;
+            }
+          }
+          break;
       }
       //当可能发生变化时才进行比对
       if(change) {
@@ -587,8 +606,8 @@ var SPECIAL_PROP = {
   VirtualDom.prototype.__match = function(first) {
     this.__inline = this.__cache.style || '';
     if(this.parent instanceof VirtualDom) {
-      this.__classes = this.parent.__classes.slice(0);
-      this.__ids = this.parent.__ids.slice(0);
+      this.__classes = this.parent.__classes.slice();
+      this.__ids = this.parent.__ids.slice();
     }
     else {
       this.__classes = [];
