@@ -32,10 +32,11 @@ function isOrigin(o) {
   return util.isBoolean(o) || util.isNull(o) || util.isNumber(o) || util.isUndefined(o) || util.isString(o);
 }
 function equal(a, b) {
-  if(a === b) {
-    return true;
+  //vd常量
+  if(a instanceof Element || b instanceof Element) {
+    return a == b;
   }
-  if(isOrigin(a) || isOrigin(b) || util.isFunction(a) || util.isFunction(b)) {
+  if(isOrigin(a) || isOrigin(b)) {
     return a === b;
   }
   if(util.isArray(a)) {
@@ -56,7 +57,7 @@ function equal(a, b) {
     if(!util.isDate(b)) {
       return false;
     }
-    return a.toString() === b.toString();
+    return a - b == 0;
   }
   if(util.isObject(a)) {
     if(!util.isObject(b)) {
@@ -74,22 +75,6 @@ function equal(a, b) {
     }
     return true;
   }
-}
-
-function getFirst(arr) {
-  var res = arr[0];
-  if(Array.isArray(res)) {
-    return getFirst(res);
-  }
-  return res;
-}
-
-function getLast(arr) {
-  var res = arr[arr.length - 1];
-  if(Array.isArray(res)) {
-    return getLast(res);
-  }
-  return res;
 }
 
 function joinArray(arr) {
@@ -177,8 +162,6 @@ var util = {
     while (NODE.innerHTML = '<!--[if gt IE '+(++v)+']>1<![endif]-->', NODE.innerHTML);
     return v;
   }(),
-  getFirst:getFirst,
-  getLast:getLast,
   joinArray:joinArray
 };
 
