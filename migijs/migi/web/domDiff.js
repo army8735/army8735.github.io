@@ -11,45 +11,81 @@ var TEXT_TO_DOM = 2;
 var TEXT_TO_TEXT = 3;
 
 function replaceWith(elem, cns, index, vd, isText) {
-  var node = isText ? util.NODE : util.getParent(vd.name);
-  var s = vd === void 0 || vd === null ? '' : vd.toString();
+  //insertAdjacentHTML在插入text时浏览器行为表现不一致，ff会合并相邻text，chrome则不会
+  //因此DOM使用insertAdjacentHTML，text则用textNode
   var target;
-  if(s) {
-    node.innerHTML = isText ? util.encodeHtml(s) : s;
-    target = node.firstChild;
+  if(isText) {
+    vd = vd === void 0 || vd === null ? '' : vd.toString();
+    if(vd) {
+      var node = util.NODE;
+      node.innerHTML = util.encodeHtml(vd);
+      target = node.firstChild;
+    }
+    else {
+      target = document.createTextNode('');
+    }
+    if(index >= cns.length) {
+      elem.appendChild(target);
+    }
+    else {
+      elem.replaceChild(target, cns[index]);
+    }
   }
   else {
-    target = document.createTextNode('');
-  }
-  if(index >= cns.length) {
-    elem.appendChild(target);
-  }
-  else {
-    elem.replaceChild(target, cns[index]);
-  }
-  if(!isText) {
+    target = vd.toString();
+    if(index >= cns.length) {
+      elem.insertAdjacentHTML('beforeend', target);
+    }
+    else {
+      //textNode没有insertAdjacentHTML方法，必须使用replaceChild
+      if(cns[index].nodeType == 1) {
+        cns[index].insertAdjacentHTML('afterend', target);
+        elem.removeChild(cns[index]);
+      }
+      else {
+        var node = util.getParent(vd.name);
+        node.innerHTML = target;
+        elem.replaceChild(node.firstChild, cns[index]);
+      }
+    }
     //别忘了触发DOM事件
     vd.emit(Event.DOM);
   }
 }
 function insertAt(elem, cns, index, vd, isText) {
-  var node = isText ? util.NODE : util.getParent(vd.name);
-  var s = vd === void 0 || vd === null ? '' : vd.toString();
   var target;
-  if(s) {
-    node.innerHTML = isText ? util.encodeHtml(s) : s;
-    target = node.firstChild;
+  if(isText) {
+    vd = vd === void 0 || vd === null ? '' : vd.toString();
+    if(vd) {
+      var node = util.NODE;
+      node.innerHTML = util.encodeHtml(vd);
+      target = node.firstChild;
+    }
+    else {
+      target = document.createTextNode('');
+    }
+    if(index >= cns.length) {
+      elem.appendChild(target);
+    }
+    else {
+      elem.insertBefore(target, cns[index]);
+    }
   }
   else {
-    target = document.createTextNode('');
-  }
-  if(index >= cns.length) {
-    elem.appendChild(target);
-  }
-  else {
-    elem.insertBefore(target, cns[index]);
-  }
-  if(!isText) {
+    target = vd.toString();
+    if(index >= cns.length) {
+      elem.insertAdjacentHTML('beforeend', target);
+    }
+    else {
+      if(cns[index].nodeType == 1) {
+        cns[index].insertAdjacentHTML('beforebegin', target);
+      }
+      else {
+        var node = util.getParent(vd.name);
+        node.innerHTML = target;
+        elem.insertBefore(node.firstChild, cns[index]);
+      }
+    }
     //别忘了触发DOM事件
     vd.emit(Event.DOM);
   }
@@ -197,15 +233,8 @@ function diffVd(ovd, nvd) {
   //记录对比过的prop
   var hash = {};
   ok.forEach(function(prop) {
-    //TODO: 侦听引用对比
-    if(/^on[A-Z]/.test(prop)) {
-      //TODO: removeEventListener参数
-      var name = prop.slice(2).replace(/[A-Z]/g, function(Up) {
-        return Up.toLowerCase();
-      });
-      elem.removeEventListener(name);
-    }
-    else {
+    //onXXX事件由__listener中的引用移除
+    if(!/^on[A-Z]/.test(prop)) {
       hash[prop] = true;
       //对比老属性，相同无需更新
       var v = ovd.props[prop];
@@ -215,10 +244,20 @@ function diffVd(ovd, nvd) {
       }
     }
   });
-  //添加新vd的属性
+  //移除__listener记录的引用
+  ovd.__removeListener();
+  //添加新vd的属性，不会出现Cb侦听
   nk.forEach(function(prop) {
-    //TODO: onXxx
-    if(!hash.hasOwnProperty(prop)) {
+    if(/^on[A-Z]/.test(prop)) {
+      var name = prop.slice(2).replace(/[A-Z]/g, function(up) {
+        return up.toLowerCase();
+      });
+      nvd.__addListener(name, function(event) {
+        var item = nvd.props[prop];
+        item(event);
+      });
+    }
+    else if(!hash.hasOwnProperty(prop)) {
       nvd.__updateAttr(prop, nvd.props[prop]);
     }
   });
@@ -237,6 +276,11 @@ function diffVd(ovd, nvd) {
   }
   range.merge(ranges);
   if(ranges.length) {
+    //textarea特殊判断
+    if(nvd.name == 'textarea') {
+      nvd.__updateAttr('value', range.value(ranges[0], nvd.children));
+      return;
+    }
     ranges.forEach(function(item) {
       range.update(item, nvd.children, elem);
     });
@@ -467,9 +511,10 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
         }
         //否则重绘替换
         else {
-          var node = util.getParent(nvd.name);
-          node.innerHTML = nvd.toString();
-          elem.replaceChild(node.firstChild, elem.childNodes[option.start]);
+          elem.insertAdjacentHTML('afterend', nvd.toString());
+          elem.parentNode.removeChild(elem);
+          //别忘了触发DOM事件
+          nvd.emit(Event.DOM);
           //缓存对象池
           cachePool.add(ovd.__destroy());
         }
@@ -486,7 +531,6 @@ exports.check=check;function check(option, elem, vd, ranges, history) {
   if(option.t2d) {
     delete option.t2d;
     range.record(history, option);
-    addRange(ranges, option);
     insertAt(elem, elem.childNodes, option.start, vd, true);
   }
   else if(option.d2t) {

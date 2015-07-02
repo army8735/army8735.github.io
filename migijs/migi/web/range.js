@@ -44,7 +44,7 @@ function join(index, children, history) {
         break;
       }
       else {
-        res += child === void 0 || child === null ? '' : child.toString();
+        res += child.toString();
       }
     }
     else if(child instanceof Element) {
@@ -97,11 +97,12 @@ exports.update=update;function update(item, children, elem) {
   if(res != now) {
     //textContent自动转义，保留空白
     //ie的innerText会解释html标签，故用临时节点的innerHTML再replace代替
+    //有实体字符时也不能用textContent
     //但当为innerHTML空时，没有孩子节点，所以特殊判断
     if(res) {
-      if(util.lie) {
+      if(util.lie || /&([a-z]+|#\d+);/i.test(res)) {
         var node = util.NODE;
-        node.innerHTML = res;
+        node.innerHTML = util.encodeHtml(res);
         elem.replaceChild(node.firstChild, textNode);
       }
       else {
@@ -123,7 +124,7 @@ exports.value=value;function value(item, children) {
     VirtualDom = VirtualDom['default'];
   }
   //从item的index开始往后找，直到不是text为止，拼接所有text进行更新
-  return join(item.index, children);
+  return join(item.index, children, {});
 }
 
 exports.record=record;function record(history, option) {

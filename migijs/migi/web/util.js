@@ -4,6 +4,9 @@ function clone(obj) {
   if(obj instanceof Element) {
     return obj;
   }
+  if(isOrigin(obj)) {
+    return obj;
+  }
   var o = Array.isArray(obj) ? [] : {};
   for(var i in obj) {
     if(obj.hasOwnProperty(i)) {
@@ -105,9 +108,6 @@ var util = {
     if(Element.hasOwnProperty('default')) {
       Element = Element['default'];
     }
-    if(typeof obj != 'object') {
-      return obj;
-    }
     return clone(obj);
   },
   isObject: isType('Object'),
@@ -130,8 +130,6 @@ var util = {
     return prop ? s.replace(/"/g, '&quot;') : s.replace(/</g, '&lt;');
   },
   NODE: NODE,
-  TABLE: TABLE,
-  TR: TR,
   getParent:function(name) {
     //TODO: insertAdjacentHTML
     switch(name.toLowerCase()) {

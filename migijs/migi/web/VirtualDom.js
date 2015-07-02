@@ -56,13 +56,14 @@ var SPECIAL_PROP = {
     }
     Element.call(this,name, props, children);
     var self = this;
-    self.__cache = {};
-    self.__names = null;
-    self.__classes = null;
-    self.__ids = null;
-    self.__inline = null;
-    self.__hover = false;
-    self.__active = false;
+    self.__cache = {}; //缓存计算好的props
+    self.__names = null; //从Component根节点到自己的tagName列表，以便css计算
+    self.__classes = null; //同上，class列表
+    self.__ids = null; //同上，id列表
+    self.__inline = null; //昏村本身props的style属性
+    self.__hover = false; //是否处于鼠标hover状态
+    self.__active = false; //是否处于鼠标active状态
+    self.__listener = null; //添加的event的cb引用，remove时使用
     self.__init(name, children);
   }
 
@@ -89,78 +90,12 @@ var SPECIAL_PROP = {
     }
     res += ' migi-uid="' + self.uid + '"';
     //input和select这种:input要侦听数据绑定
-    if(self.name == 'input') {
-      if(self.props.hasOwnProperty('value')) {
-        var item = self.props.value;
-        self.on(Event.DOM, function() {
-          self.off(Event.DOM, arguments.callee);
-          function cb() {
-            item.v = this.value;
-            var key = item.k;
-            item.context[key] = this.value;
-          }
-          switch(self.__cache.type) {
-            //一些无需联动
-            case 'button':
-            case 'hidden':
-            case 'image':
-            case 'file':
-            case 'reset':
-            case 'submit':
-              break;
-            //只需侦听change
-            case 'checkbox':
-            case 'radio':
-            case 'range':
-              self.element.addEventListener('change', cb);
-              break;
-            //其它无需change，但input等
-            default:
-              self.element.addEventListener('input', cb);
-              self.element.addEventListener('paste', cb);
-              self.element.addEventListener('cut', cb);
-              break;
-          }
-        });
-      }
-    }
-    else if(self.name == 'select') {
-      if(self.props.hasOwnProperty('value')) {
-        var item = self.props.value;
-        self.on(Event.DOM, function() {
-          self.off(Event.DOM, arguments.callee);
-          function cb() {
-            item.v = this.value;
-            var key = item.k;
-            item.context[key] = this.value;
-          }
-          self.element.addEventListener('change', cb);
-        });
-      }
-    }
+    self.__checkListener();
     //自闭合标签特殊处理
     if(self.__selfClose) {
       return res + '/>';
     }
     res += '>';
-    //textarea的value在标签的childNodes里
-    if(self.name == 'textarea') {
-      self.children.forEach(function(child) {
-        if(child instanceof Obj) {
-          self.on(Event.DOM, function() {
-            self.off(Event.DOM, arguments.callee);
-            function cb(e) {
-              child.v = this.value;
-              var key = child.k;
-              child.context[key] = this.value;
-            }
-            self.element.addEventListener('input', cb);
-            self.element.addEventListener('paste', cb);
-            self.element.addEventListener('cut', cb);
-          });
-        }
-      });
-    }
     //渲染children
     res += self.__renderChildren();
     res +='</' + self.name + '>';
@@ -224,12 +159,11 @@ var SPECIAL_PROP = {
     var res = '';
     //onXxx侦听处理
     if(/^on[A-Z]/.test(prop)) {
-      self.on(Event.DOM, function() {
-        self.off(Event.DOM, arguments.callee);
+      self.once(Event.DOM, function() {
         var name = prop.slice(2).replace(/[A-Z]/g, function(up) {
           return up.toLowerCase();
         });
-        self.element.addEventListener(name, function(event) {
+        self.__addListener(name, function(event) {
           var item = self.props[prop];
           if(item instanceof Cb) {
             item.cb.call(item.context, event);
@@ -245,8 +179,7 @@ var SPECIAL_PROP = {
       var s = v.toString();
       //特殊html不转义
       if(prop == 'dangerouslySetInnerHTML') {
-        self.on(Event.DOM, function() {
-          self.off(Event.DOM, arguments.callee);
+        self.once(Event.DOM, function() {
           self.element.innerHTML = s;
         });
         return '';
@@ -259,8 +192,7 @@ var SPECIAL_PROP = {
     else {
       var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 || v === null ? '' : v.toString());
       if(prop == 'dangerouslySetInnerHTML') {
-        self.on(Event.DOM, function() {
-          self.off(Event.DOM, arguments.callee);
+        self.once(Event.DOM, function() {
           self.element.innerHTML = s;
         });
         return '';
@@ -287,10 +219,125 @@ var SPECIAL_PROP = {
   VirtualDom.prototype.__renderChildren = function() {
     var self = this;
     var res = '';
-    self.children.forEach(function(child) {
+    self.children.forEach(function(child) {console.log(child)
       res += VirtualDom.renderChild(child);
     });
     return res;
+  }
+  VirtualDom.prototype.__checkListener = function() {
+    var self = this;
+    if(self.name == 'input') {
+      if(self.props.hasOwnProperty('value')) {
+        var item = self.props.value;
+        if(item instanceof Obj) {
+          self.once(Event.DOM, function() {
+            function cb() {
+              item.v = this.value;
+              var key = item.k;
+              item.context[key] = this.value;
+            }
+            var type = self.__cache.type;
+            if(type === void 0 || type === null) {
+              type = '';
+            }
+            switch(type.toLowerCase()) {
+              //一些无需联动
+              case 'button':
+              case 'hidden':
+              case 'image':
+              case 'file':
+              case 'reset':
+              case 'submit':
+                break;
+              //只需侦听change
+              case 'checkbox':
+              case 'radio':
+              case 'range':
+              case 'color':
+                self.__addListener('change', cb);
+                break;
+              //其它无需change，但input等
+              default:
+                self.__addListener(['input', 'paste', 'cut'], cb);
+                break;
+            }
+          });
+        }
+      }
+    }
+    else if(self.name == 'select') {
+      if(self.props.hasOwnProperty('value')) {
+        var item = self.props.value;
+        if(item instanceof Obj) {
+          self.once(Event.DOM, function() {
+            function cb() {
+              item.v = this.value;
+              var key = item.k;
+              item.context[key] = this.value;
+            }
+            self.__addListener('change', cb);
+          });
+        }
+      }
+    }
+    //textarea的value在标签的childNodes里，这里只处理单一child情况
+    //TODO: textarea的children有多个其中一个是text该怎么办？有歧义
+    else if(self.name == 'textarea') {
+      if(self.children.length == 1) {
+        var child = self.children[0];
+        if(child instanceof Obj) {
+          self.once(Event.DOM, function() {
+            function cb(e) {
+              child.v = this.value;
+              var key = child.k;
+              child.context[key] = this.value;
+            }
+            self.__addListener(['input', 'paste', 'cut'], cb);
+          });
+        }
+      }
+    }
+  }
+  VirtualDom.prototype.__addListener = function(name, cb) {
+    var self = this;
+    if(Array.isArray(name)) {
+      name.forEach(function(n) {
+        self.__addListener(n, cb);
+      });
+    }
+    else {
+      //一般没有event，也就不生成对象防止diff比对
+      self.__listener = self.__listener || {};
+      if(self.__listener.hasOwnProperty(name)) {
+        var temp = self.__listener[name];
+        if(Array.isArray(temp)) {
+          temp.push(cb);
+        }
+        else {
+          self.__listener[name] = [temp, cb];
+        }
+      }
+      else {
+        self.__listener[name] = cb;
+      }
+      self.element.addEventListener(name, cb);
+    }
+  }
+  VirtualDom.prototype.__removeListener = function() {
+    var self = this;
+    if(self.__listener) {
+      Object.keys(self.__listener).forEach(function(name) {
+        var item = self.__listener[name];
+        if(Array.isArray(item)) {
+          item.forEach(function(cb) {
+            self.element.removeEventListener(name, cb);
+          });
+        }
+        else {
+          self.element.removeEventListener(name, item);
+        }
+      });
+    }
   }
 
   VirtualDom.prototype.find = function(name) {
@@ -673,6 +720,7 @@ var SPECIAL_PROP = {
     this.__inline = null;
     this.__hover = false;
     this.__active = false;
+    this.__listener = null;
     this.__hasDes = true;
     return this;
   }
@@ -689,7 +737,7 @@ var SPECIAL_PROP = {
       return child.toString();
     }
     if(child instanceof Obj) {
-      return child.toString();
+      return util.encodeHtml(child.toString());
     }
     if(Array.isArray(child)) {
       var res = '';

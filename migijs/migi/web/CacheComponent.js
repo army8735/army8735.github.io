@@ -11,9 +11,9 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("default")
   }
 
   CachedComponent.prototype.__onData = function(k) {
-    var self = this;
+    var _4=this;var self = this;
     if(self.__flag) {
-      Component.prototype.__onData.call(this,k);
+      Component.prototype.__onData.call(_4,k);
       return;
     }
     if(self.__handler.hasOwnProperty(k)) {
@@ -27,7 +27,7 @@ var util=function(){var _2=require('./util');return _2.hasOwnProperty("default")
         self.__handler = {};
         self.__cb = null;
         keys = keys.length > 1 ? keys : keys[0];
-        Component.prototype.__onData.call(this,keys);
+        Component.prototype.__onData.call(_4,keys);
         self.emit(Event.CACHE_DATA, keys);
       }, 1);
     }
