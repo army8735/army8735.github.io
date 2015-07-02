@@ -176,7 +176,7 @@ var SPECIAL_PROP = {
     }
     //Obj类型绑定处理
     else if(v instanceof Obj) {
-      var s = v.toString();
+      var s = v.toString(true);
       //特殊html不转义
       if(prop == 'dangerouslySetInnerHTML') {
         self.once(Event.DOM, function() {
@@ -219,7 +219,7 @@ var SPECIAL_PROP = {
   VirtualDom.prototype.__renderChildren = function() {
     var self = this;
     var res = '';
-    self.children.forEach(function(child) {console.log(child)
+    self.children.forEach(function(child) {
       res += VirtualDom.renderChild(child);
     });
     return res;
@@ -601,6 +601,9 @@ var SPECIAL_PROP = {
     }
     option.first = false;
   }
+  //TODO: 一个神奇的现象，实体字符作为attr在初始化时作为String拼接和在setAttribute中表现不一致
+  //如&nbsp;会成为charCode 160的Non-breaking space，而非32的Normal space
+  //但是setAttribute会保留实体字符形式
   VirtualDom.prototype.__updateAttr = function(k, v) {
     if(k == 'dangerouslySetInnerHTML') {
       this.element.innerHTML = v || '';
@@ -631,7 +634,7 @@ var SPECIAL_PROP = {
           if(v === null || v === void 0) {
             this.element.removeAttribute('migi-' + k);
           }
-          else{
+          else {
             this.element.setAttribute('migi-' + k, v);
           }
           break;
@@ -640,7 +643,7 @@ var SPECIAL_PROP = {
         if(v === null || v === void 0) {
           this.element.removeAttribute(k);
         }
-        else{
+        else {
           this.element.setAttribute(k, v);
         }
         break;
@@ -733,11 +736,8 @@ var SPECIAL_PROP = {
     if(child === void 0 || child === null) {
       return '';
     }
-    if(child instanceof Element) {
+    if(child instanceof Element || child instanceof Obj) {
       return child.toString();
-    }
-    if(child instanceof Obj) {
-      return util.encodeHtml(child.toString());
     }
     if(Array.isArray(child)) {
       var res = '';
