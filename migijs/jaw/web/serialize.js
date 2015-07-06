@@ -1,6 +1,6 @@
-define(function(require, exports, module){var homunculus=function(){var _0=require('homunculus');return _0.hasOwnProperty("homunculus")?_0.homunculus:_0.hasOwnProperty("default")?_0["default"]:_0}();
-var join=function(){var _1=require('./join');return _1.hasOwnProperty("join")?_1.join:_1.hasOwnProperty("default")?_1["default"]:_1}();
-var sort=function(){var _2=require('./sort');return _2.hasOwnProperty("sort")?_2.sort:_2.hasOwnProperty("default")?_2["default"]:_2}();
+define(function(require, exports, module){var homunculus=function(){var _0=require('homunculus');return _0.hasOwnProperty("default")?_0["default"]:_0}();
+var join=function(){var _1=require('./join');return _1.hasOwnProperty("default")?_1["default"]:_1}();
+var sort=function(){var _2=require('./sort');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 
 var Token = homunculus.getClass('token', 'css');
 var Node = homunculus.getClass('node', 'css');
@@ -51,7 +51,6 @@ function style(node) {
 }
 
 function record(sel, idx, styles, res) {
-  var first = sel[0];
   var _p = 0;
   var now = res;
   for(var i = sel.length - 1; i >= 0; i--) {
@@ -72,9 +71,25 @@ function record(sel, idx, styles, res) {
           }
           while(prev && prev.type() == Token.SELECTOR);
           sort(list, function(a, b) {
-            return a < b;
+            return a != '*' && a < b || b == '*';
           });
+          var star = list[0] == '*';
+          //*开头有几种组合，记录之
+          if(star) {
+            if(list.length > 2) {
+              now['_*.#'] = true;
+            }
+            else if(list[1][0] == '.') {
+              now['_*.'] = true;
+            }
+            else {
+              now['_*#'] = true;
+            }
+          }
           s = list.join('');
+        }
+        else if(s == '*') {
+          now['_*'] = true;
         }
         now[s] = now[s] || {};
         now = now[s];
@@ -90,15 +105,49 @@ function record(sel, idx, styles, res) {
         }
         //省略*
         if(!prev || prev.type() != Token.SELECTOR) {
+          now['_*'] = true;
           now['*'] = now['*'] || {};
           now = now['*'];
         }
         else if(prev) {
+          var selTemp = [];
           s = prev.content();
+          selTemp.push(s);
+          _p += priority(prev, s);
+          prev = prev.prev();
+          //可能有多个tag.class#id:pseudo
+          while(prev && prev.type() == Token.SELECTOR) {
+            s = prev.content();
+            selTemp.push(s);
+            _p += priority(prev, s);
+            prev = prev.prev();
+            i--;
+          }
+          sort(selTemp, function(a, b) {
+            return a != '*' && a < b || b == '*';
+          });
+          var star = selTemp[0] == '*';
+          //*开头有几种组合，记录之
+          if(star) {
+            if(selTemp.length > 2) {
+              now['_*.#'] = true;
+            }
+            else if(selTemp.length > 1) {
+              if(selTemp[1][0] == '.') {
+                now['_*.'] = true;
+              }
+              else {
+                now['_*#'] = true;
+              }
+            }
+            else {
+              now['_*'] = true;
+            }
+          }
+          s = selTemp.join('');
           now[s] = now[s] || {};
           now = now[s];
           i--;
-          _p += priority(prev, s);
         }
         //伪类都存在_:对象下，是个数组
         //每项为长度2的数组，第1个是伪类组合，第2个是对应的值
@@ -148,6 +197,7 @@ function record(sel, idx, styles, res) {
             _p += priority(prev, s);
             break;
           case ']':
+            //TODO: 选择器和属性很特殊，可以交叉：div[attr].class[attr]
             var list = [];
             var item;
             var prev = t;
@@ -174,14 +224,47 @@ function record(sel, idx, styles, res) {
             }
             //省略*
             if(!prev || prev.type() != Token.SELECTOR) {
+              now['_*'] = true;
               now['*'] = now['*'] || {};
               now = now['*'];
             }
             else {
+              var selTemp = [];
               s = prev.content();
+              selTemp.push(s);
+              _p += priority(prev, s);
+              prev = prev.prev();
+              while(prev && prev.type() == Token.SELECTOR) {
+                s = prev.content();
+                selTemp.push(s);
+                _p += priority(prev, s);
+                prev = prev.prev();
+                i--;
+              }
+              sort(selTemp, function(a, b) {
+                return a != '*' && a < b || b == '*';
+              });
+              var star = selTemp[0] == '*';
+              //*开头有几种组合，记录之
+              if(star) {
+                if(selTemp.length > 2) {
+                  now['_*.#'] = true;
+                }
+                else if(selTemp.length > 1) {
+                  if(selTemp[1][0] == '.') {
+                    now['_*.'] = true;
+                  }
+                  else {
+                    now['_*#'] = true;
+                  }
+                }
+                else {
+                  now['_*'] = true;
+                }
+              }
+              s = selTemp.join('');
               now[s] = now[s] || {};
               now = now[s];
-              _p += priority(prev, s);
             }
             //属性都存在_[对象下，是个数组
             //每项为长度2的数组，第1个是属性组合，第2个是对应的值
@@ -228,6 +311,7 @@ function record(sel, idx, styles, res) {
           //TODO: CSS3伪类
           case ')':
             break;
+          //TODO: attr和pseudo混杂的情况
         }
         break;
     }
