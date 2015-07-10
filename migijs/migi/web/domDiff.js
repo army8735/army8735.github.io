@@ -93,8 +93,18 @@ function insertAt(elem, cns, index, vd, isText) {
   }
 }
 
-function add(elem, vd, ranges, option, history) {
-  if(vd instanceof Element) {
+function add(elem, vd, ranges, option, history, first) {
+  if(Array.isArray(vd)) {
+    for(var i = 0, len = vd.length; i < len; i++) {
+      var item = vd[i];
+      if(i > 0) {
+        first = false;
+        delete option.t2d;
+      }
+      add(elem, item, ranges, option, history, first);
+    }
+  }
+  else if(vd instanceof Element) {
     switch(option.state) {
       case DOM_TO_TEXT:
         option.start++;
@@ -118,7 +128,7 @@ function add(elem, vd, ranges, option, history) {
     option.prev = type.DOM;
   }
   else {
-    check(option, elem, vd, ranges, history);
+    first && check(option, elem, vd, ranges, history);
     switch(option.state) {
       case DOM_TO_TEXT:
         //d(t) -> tt(t)
@@ -144,62 +154,101 @@ function add(elem, vd, ranges, option, history) {
     option.prev = type.TEXT;
   }
 }
-function del(elem, vd, ranges, option, history) {
-  if(vd instanceof Element) {
-    switch(option.state) {
-      case DOM_TO_TEXT:
+function del(elem, vd, ranges, option, temp, last) {
+  if(Array.isArray(vd)) {
+    var len = vd.length;
+    vd.forEach(function(item, i) {
+      del(elem, item, ranges, option, temp, last && i == len - 1);
+    });
+  }
+  else if(vd instanceof Element) {
+    if(temp.hasOwnProperty('prev')) {
+      //刚删过t的话再d索引+1，并且还删过d则连带中间多余的t一并删除
+      if(temp.prev == type.TEXT) {
+        if(temp.d) {
+          removeAt(elem, option.start + 1);
+        }
         removeAt(elem, option.start + 1);
-        option.prev = type.TEXT;
-        //dd(t) -> t(t)
-        option.d2t = true;
-        break;
-      case TEXT_TO_TEXT:
-        removeAt(elem, option.start + 1);
-        option.prev = type.TEXT;
-        //td(t) -> t(t)
-        option.d2t = true;
-        break;
-      case TEXT_TO_DOM:
-        removeAt(elem, option.start);
-        option.state = DOM_TO_DOM;
-        option.prev = type.DOM;
-        //td(t) -> d(t)
-        break;
-      case DOM_TO_DOM:
-        removeAt(elem, option.start);
-        option.prev = type.DOM;
-        //dd(t) -> d(t)
-        break;
+      }
+      //刚删过d的话，检查之前最后的节点状态判别索引是否要+1
+      else {
+        if(option.prev == type.TEXT) {
+          removeAt(elem, option.start + 1);
+        }
+        else {
+          removeAt(elem, option.start);
+        }
+      }
     }
+    else {
+      switch(option.state) {
+        case DOM_TO_TEXT:
+          removeAt(elem, option.start + 1);
+          option.prev = type.TEXT;
+          //dd(t) -> t(t)
+          option.d2t = true;
+          break;
+        case TEXT_TO_TEXT:
+          removeAt(elem, option.start + 1);
+          option.prev = type.TEXT;
+          //td(t) -> t(t)
+          option.d2t = true;
+          break;
+        case TEXT_TO_DOM:
+          removeAt(elem, option.start);
+          //删除DOM后，之前t2d可以视作d2d无变化，防止后面多余的t干扰
+          option.state = DOM_TO_DOM;
+          option.prev = type.DOM;
+          //td(t) -> d(t)
+          break;
+        case DOM_TO_DOM:
+          removeAt(elem, option.start);
+          option.prev = type.DOM;
+          //dd(t) -> d(t)
+          break;
+      }
+    }
+    temp.d = true;
+    temp.prev = type.DOM;
     //缓存对象池
     cachePool.add(vd.__destroy());
   }
   else {
-    switch(option.state) {
-      case DOM_TO_TEXT:
-        removeAt(elem, option.start + 1);
-        addRange(ranges, option);
-        option.state = TEXT_TO_TEXT;
-        option.prev = type.TEXT;
-        //dt(t) -> t(t)
-        break;
-      case TEXT_TO_TEXT:
-        addRange(ranges, option);
-        option.prev = type.TEXT;
-        //tt(t) -> t(t)
-        break;
-      case DOM_TO_DOM:
+    if(temp.hasOwnProperty('prev')) {
+      if(last && temp.d) {
         removeAt(elem, option.start);
-        option.prev = type.DOM;
-        //dt(t) -> d(t)
         option.t2d = true;
-        break;
-      case TEXT_TO_DOM:
-        option.prev = type.DOM;
-        //tt(t) -> d(t)
-        option.t2d = true;
-        break;
+      }
     }
+    else {
+      switch(option.state) {
+        case DOM_TO_TEXT:
+          removeAt(elem, option.start + 1);
+          addRange(ranges, option);
+          //删除text后，之前d2t可视作t2t无变化
+          option.state = TEXT_TO_TEXT;
+          option.prev = type.TEXT;
+          //dt(t) -> t(t)
+          break;
+        case TEXT_TO_TEXT:
+          addRange(ranges, option);
+          option.prev = type.TEXT;
+          //tt(t) -> t(t)
+          break;
+        case DOM_TO_DOM:
+          removeAt(elem, option.start);
+          option.prev = type.DOM;
+          //dt(t) -> d(t)
+          option.t2d = true;
+          break;
+        case TEXT_TO_DOM:
+          option.prev = type.DOM;
+          //tt(t) -> d(t)
+          option.t2d = true;
+          break;
+      }
+    }
+    temp.prev = type.TEXT;
   }
 }
 function removeAt(elem, start) {
@@ -268,20 +317,36 @@ function diffVd(ovd, nvd) {
       nvd.__updateAttr(prop, nvd.props[prop]);
     }
   });
-  //input和select这种:input要侦听数据绑定
-  //nvd.__checkListener();
+  var ol = ovd.children.length;
+  var nl = nvd.children.length;
   //渲染children
   var ranges = [];
   var option = { start: 0, record: [], first: true };
   var history;
   //遍历孩子，长度取新老vd最小值
-  for(var index = 0, len = Math.min(ovd.children.length, nvd.children.length); index < len; index++) {
-    var oc = ovd.children[index];
-    var nc = nvd.children[index];
+  for(var i = 0, len = Math.min(ol, nl); i < len; i++) {
+    var oc = ovd.children[i];
+    var nc = nvd.children[i];
     //history记录着当前child索引，可能它是个数组，递归记录
-    history = [index];
+    history = [i];
     //vd的child可能是vd、文本、变量和数组，但已不可能是Obj
     diffChild(elem, oc, nc, ranges, option, history);
+  }
+  //老的多余的删除
+  if(i < ol) {
+    var temp = {};
+    for(;i < ol; i++) {
+      del(elem, ovd.children[i], ranges, option, temp, i == ol - 1);
+    }
+  }
+  //新的多余的插入
+  else if(i < nl) {
+    add(elem, nvd.children[i++], ranges, option, history, true);
+    history[history.length - 1] = i;
+    for(;i < nl; i++) {
+      history[history.length - 1] = i;
+      add(elem, nvd.children[i], ranges, option, history);
+    }
   }
   range.merge(ranges);
   if(ranges.length) {
@@ -347,8 +412,9 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
       //有内容的数组变为空数组
       case 1:
         diffChild(elem, ovd[0], nvd[0], ranges, option, history, first);
+        var temp = {};
         for(var i = 1; i < ol; i++) {
-          del(elem, ovd[i], ranges, option, history);
+          del(elem, ovd[i], ranges, option, temp, i == ol - 1);
         }
         break;
       //空数组变为有内容
@@ -356,7 +422,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
         diffChild(elem, ovd[0], nvd[0], ranges, option, history, first);
         for(var i = 1; i < nl; i++) {
           history[history.length - 1] = i;
-          add(elem, nvd[i], ranges, option, history);
+          add(elem, nvd[i], ranges, option, history, i == 1);
         }
         break;
       //都有内容
@@ -366,13 +432,20 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
           diffChild(elem, ovd[i], nvd[i], ranges, option, history, first && !i);
         }
         //老的多余的删除
-        for(var j = i; j < ol; j++) {
-          del(elem, ovd[j], ranges, option, history);
+        if(i < ol) {
+          var temp = {};
+          for(;i < ol; i++) {
+            del(elem, ovd[i], ranges, option, temp, i == ol - 1);
+          }
         }
         //新的多余的插入
-        for(var j = i; j < nl; j++) {
+        else if(i < nl) {
           history[history.length - 1] = i;
-          add(elem, nvd[j], ranges, option, history);
+          add(elem, nvd[i++], ranges, option, history, true);
+          for(;i < nl; i++) {
+            history[history.length - 1] = i;
+            add(elem, nvd[i], ranges, option, history);
+          }
         }
         break;
     }
@@ -383,8 +456,9 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
     //将老的第1个和新的相比，注意老的第一个可能还是个数组，递归下去
     diffChild(elem, ovd[0], nvd, ranges, option, history, first);
     //移除剩余的老的
+    var temp = {};
     for(var i = 1, len = ovd.length; i < len; i++) {
-      del(elem, ovd[i], ranges, option, history);
+      del(elem, ovd[i], ranges, option, temp, i == len - 1);
     }
   }
   //新的是数组老的不是
@@ -395,7 +469,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history, first) {
     //增加剩余的新的
     for(var i = 1, len = nvd.length; i < len; i++) {
       history[history.length - 1] = i;
-      add(elem, nvd[i], ranges, option, history);
+      add(elem, nvd[i], ranges, option, history, i == 1);
     }
     history.pop();
   }

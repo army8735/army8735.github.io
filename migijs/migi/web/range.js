@@ -51,6 +51,13 @@ function join(index, children, history) {
       history.end = true;
       break;
     }
+    //array逻辑和Obj里面相同
+    else if(Array.isArray(child)) {
+      res += joinObj(child, history);
+      if(history.end) {
+        break;
+      }
+    }
     else {
       res += child === void 0 || child === null ? '' : child.toString();
     }
