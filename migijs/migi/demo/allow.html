@@ -2,36 +2,48 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>侦听操作DOM</title>
+  <title>allowPropagation</title>
   <link href="style.css" media="all" rel="stylesheet"/>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
+  <style>
+    .p{
+      padding:20px;
+      background:#FFCCCC;
+    }
+    .p span{
+      display:block;
+      background:#FFF;
+    }
+  </style>
 </head>
 <body>
 <div id="example"></div>
 <pre><code class="brush:jsx"></code></pre>
 <script type="text/jsx">
-  class MyComponent extends migi.Component {
+  class Shadow extends migi.Component {
     constructor(...data) {
       super(...data);
     }
-    handleClick() {
-      this.$element.querySelector('[ref]').focus();
+    click() {
+      alert('inner');
+    }
+    click2() {
+      alert('p');
     }
     render() {
-      return (
-        <div>
-          <input type="text" ref="myTextInput" />
-          <input type="button" value="Focus the text input" onClick={this.handleClick} />
-        </div>
-      );
+      return <p class="p" onClick={ this.click2 }><span onClick={ this.click }>text</span></p>;
     }
   }
 
   migi.render(
-    <MyComponent />,
+    <Shadow allowPropagation="true"/>,
     '#example'
   );
+
+  document.body.addEventListener('click', function() {
+    alert('outer');
+  });
 </script>
 <script>
   seajs.config({

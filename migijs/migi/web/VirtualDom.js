@@ -8,8 +8,7 @@ var range=function(){var _6=require('./range');return _6.hasOwnProperty("default
 var match=function(){var _7=require('./match');return _7.hasOwnProperty("default")?_7["default"]:_7}();
 var sort=function(){var _8=require('./sort');return _8.hasOwnProperty("default")?_8["default"]:_8}();
 var domDiff=function(){var _9=require('./domDiff');return _9.hasOwnProperty("default")?_9["default"]:_9}();
-var cachePool=function(){var _10=require('./cachePool');return _10.hasOwnProperty("default")?_10["default"]:_10}();
-var type=function(){var _11=require('./type');return _11.hasOwnProperty("default")?_11["default"]:_11}();
+var type=function(){var _10=require('./type');return _10.hasOwnProperty("default")?_10["default"]:_10}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -45,7 +44,7 @@ var SPECIAL_PROP = {
   'nodeType': true
 };
 
-!function(){var _12=Object.create(Element.prototype);_12.constructor=VirtualDom;VirtualDom.prototype=_12}();
+!function(){var _11=Object.create(Element.prototype);_11.constructor=VirtualDom;VirtualDom.prototype=_11}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
     if(props===void 0)props={};if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
@@ -71,9 +70,9 @@ var SPECIAL_PROP = {
   //@override
   VirtualDom.prototype.toString = function() {
     var self = this;
-    var res = '<' + self.name;
+    var res = '<' + self.$name;
     //处理属性
-    Object.keys(self.props).forEach(function(prop) {
+    Object.keys(self.$props).forEach(function(prop) {
       var s = self.__renderProp(prop);
       res += s;
     });
@@ -89,7 +88,7 @@ var SPECIAL_PROP = {
         }
       }
     }
-    res += ' migi-uid="' + self.uid + '"';
+    res += ' migi-uid="' + self.$uid + '"';
     //input和select这种:input要侦听数据绑定
     self.__checkListener();
     //自闭合标签特殊处理
@@ -99,20 +98,20 @@ var SPECIAL_PROP = {
     res += '>';
     //渲染children
     res += self.__renderChildren();
-    res +='</' + self.name + '>';
+    res +='</' + self.$name + '>';
     return res;
   }
 
-  VirtualDom.prototype.isFirst = function(children) {
+  VirtualDom.prototype.$isFirst = function(children) {
     //本身就是Component的唯一节点
-    if(this.parent instanceof Component) {
+    if(this.$parent instanceof Component) {
       return true;
     }
-    children = children || this.parent.children;
+    children = children || this.$parent.$children;
     for(var i = 0, len = children.length; i < len; i++) {
       var child = children[i];
       if(Array.isArray(child) && child.length) {
-        return this.isFirst(child);
+        return this.$isFirst(child);
       }
       else if(child == this) {
         return true;
@@ -123,21 +122,21 @@ var SPECIAL_PROP = {
       else if(child instanceof Obj) {
         child = child.v;
         if(Array.isArray(child) && child.length) {
-          return this.isFirst(child);
+          return this.$isFirst(child);
         }
       }
     }
   }
-  VirtualDom.prototype.isLast = function(children) {
+  VirtualDom.prototype.$isLast = function(children) {
     //本身就是Component的唯一节点
-    if(this.parent instanceof Component) {
+    if(this.$parent instanceof Component) {
       return true;
     }
-    children = children || this.parent.children;
+    children = children || this.$parent.$children;
     for(var i = children.length - 1; i >= 0; i--) {
       var child = children[i];
       if(Array.isArray(child) && child.length) {
-        return this.isLast(child);
+        return this.$isLast(child);
       }
       else if(child == this) {
         return true;
@@ -148,7 +147,7 @@ var SPECIAL_PROP = {
       else if(child instanceof Obj) {
         child = child.v;
         if(Array.isArray(child) && child.length) {
-          return this.isLast(child);
+          return this.$isLast(child);
         }
       }
     }
@@ -156,7 +155,7 @@ var SPECIAL_PROP = {
 
   VirtualDom.prototype.__renderProp = function(prop) {
     var self = this;
-    var v = self.props[prop];
+    var v = self.$props[prop];
     var res = '';
     //onXxx侦听处理
     if(/^on[A-Z]/.test(prop)) {
@@ -165,7 +164,7 @@ var SPECIAL_PROP = {
           return up.toLowerCase();
         });
         self.__addListener(name, function(event) {
-          var item = self.props[prop];
+          var item = self.$props[prop];
           if(item instanceof Cb) {
             item.cb.call(item.context, event);
           }
@@ -181,7 +180,7 @@ var SPECIAL_PROP = {
       //特殊html不转义
       if(prop == 'dangerouslySetInnerHTML') {
         self.once(Event.DOM, function() {
-          self.element.innerHTML = s;
+          self.$element.innerHTML = s;
         });
         return '';
       }
@@ -194,7 +193,7 @@ var SPECIAL_PROP = {
       var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 || v === null ? '' : v.toString());
       if(prop == 'dangerouslySetInnerHTML') {
         self.once(Event.DOM, function() {
-          self.element.innerHTML = s;
+          self.$element.innerHTML = s;
         });
         return '';
       }
@@ -220,16 +219,16 @@ var SPECIAL_PROP = {
   VirtualDom.prototype.__renderChildren = function() {
     var self = this;
     var res = '';
-    self.children.forEach(function(child) {
-      res += VirtualDom.renderChild(child);
+    self.$children.forEach(function(child) {
+      res += renderChild(child);
     });
     return res;
   }
   VirtualDom.prototype.__checkListener = function() {
     var self = this;
-    if(self.name == 'input') {
-      if(self.props.hasOwnProperty('value')) {
-        var item = self.props.value;
+    if(self.$name == 'input') {
+      if(self.$props.hasOwnProperty('value')) {
+        var item = self.$props.value;
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb() {
@@ -266,9 +265,9 @@ var SPECIAL_PROP = {
         }
       }
     }
-    else if(self.name == 'select') {
-      if(self.props.hasOwnProperty('value')) {
-        var item = self.props.value;
+    else if(self.$name == 'select') {
+      if(self.$props.hasOwnProperty('value')) {
+        var item = self.$props.value;
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb() {
@@ -283,9 +282,9 @@ var SPECIAL_PROP = {
     }
     //textarea的value在标签的childNodes里，这里只处理单一child情况
     //TODO: textarea的children有多个其中一个是text该怎么办？有歧义
-    else if(self.name == 'textarea') {
-      if(self.children.length == 1) {
-        var child = self.children[0];
+    else if(self.$name == 'textarea') {
+      if(self.$children.length == 1) {
+        var child = self.$children[0];
         if(child instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
@@ -321,7 +320,7 @@ var SPECIAL_PROP = {
       else {
         self.__listener[name] = cb;
       }
-      self.element.addEventListener(name, cb);
+      self.$element.addEventListener(name, cb);
     }
   }
   VirtualDom.prototype.__removeListener = function() {
@@ -331,66 +330,83 @@ var SPECIAL_PROP = {
         var item = self.__listener[name];
         if(Array.isArray(item)) {
           item.forEach(function(cb) {
-            self.element.removeEventListener(name, cb);
+            self.$element.removeEventListener(name, cb);
           });
         }
         else {
-          self.element.removeEventListener(name, item);
+          self.$element.removeEventListener(name, item);
         }
       });
     }
   }
 
-  VirtualDom.prototype.find = function(name) {
-    return this.findAll(name, true)[0];
+  VirtualDom.prototype.$find = function(name) {
+    return this.$findAll(name, true)[0];
   }
-  VirtualDom.prototype.findAll = function(name, first) {
-    var res = [];
-    for(var i = 0, len = this.children.length; i < len; i++) {
-      var child = this.children[i];
+  VirtualDom.prototype.$findAll = function(name, first) {
+    return this.__findAll(name, this.$children, [], first);
+  }
+  VirtualDom.prototype.__findAll = function(name, children, res, first) {
+    for(var i = 0, len = children.length; i < len; i++) {
+      var child = children[i];
       if(child instanceof Element) {
-        if(child instanceof Component) {
-          //传入的可能是个class或者string
-          if(child.name == name || util.isFunction(name) && child instanceof name) {
-            res.push(child);
-            if(first) {
-              break;
-            }
-          }
+        res = this.__findEq(name, child, res, first);
+      }
+      else if(child instanceof Obj) {
+        child = child.v;
+        if(Array.isArray(child)) {
+          this.__findAll(name, child, res, first);
         }
-        else {
-          if(child.name == name || util.isFunction(name) && child instanceof name) {
-            res.push(child);
-            if(first) {
-              break;
-            }
-          }
-          res = res.concat(child.findAll(name));
-          if(first && res.length) {
-            break;
-          }
+        else if(child instanceof Element) {
+          res = this.__findEq(name, child, res, first);
         }
+      }
+      else if(Array.isArray(child)) {
+        this.__findAll(name, child, res, first);
+      }
+      if(first && res.length) {
+        break;
       }
     }
     return res;
   }
+  VirtualDom.prototype.__findEq = function(name, child, res, first) {
+    //cp不递归
+    if(child instanceof Component) {
+      //传入的可能是个class或者string
+      if(child.$name == name || util.isFunction(name) && child instanceof name) {
+        res.push(child);
+      }
+    }
+    //vd递归
+    else {
+      if(child.$name == name || util.isFunction(name) && child instanceof name) {
+        res.push(child);
+        if(first) {
+          return res;
+        }
+      }
+      res = res.concat(child.$findAll(name, first));
+    }
+    return res;
+  }
 
-  var _13={};_13.names={};_13.names.get =function() {
+  var _12={};_12.$names={};_12.$names.get =function() {
     return this.__names || (this.__names = []);
   }
-  _13.style={};_13.style.set =function(v) {
+  _12.$style={};_12.$style.set =function(v) {
     var self = this;
     self.__style = v;
-    if(self.parent instanceof VirtualDom) {
-      self.__names = self.parent.names.slice();
+    if(self.$parent instanceof VirtualDom) {
+      self.__names = self.$parent.$names.slice();
     }
     else {
       self.__names = [];
     }
-    self.__names.push(self.name);
-    self.children.forEach(function(child) {
+    self.__names.push(self.$name);
+    self.$children.forEach(function(child) {
       if(child instanceof VirtualDom) {
-        child.style = v;
+        child.$style = v;
       }
     });
   }
@@ -401,8 +417,8 @@ var SPECIAL_PROP = {
     var self = this;
     //start标明真实DOM索引，因为相邻的文本会合并为一个text节点
     var option = { start: 0, first: true };
-    for(var index = 0, len = self.children.length; index < len; index++) {
-      var child = self.children[index];
+    for(var index = 0, len = self.$children.length; index < len; index++) {
+      var child = self.$children[index];
       self.__domChild(child, index, len, option);
     }
     //可能最后一个是空白text，需特殊判断下插入
@@ -411,16 +427,15 @@ var SPECIAL_PROP = {
     }
   }
   //index和i结合判断首个，因为child为数组时会展开，当child不是第1个时其展开项都有prev
-  VirtualDom.prototype.__domChild = function(child, index, len, option, i) {
+  VirtualDom.prototype.__domChild = function(child, index, len, option) {
     var self = this;
     //防止空数组跳过逻辑，它被认为是个空字符串
     if(Array.isArray(child) && child.length) {
-      child.forEach(function(item, i) {
-        //第1个同时作为children的第1个要特殊处理
-        self.__domChild(item, index, len, option, i);
+      child.forEach(function(item) {
+        self.__domChild(item, index, len, option);
       });
     }
-    else if(child instanceof Element) {
+    else if(child instanceof Element && !(child instanceof migi.NonVisualComponent)) {
       //前面的连续的空白节点需插入一个空TextNode
       if(option.empty) {
         self.__insertBlank(option.start);
@@ -436,14 +451,14 @@ var SPECIAL_PROP = {
         }
       }
       option.prev = type.DOM;
-      if(child instanceof Component) {
-        child.emit(Event.DOM);
-      }
     }
     else if(child instanceof Obj) {
-      self.__domChild(child.v, index, len, option, i);
+      self.__domChild(child.v, index, len, option);
     }
-    else if(VirtualDom.isEmptyText(child)) {
+    else if(isEmptyText(child)) {
+      if(child instanceof migi.NonVisualComponent) {
+        child.emit(Event.DOM);
+      }
       //前方如有兄弟文本节点，无需插入，否则先记录empty，等后面检查是否有非空text出现，再插入空白节点
       if(!option.first) {
         if(option.prev == type.TEXT) {
@@ -462,7 +477,7 @@ var SPECIAL_PROP = {
   }
   VirtualDom.prototype.__insertBlank = function(start) {
     var blank = document.createTextNode('');
-    var elem = this.element;
+    var elem = this.$element;
     var cns = elem.childNodes;
     //可能仅一个空文本节点，或最后一个空文本节点
     var length = cns.length;
@@ -478,8 +493,8 @@ var SPECIAL_PROP = {
   VirtualDom.prototype.__onData = function(k) {
     var self = this;
     //联动属性值
-    for(var key in self.props) {
-      var item = self.props[key];
+    for(var key in self.$props) {
+      var item = self.$props[key];
       if(item instanceof Obj) {
         var change = false;
         if(Array.isArray(item.k)) {
@@ -506,22 +521,21 @@ var SPECIAL_PROP = {
     var ranges = [];
     var option = { start: 0, record: [], first: true };
     var history;
-    var children = self.children;
+    var children = self.$children;
     for(var index = 0, len = children.length; index < len; index++) {
       var child = children[index];
       //history记录着当前child索引，可能它是个数组，递归记录
       history = [index];
       self.__checkObj(k, child, index, len, ranges, option, history);
     }
-    range.merge(ranges);
     if(ranges.length) {
       //textarea特殊判断
-      if(self.name == 'textarea') {
-        self.__updateAttr('value', range.value(ranges[0], self.children));
+      if(self.$name == 'textarea') {
+        self.__updateAttr('value', range.value(ranges[0], self.$children));
         return;
       }
       ranges.forEach(function(item) {
-        range.update(item, self.children, self.element);
+        range.update(item, self.$children, self.$element);
       });
     }
   }
@@ -563,7 +577,7 @@ var SPECIAL_PROP = {
         var ov = child.v;
         //对比是否真正发生变更
         if(child.update(ov)) {
-          domDiff.diff(this.element, ov, child.v, ranges, option, history);
+          domDiff.diff(this.$element, ov, child.v, ranges, option, history);
         }
       }
     }
@@ -571,7 +585,9 @@ var SPECIAL_PROP = {
     else if(child instanceof Element) {
       delete option.t2d;
       delete option.d2t;
-      child.emit(Event.DATA, k);
+      if(child instanceof VirtualDom) {
+        child.__onData(k);
+      }
       option.start++;
       //前面的文本再加一次
       if(!option.first && option.prev == type.TEXT) {
@@ -592,14 +608,14 @@ var SPECIAL_PROP = {
       }
       //注意空数组算text类型
       else {
-        domDiff.check(option, this.element, child, ranges, history);
+        domDiff.check(option, this.$element, child, ranges, history);
         range.record(history, option);
         option.prev = type.TEXT;
       }
     }
     //else其它情况为文本节点或者undefined忽略
     else {
-      domDiff.check(option, this.element, child, ranges, history);
+      domDiff.check(option, this.$element, child, ranges, history);
       range.record(history, option);
       option.prev = type.TEXT;
     }
@@ -610,12 +626,12 @@ var SPECIAL_PROP = {
   //但是setAttribute会保留实体字符形式
   VirtualDom.prototype.__updateAttr = function(k, v) {
     if(k == 'dangerouslySetInnerHTML') {
-      this.element.innerHTML = v || '';
+      this.$element.innerHTML = v || '';
       return;
     }
     switch(k) {
       case 'value':
-        this.element[k] = v || '';
+        this.$element[k] = v || '';
         break;
       case 'checked':
       case 'selected':
@@ -628,7 +644,7 @@ var SPECIAL_PROP = {
       case 'tagName':
       case 'nodeName':
       case 'nodeType':
-        this.element[k] = v || false;
+        this.$element[k] = v || false;
         break;
       case 'className':
         k = 'class';
@@ -636,19 +652,19 @@ var SPECIAL_PROP = {
       case 'class':
         if(this.__style) {
           if(v === null || v === void 0) {
-            this.element.removeAttribute('migi-' + k);
+            this.$element.removeAttribute('migi-' + k);
           }
           else {
-            this.element.setAttribute('migi-' + k, v);
+            this.$element.setAttribute('migi-' + k, v);
           }
           break;
         }
       default:
         if(v === null || v === void 0) {
-          this.element.removeAttribute(k);
+          this.$element.removeAttribute(k);
         }
         else {
-          this.element.setAttribute(k, v);
+          this.$element.setAttribute(k, v);
         }
         break;
     }
@@ -660,9 +676,9 @@ var SPECIAL_PROP = {
   }
   VirtualDom.prototype.__match = function(first) {
     this.__inline = this.__cache.style || '';
-    if(this.parent instanceof VirtualDom) {
-      this.__classes = this.parent.__classes.slice();
-      this.__ids = this.parent.__ids.slice();
+    if(this.$parent instanceof VirtualDom) {
+      this.__classes = this.$parent.__classes.slice();
+      this.__ids = this.$parent.__ids.slice();
     }
     else {
       this.__classes = [];
@@ -693,10 +709,10 @@ var SPECIAL_PROP = {
   }
   VirtualDom.prototype.__updateStyle = function() {
     var s = this.__match();
-    if(this.element.getAttribute('style') != s) {
-      this.element.setAttribute('style', s);
+    if(this.$element.getAttribute('style') != s) {
+      this.$element.setAttribute('style', s);
     }
-    this.children.forEach(function(child) {
+    this.$children.forEach(function(child) {
       if(child instanceof VirtualDom) {
         child.__updateStyle();
       }
@@ -720,6 +736,7 @@ var SPECIAL_PROP = {
     return this;
   }
   VirtualDom.prototype.__destroy = function() {
+    this.__hash = {};
     this.__cache = {};
     this.__names = null;
     this.__classes = null;
@@ -731,27 +748,27 @@ var SPECIAL_PROP = {
     this.__hasDes = true;
     return this;
   }
+Object.keys(_12).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_12[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
 
-  VirtualDom.isEmptyText=function(item) {
-    //静态文本节点，包括空、undefined、null、空数组
-    return item === void 0 || item === null || !item.toString();
+//静态文本节点，包括空、undefined、null、空数组
+function isEmptyText(item) {
+  return item === void 0 || item === null || !item.toString();
+}
+function renderChild(child) {
+  if(child === void 0 || child === null) {
+    return '';
   }
-  VirtualDom.renderChild=function(child) {
-    if(child === void 0 || child === null) {
-      return '';
-    }
-    if(child instanceof Element || child instanceof Obj) {
-      return child.toString();
-    }
-    if(Array.isArray(child)) {
-      var res = '';
-      child.forEach(function(item) {
-        res += VirtualDom.renderChild(item);
-      });
-      return res;
-    }
-    return util.encodeHtml(child.toString());
+  if(child instanceof Element || child instanceof Obj) {
+    return child.toString();
   }
-Object.keys(_13).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_13[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
+  if(Array.isArray(child)) {
+    var res = '';
+    child.forEach(function(item) {
+      res += renderChild(item);
+    });
+    return res;
+  }
+  return util.encodeHtml(child.toString());
+}
 
 exports["default"]=VirtualDom;});

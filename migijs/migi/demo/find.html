@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>侦听操作DOM</title>
+  <title>find</title>
   <link href="style.css" media="all" rel="stylesheet"/>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
@@ -11,25 +11,29 @@
 <div id="example"></div>
 <pre><code class="brush:jsx"></code></pre>
 <script type="text/jsx">
-  class MyComponent extends migi.Component {
+  class Component extends migi.Component {
     constructor(...data) {
       super(...data);
-    }
-    handleClick() {
-      this.$element.querySelector('[ref]').focus();
+      this.on(migi.Event.DOM, function() {
+        console.log(this.$find('span'));
+        console.log(this.$findAll('span'));
+        console.log(this.$findChild('span'));
+        console.log(this.$findChildren('span'));
+      });
     }
     render() {
-      return (
-        <div>
-          <input type="text" ref="myTextInput" />
-          <input type="button" value="Focus the text input" onClick={this.handleClick} />
-        </div>
-      );
+      return <div>
+        <span>1</span>
+        <span>2</span>
+      </div>;
     }
   }
 
   migi.render(
-    <MyComponent />,
+    <Component>
+      <span>3</span>
+      <span>4</span>
+    </Component>,
     '#example'
   );
 </script>

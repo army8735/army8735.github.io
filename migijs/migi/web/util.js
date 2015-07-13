@@ -32,7 +32,7 @@ function isType(type) {
 }
 
 function isOrigin(o) {
-  return util.isBoolean(o) || util.isNull(o) || util.isNumber(o) || util.isUndefined(o) || util.isString(o);
+  return o === void 0 || o === null || util.isBoolean(o) || util.isNumber(o) || util.isString(o);
 }
 function equal(a, b) {
   //vd常量
@@ -42,11 +42,11 @@ function equal(a, b) {
   if(isOrigin(a) || isOrigin(b)) {
     return a === b;
   }
-  if(util.isArray(a)) {
-    if(!util.isArray(b)) {
+  if(Array.isArray(a)) {
+    if(!Array.isArray(b)) {
       return false;
     }
-    if(a.length !== b.length) {
+    if(a.length != b.length) {
       return false;
     }
     for(var i = 0, len = a.length; i < len; i++) {
@@ -119,11 +119,8 @@ var util = {
   },
   isObject: isType('Object'),
   isString: isType('String'),
-  isArray: Array.isArray || isType('Array'),
   isFunction: isType('Function'),
-  isUndefined: isType('Undefined'),
   isNumber: isType('Number'),
-  isNull: isType('Null'),
   isBoolean: isType('Boolean'),
   isDate: isType('Date'),
   equal:function(a, b) {

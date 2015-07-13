@@ -84,13 +84,11 @@
     constructor(...data) {
       super(...data);
       var self = this;
-      self.on(migi.Event.DOM, function() {
-        self.request();
-      });
+      self.request();
     }
     request() {
       var self = this;
-      var url = self.props.url;
+      var url = self.$props.url;
       $.getJSON(url, function(data) {
         self.emit('success', data);
       });
@@ -106,7 +104,7 @@
       self._value = '';
       self._show = false;
       self.on(migi.Event.DOM, function() {
-        var ajax = self.findChild('Ajax');
+        var ajax = self.$findChild('Ajax');
         if(ajax) {
           ajax.on('success', function(data) {
             self.list = data;
@@ -206,8 +204,8 @@
     </ol>,
     '#example'
   );
-  var selects = ol.findAll('Select');
-  selects[0].bridge(selects[1], {
+  var selects = ol.$findAll('Select');
+  selects[0].$bridge(selects[1], {
     value: {
       name: 'list',
       middleware: function(d) {
