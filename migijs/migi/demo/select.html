@@ -151,7 +151,7 @@
     handleClick(e) {
       this.show = !this.show;
       if(e.target.tagName == 'LI') {
-        this.find('strong').html = this.value = e.target.innerHTML;
+        this.$find('strong').html = this.value = e.target.innerHTML;
       }
     }
     handlerOver(e) {
