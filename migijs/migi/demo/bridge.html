@@ -135,11 +135,11 @@
     set show(v) {
       this._show = v;
       if(v) {
-        var cur = this.element.querySelector('.cur');
+        var cur = this.$element.querySelector('.cur');
         if(cur) {
           cur.className = '';
         }
-        cur = this.element.querySelector('li[title="' + this.value + '"]');
+        cur = this.$element.querySelector('li[title="' + this.value + '"]');
         if(cur) {
           cur.className = 'cur';
         }
@@ -160,7 +160,7 @@
     }
     handlerOver(e) {
       if(e.target.tagName == 'LI' && e.target.className != 'cur') {
-        var cur = this.element.querySelector('.cur');
+        var cur = this.$element.querySelector('.cur');
         if(cur) {
           cur.className = '';
         }
