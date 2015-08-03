@@ -7,7 +7,7 @@ define(function(require, exports) {
 		find;
 
 	function getText(node) {
-		return node.textContent || node.innerText || node.firstChild && node.firstChild.nodeValue || '';
+		return node.textContent || node.firstChild && node.firstChild.nodeValue || '';
 	}
 	function parse(nodes) {
 		if(!nodes.length) {
@@ -35,7 +35,7 @@ define(function(require, exports) {
 			div = document.createElement('div'),
 			col = document.createElement('div'),
 			lastCol = 0;
-			ol = document.createElement('ol');
+		ol = document.createElement('ol');
 		ol.start = start;
 		for(var i = 0; i < tab; i++) {
 			tabBlank += '&nbsp';
@@ -104,8 +104,12 @@ define(function(require, exports) {
 	exports.exec = function(tagName, className) {
 		tagName = tagName || 'code';
 		find = className || 'brush';
-		nodes = Array.prototype.slice.call(document.getElementsByTagName(tagName), 0);
-		parse(nodes);
+		nodes = document.getElementsByTagName(tagName);
+		var arr = [];
+		for(var i = 0, len = nodes.length; i < len; i++) {
+			arr.push(nodes[i]);
+		}
+		parse(arr);
 		return exports;
 	};
 	exports.cache = function(i) {
