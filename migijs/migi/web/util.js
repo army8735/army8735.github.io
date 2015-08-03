@@ -1,4 +1,5 @@
 define(function(require, exports, module){var Element=function(){var _0=require('./Element');return _0.hasOwnProperty("default")?_0["default"]:_0}();
+var browser=function(){var _1=require('./browser');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 
 function clone(obj) {
   if(obj instanceof Element) {
@@ -10,14 +11,15 @@ function clone(obj) {
   var o = Array.isArray(obj) ? [] : {};
   for(var i in obj) {
     if(obj.hasOwnProperty(i)) {
-      if(obj[i] instanceof Element) {
-        o[i] = obj[i];
+      var item = obj[i];
+      if(item instanceof Element || browser.lie && item && item.__migiEL) {
+        o[i] = item;
       }
-      else if(util.isDate(obj[i])) {
-        o[i] = new Date(obj[i]);
+      else if(util.isDate(item)) {
+        o[i] = new Date(item);
       }
       else {
-        o[i] = util.isObject(obj[i]) ? clone(obj[i]) : obj[i];
+        o[i] = util.isObject(item) ? clone(item) : item;
       }
     }
   }
@@ -36,7 +38,7 @@ function isOrigin(o) {
 }
 function equal(a, b) {
   //vd常量
-  if(a instanceof Element || b instanceof Element) {
+  if(a instanceof Element || b instanceof Element || browser.lie && (a && a.__migiEL || b && b.__migiEL)) {
     return a == b;
   }
   if(isOrigin(a) || isOrigin(b)) {
@@ -86,7 +88,7 @@ function joinArray(arr, prop) {
     if(Array.isArray(item)) {
       res += joinArray(item);
     }
-    else if(item instanceof Element) {
+    else if(item instanceof Element || browser.lie && item && item.__migiEL) {
       res += item.toString();
     }
     else if(item === void 0 || item === null) {
@@ -99,15 +101,9 @@ function joinArray(arr, prop) {
   return res;
 }
 
-var NODE = document.createElement('div');
-var TABLE = document.createElement('table');
-var TBODY = document.createElement('tbody');
-var TR = document.createElement('tr');
-var UL = document.createElement('ul');
-var DL = document.createElement('dl');
-var SELECT = document.createElement('select');
-var MENU = document.createElement('menu');
-var LIE = !+'\v1';
+var PROTECT = {
+  constructor: true
+};
 
 var util = {
   clone:function(obj) {
@@ -133,45 +129,30 @@ var util = {
   encodeHtml:function(s, prop) {
     return prop ? s.replace(/"/g, '&quot;') : s.replace(/</g, '&lt;');
   },
-  NODE: NODE,
-  getParent:function(name) {
-    switch(name) {
-      case 'td':
-        return TR;
-      case 'tr':
-        return TBODY;
-      case 'tbody':
-      case 'thead':
-      case 'col':
-        return TABLE;
-      case 'li':
-        return UL;
-      case 'dt':
-      case 'dd':
-        return DL;
-      case 'option':
-        return SELECT;
-      case 'menuitem':
-        return MENU;
-      default:
-        return NODE;
-    }
-  },
-  lie: LIE,
-  version: function() {
-    if(!LIE) {
-      return;
-    }
-    var v = 5;
-    while (NODE.innerHTML = '<!--[if gt IE '+(++v)+']>1<![endif]-->', NODE.innerHTML);
-    return v;
-  }(),
-  joinArray: function(arr, prop) {
+  joinArray:function(arr, prop) {
     //fix循环依赖
     if(Element.hasOwnProperty('default')) {
       Element = Element['default'];
     }
     return joinArray(arr, prop);
+  },
+  //不包括原型链mix
+  smix:function(target, data) {
+    data=[].slice.call(arguments, 1);data.forEach(function(item) {
+      util.pmix(target, item, true);
+    });
+    return target;
+  },
+  //包括原型链mix
+  pmix:function(target, data, noProto) {
+    for(var i in data) {
+      if(!PROTECT.hasOwnProperty(i)) {
+        if(!noProto || data.hasOwnProperty(i)) {
+          target[i] = data[i];
+        }
+      }
+    }
+    return target;
   }
 };
 

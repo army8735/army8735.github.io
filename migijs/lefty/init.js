@@ -6,17 +6,12 @@ define(function(require, exports, module) {
       var node = jsx[i];
       if(node.getAttribute('type') == 'text/jsx' && !node.getAttribute('lefty')) {
         node.setAttribute('lefty', 1);
-        var code = node.textContent || node.innerText;
+        var code = node.textContent || node.text;
         if(!code) {
           continue;
         }
-        code = lefty.parse(code, true);
-        if(node.textContent) {
-          node.textContent = code;
-        }
-        else {
-          node.innerText = code;
-        }
+        code = lefty.parse(code, true, true);
+        node.textContent = node.text = code;
       }
     }
   }

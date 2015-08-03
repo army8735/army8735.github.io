@@ -130,16 +130,20 @@
     <span>这是一个模拟下拉菜单的组件，它通过前面的Ajax组件读取一个数据源并进行展示</span>
   </li>
   <li>
-    <a href="bind.html" title="bind">数据绑定bind</a>
-    <span>当2个相同组件的数据需要双向联动时，使用bind方法即可，另外2个参数标明包括和排除的同步变量名</span>
-  </li>
-  <li>
     <a href="bridge.html" title="bridge">数据桥接bridge</a>
     <span>这是联动下拉菜单的组件，它通过前面的Ajax组件读取一个省市信息展示，使用bridge进行桥接单向数据联动、middleware进行数据处理</span>
   </li>
   <li>
     <a href="bridgee.html" title="bridge">数据中转事件总线</a>
     <span>虽然用$find方法可以找到若干个组件进行数据联动，但毕竟不方便。migi.eventBus作为事件总线外，还可以用作数据中转站，同样的bridge接口串联2个组件数据</span>
+  </li>
+  <li>
+    <a href="tap.html" title="bridge">tap事件</a>
+    <span>类似zepto的tap事件，目前较为简单。handler的第一个参数是touchEnd时触发的touchEvent对象。</span>
+  </li>
+  <li>
+    <a href="lie.html" title="bridge">ie8的get/set hack</a>
+    <span>ie8由于浏览器限制，无法为普通js对象提供get/set，故使用了hack手段让组件返回的是个DOM对象。此时判别对象类型和使用引用时会有陷阱，故提供了个兼容的$方法来读取/设置组件get/set属性</span>
   </li>
   <li>
     <a href="benchmark.html" title="benchmark">性能测试</a>

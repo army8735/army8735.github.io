@@ -1,5 +1,6 @@
 define(function(require, exports, module){var Element=function(){var _0=require('./Element');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")?_1["default"]:_1}();
+var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 
 
   function Obj(k, context, cb) {
@@ -8,25 +9,13 @@ var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")
       Element = Element['default'];
     }
 
-    this.__k = k;
-    this.__context = context;
-    this.__cb = cb;
-    this.v = cb.call(context);
+    this.k = k;
+    this.context = context;
+    this.cb = cb;
+    this.setV(cb.call(context));
   }
-  var _2={};_2.k={};_2.k.get =function() {
-    return this.__k;
-  }
-  _2.context={};_2.context.get =function() {
-    return this.__context;
-  }
-  _2.v={};_2.v.get =function() {
-    return this.__v;
-  }
-  _2.v.set =function(v) {
-    this.__v = util.clone(v);
-  }
-  _2.cb={};_2.cb.get =function() {
-    return this.__cb;
+  Obj.prototype.setV = function(v) {
+    this.v = util.clone(v);
   }
   Obj.prototype.toString = function(prop) {
     //array调用join包括转码
@@ -41,15 +30,15 @@ var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")
     if(prop) {
       return util.encodeHtml(s, prop);
     }
-    return this.v instanceof Element ? s : util.encodeHtml(s, prop);
+    return this.v instanceof Element || browser.lie && this.v && this.v.__migiEL ? s : util.encodeHtml(s, prop);
   }
   Obj.prototype.update = function(ov) {
     var nv = this.cb.call(this.context);
     if(!util.equal(ov, nv)) {
-      this.v = nv;
+      this.setV(nv);
       return true;
     }
   }
-Object.keys(_2).forEach(function(k){Object.defineProperty(Obj.prototype,k,_2[k])});
+
 
 exports["default"]=Obj;});
