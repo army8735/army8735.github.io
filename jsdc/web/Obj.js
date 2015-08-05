@@ -19,7 +19,9 @@ var Obj = Class(function(jsdc) {
       if(prmr.name() == JsNode.PRMREXPR
         && !prmr.next()
         && (parent.name() == JsNode.ASSIGNEXPR
-          || parent.name() == JsNode.INITLZ)) {
+          || parent.name() == JsNode.INITLZ)
+        || prmr.name() == JsNode.PRMREXPR
+          && parent.name() == JsNode.EXPORTDECL) {
         if(node.size() == 1) {
           var first = node.first();
           if(first.name() == JsNode.TOKEN) {
