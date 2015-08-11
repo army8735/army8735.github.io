@@ -26,8 +26,8 @@
   class Component extends migi.Component {
     constructor(...data) {
       super(...data);
-      this.$findChild(NV).on('dom', function(fake) {
-        console.log(this.$name, fake);
+      this.findChild(NV).on('dom', function(fake) {
+        console.log(this.name, fake);
       });
     }
   }
@@ -42,8 +42,8 @@
   class Component2 extends migi.Component {
     constructor(...data) {
       super(...data);
-      this.$findChild(NV).on('dom', function(fake) {
-        console.log(this.$name, fake);
+      this.findChild(NV).on('dom', function(fake) {
+        console.log(this.name, fake);
       });
     }
     render() {

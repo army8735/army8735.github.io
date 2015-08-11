@@ -16,26 +16,20 @@
   class Component extends migi.Component {
     constructor(...data) {
       super(...data);
-      this.on(migi.Event.DOM, function() {
-        console.log(this.find('span'));
-        console.log(this.findAll('span'));
-        console.log(this.findChild('span'));
-        console.log(this.findChildren('span'));
-      });
+    }
+    click() {
+      this.ref.s.element.innerHTML = 'ref';
     }
     render() {
       return <div>
-        <span>1</span>
-        <span>2</span>
+        <p ref="p" onClick={this.click}>click</p>
+        <span ref="s"></span>
       </div>;
     }
   }
 
   migi.render(
-    <Component>
-      <span>3</span>
-      <span>4</span>
-    </Component>,
+    <Component/>,
     '#example'
   );
 </script>
@@ -45,7 +39,7 @@
       'homunculus': seajs.resolve('../../../homunculus/index.js', seajs.data.cwd),
       'jsdc': seajs.resolve('../../../jsdc/index.js', seajs.data.cwd),
       'lefty': seajs.resolve('../../lefty/init.js', seajs.data.cwd),
-      'jaw': seajs.resolve('../../jaw/init', seajs.data.cwd)
+      'jaw': seajs.resolve('../../jaw/init.js', seajs.data.cwd)
     },
     map: [function(url) {
       return url.replace('demo/lexer/', '../../homunculus/web/lexer/');

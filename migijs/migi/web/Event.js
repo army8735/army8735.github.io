@@ -1,4 +1,5 @@
 define(function(require, exports, module){var browser=function(){var _0=require('./browser');return _0.hasOwnProperty("default")?_0["default"]:_0}();
+var mix=function(){var _1=require('./mix');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 
 
   function Event() {
@@ -89,6 +90,18 @@ define(function(require, exports, module){var browser=function(){var _0=require(
     }
     return this;
   }
+
+  Event.prototype.__hackLie = function(cons, GS) {
+    this.__migiGS = mix.s({}, this.__migiGS, GS);
+    if(this.constructor == cons) {
+      var a = document.createElement('a');
+      this.__migiNode = a.__migiNode = a;
+      mix.p(a, this);
+      Object.defineProperties(a, this.__migiGS);
+      return a;
+    }
+  }
+
   Event.mix=function(obj) {
     obj=[].slice.call(arguments, 0);obj.forEach(function(o) {
       var event = new Event();
