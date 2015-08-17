@@ -10,7 +10,8 @@ var uid = 0;
 !function(){var _6=Object.create(Event.prototype);_6.constructor=Model;Model.prototype=_6}();
   function Model() {
     Event.call(this);
-    this.__uid = 'm' + uid++;
+    this.$ = this.$$ = this;
+    this.uid = 'm' + uid++;
     this.__name = this.constructor.__migiName;
     this.__ref = [];
     this.__bridgeHash = null;
@@ -49,7 +50,7 @@ Object.keys(Event).forEach(function(k){Model[k]=Event[k]});
 });
 
 var GS = {};
-['name', 'uid'].forEach(function(item) {
+['name'].forEach(function(item) {
   GS[item] = {
     get: function() {
       return this['__' + item];

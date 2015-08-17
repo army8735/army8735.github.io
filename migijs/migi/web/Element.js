@@ -14,13 +14,14 @@ function getDom(dom) {
 !function(){var _3=Object.create(Event.prototype);_3.constructor=Element;Element.prototype=_3}();
   function Element(name, props, children) {
     Event.call(this);
-    this.__uid = uid++;
+    this.$ = this.$$ = this;
+    this.uid = uid++;
     this.__reset(name, props, children);
   }
   Element.prototype.__reset = function(name, props, children) {
     this.__name = name;
     this.props = props;
-    this.__children = children;
+    this.children = children;
 
     this.__element = null; //真实DOM引用
     this.__parent = null; //父vd或cp引用
@@ -39,7 +40,8 @@ function getDom(dom) {
   }
   //防止多次插入后重复，清除上次，永远只存在一个实例
   Element.prototype.__clean = function() {
-    if(this.dom) {
+    if(this.__dom) {
+      this.__dom = false;
       var elem = this.element;
       if(elem) {
         elem.parentNode.removeChild(elem);
@@ -148,7 +150,7 @@ var GS = {
     }
   }
 };
-['name', 'children', 'uid', 'dom'].forEach(function(item) {
+['name', 'dom'].forEach(function(item) {
   GS[item] = {
     get: function() {
       return this['__' + item];
