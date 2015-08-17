@@ -411,7 +411,7 @@ function body(node, ids) {
           var top = closest(parent);
           var o = hash[top.nid()];
           var news = getUid(ids);
-          res += 'if(migi.browser.lie&&this.__migiCP){';
+          res += 'if(migi.browser.lie&&this.__hackLie&&(this.__migiCP||this.__migiMD)){';
           res += 'return this.__hackLie(' + o.name + ',' + o.gsName + ')}';
         }
       }
@@ -431,11 +431,15 @@ function closest(node) {
 
 var res;
 
-function klass(node, ids) {
+function parse(node, ids) {
   res = '';
-  uid = 0;
   recursion(node, ids);
   return res;
 }
 
-exports["default"]=klass;});
+exports["default"]={
+  parse:parse,
+  reset: function() {
+    uid = 0;
+  }
+};});

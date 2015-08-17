@@ -19,7 +19,7 @@ function getDom(dom) {
   }
   Element.prototype.__reset = function(name, props, children) {
     this.__name = name;
-    this.__props = props;
+    this.props = props;
     this.__children = children;
 
     this.__element = null; //真实DOM引用
@@ -146,25 +146,9 @@ var GS = {
       }
       return p;
     }
-  },
-  $: {
-    get: function() {
-      if(browser.lie && this.__migiNode) {
-        return this.__migiNode;
-      }
-      return this;
-    }
-  },
-  $$: {
-    get: function() {
-      if(browser.lie && this.__migiEL) {
-        return this.__migiEL;
-      }
-      return this;
-    }
   }
 };
-['name', 'props', 'children', 'uid', 'dom'].forEach(function(item) {
+['name', 'children', 'uid', 'dom'].forEach(function(item) {
   GS[item] = {
     get: function() {
       return this['__' + item];

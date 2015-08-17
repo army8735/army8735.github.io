@@ -38,6 +38,8 @@
     }
     render() {
       var blank = '';
+      var arr = [];
+      var udf;
       return (
         <div>
           <p onClick={this.add}>点击添加一个随机数</p>
@@ -54,6 +56,9 @@
             <li title="DOM+变量"><span>dom</span>{this.list}</li>
             <li title="变量+DOM">{this.list}<span>dom</span></li>
             <li title="变量+DOM+变量">{this.list}<span>dom</span>{this.list}</li>
+            <li title="变量+[]+变量">{this.list} {arr} {this.list}</li>
+            <li title="变量+undefined+变量">{this.list} {udf} {this.list}</li>
+            <li title="变量+null+变量">{this.list} {null} {this.list}</li>
           </ul>
         </div>
       );
@@ -81,7 +86,7 @@
   seajs.use(['jssc', '../init', 'lefty'], function(jssc, migi, lefty) {
     var code = document.querySelector('pre code');
     var jsx = document.querySelector('script[type="text/jsx"]');
-    var source = jsx.textContent || jsx.text;
+    var source = jsx.textContent || jsx.innerText || jsx.firstChild && jsx.firstChild.nodeValue || '';
     source = source.trim().replace(/\n[ ]{2}/g, '\n');
     var text = document.createTextNode(source);
     code.appendChild(text);

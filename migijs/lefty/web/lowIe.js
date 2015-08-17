@@ -30,7 +30,7 @@ function recursion(node, ids, inClass) {
       case JsNode.CLASSDECL:
         inClass = klassdecl(node);
         if(inClass) {
-          return res += klass(node, ids);
+          return res += klass.parse(node, ids);
         }
         break;
     }
@@ -75,10 +75,12 @@ function hasCons(node) {
 var res;
 
 function parse(node, ids) {
-  uid = 0;
   res = '';
   recursion(node, ids);
   return res;
 }
 
-exports["default"]=parse;});
+exports["default"]={
+  parse:parse,
+  reset: klass.reset
+};});

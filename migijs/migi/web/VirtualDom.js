@@ -11,6 +11,7 @@ var sort=function(){var _9=require('./sort');return _9.hasOwnProperty("default")
 var domDiff=function(){var _10=require('./domDiff');return _10.hasOwnProperty("default")?_10["default"]:_10}();
 var type=function(){var _11=require('./type');return _11.hasOwnProperty("default")?_11["default"]:_11}();
 var fixEvent=function(){var _12=require('./fixEvent');return _12.hasOwnProperty("default")?_12["default"]:_12}();
+var attr=function(){var _13=require('./attr');return _13.hasOwnProperty("default")?_13["default"]:_13}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -32,21 +33,7 @@ var SELF_CLOSE = {
   'wbr': true
 };
 
-var SPECIAL_PROP = {
-  'checked': true,
-  'selected': true,
-  'selectedIndex': true,
-  'readOnly': true,
-  'multiple': true,
-  'defaultValue': true,
-  'autofocus': true,
-  'async': true,
-  'tagName': true,
-  'nodeName': true,
-  'nodeType': true
-};
-
-!function(){var _13=Object.create(Element.prototype);_13.constructor=VirtualDom;VirtualDom.prototype=_13}();
+!function(){var _14=Object.create(Element.prototype);_14.constructor=VirtualDom;VirtualDom.prototype=_14}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
     if(props===void 0)props={};if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
@@ -96,7 +83,7 @@ var SPECIAL_PROP = {
       }
     }
     res += ' migi-uid="' + self.uid + '"';
-    //input和select这种:input要侦听数据绑定
+    //:input要侦听数据绑定
     self.__checkListener();
     //自闭合标签特殊处理
     if(self.__selfClose) {
@@ -174,14 +161,15 @@ var SPECIAL_PROP = {
         var name = prop.slice(2).replace(/[A-Z]/g, function(up) {
           return up.toLowerCase();
         });
-        self.__addListener(name, function(event) {
-          fixEvent(event);
+        self.__addListener(name, function(e) {
+          e = e || window.event;
+          fixEvent(e);
           var item = self.props[prop];
           if(item instanceof Cb) {
-            item.cb.call(item.context, event);
+            item.cb.call(item.context, e);
           }
           else {
-            item(event);
+            item(e);
           }
         });
       });
@@ -196,13 +184,30 @@ var SPECIAL_PROP = {
         });
         return '';
       }
+      if(prop == 'className') {
+        prop = 'class';
+      }
       self.__cache[prop] = s;
-      if(!SPECIAL_PROP.hasOwnProperty(prop) || !!v.v) {
-        res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+      //特殊属性根据类型输出或是在DOM后设置prop
+      var special = attr.special(self.name, prop);
+      switch(special) {
+        case attr.RENDER_EXIST:
+          if(v.v) {
+            res = ' ' + prop + '="' + s + '"';
+          }
+          break;
+        case attr.RENDER_DOM:
+          self.once(Event.DOM, function() {
+            self.__updateAttr(prop, v);
+          });
+          break;
+        default:
+          res = ' ' + prop + '="' + s + '"';
+          break;
       }
     }
     else {
-      var s = Array.isArray(v) ? util.joinArray(v) : (v === void 0 || v === null ? '' : v.toString());
+      var s = Array.isArray(v) ? util.joinArray(v) : util.stringify(v);
       if(prop == 'dangerouslySetInnerHTML') {
         self.once(Event.DOM, function() {
           self.element.innerHTML = s;
@@ -213,8 +218,22 @@ var SPECIAL_PROP = {
         prop = 'class';
       }
       self.__cache[prop] = s;
-      if(!SPECIAL_PROP.hasOwnProperty(prop) || !!v) {
-        res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+      //特殊属性根据类型输出或是在DOM后设置prop
+      var special = attr.special(self.name, prop);
+      switch(special) {
+        case attr.RENDER_EXIST:
+          if(v) {
+            res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+          }
+          break;
+        case attr.RENDER_DOM:
+          self.once(Event.DOM, function() {
+            self.__updateAttr(prop, v);
+          });
+          break;
+        default:
+          res = ' ' + prop + '="' + util.encodeHtml(s, true) + '"';
+          break;
       }
     }
     //使用jaw导入样式时不输出class和id，以migi-class和migi-id取代之
@@ -244,6 +263,7 @@ var SPECIAL_PROP = {
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
+              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               item.setV(v);
@@ -256,13 +276,13 @@ var SPECIAL_PROP = {
             }
             switch(type.toLowerCase()) {
               //一些无需联动
-              case 'button':
-              case 'hidden':
-              case 'image':
-              case 'file':
-              case 'reset':
-              case 'submit':
-                break;
+              //case 'button':
+              //case 'hidden':
+              //case 'image':
+              //case 'file':
+              //case 'reset':
+              //case 'submit':
+              //  break;
               //只需侦听change
               case 'checkbox':
               case 'radio':
@@ -285,6 +305,7 @@ var SPECIAL_PROP = {
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
+              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               item.setV(v);
@@ -304,6 +325,7 @@ var SPECIAL_PROP = {
         if(child instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
+              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               child.setV(v);
@@ -567,10 +589,8 @@ var SPECIAL_PROP = {
         }
         if(change) {
           var ov = item.v;
-          var nv = item.cb.call(item.context);
-          if(ov != nv) {
-            item.setV(nv);
-            self.__updateAttr(key, nv);
+          if(item.update(ov)) {
+            self.__updateAttr(key, item.v);
           }
         }
       }
@@ -691,48 +711,13 @@ var SPECIAL_PROP = {
   //但是setAttribute会保留实体字符形式
   VirtualDom.prototype.__updateAttr = function(k, v) {
     if(k == 'dangerouslySetInnerHTML') {
-      this.element.innerHTML = v || '';
+      if(v === null || v === void 0) {
+        v = '';
+      }
+      this.element.innerHTML = util.stringify(v);
       return;
     }
-    switch(k) {
-      case 'value':
-        this.element[k] = v || '';
-        break;
-      case 'checked':
-      case 'selected':
-      case 'selectedIndex':
-      case 'readOnly':
-      case 'multiple':
-      case 'defaultValue':
-      case 'autofocus':
-      case 'async':
-      case 'tagName':
-      case 'nodeName':
-      case 'nodeType':
-        this.element[k] = v || false;
-        break;
-      case 'className':
-        k = 'class';
-      case 'id':
-      case 'class':
-        if(this.__style) {
-          if(v === null || v === void 0) {
-            this.element.removeAttribute('migi-' + k);
-          }
-          else {
-            this.element.setAttribute('migi-' + k, v);
-          }
-          break;
-        }
-      default:
-        if(v === null || v === void 0) {
-          this.element.removeAttribute(k);
-        }
-        else {
-          this.element.setAttribute(k, v);
-        }
-        break;
-    }
+    attr.update(this.name, this.element, k, v);
     this.__cache[k] = v;
     //使用了jaw内联解析css
     if(this.__style) {
@@ -854,9 +839,6 @@ function isEmptyText(item) {
   return item === void 0 || item === null || !item.toString();
 }
 function renderChild(child) {
-  if(child === void 0 || child === null) {
-    return '';
-  }
   if(child instanceof Element || child instanceof Obj || browser.lie && child.__migiEL) {
     return child.toString();
   }
@@ -867,7 +849,7 @@ function renderChild(child) {
     });
     return res;
   }
-  return util.encodeHtml(child.toString());
+  return util.encodeHtml(util.stringify(child));
 }
 function childParent(child, parent) {
   if(Array.isArray(child)) {

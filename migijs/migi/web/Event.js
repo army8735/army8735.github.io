@@ -4,6 +4,7 @@ var mix=function(){var _1=require('./mix');return _1.hasOwnProperty("default")?_
 
   function Event() {
     this.__hash = {};
+    this.$ = this.$$ = this;
     if(browser.lie) {
       this.__migiEV = this;
     }
@@ -92,11 +93,12 @@ var mix=function(){var _1=require('./mix');return _1.hasOwnProperty("default")?_
   }
 
   Event.prototype.__hackLie = function(cons, GS) {
-    this.__migiGS = mix.s({}, this.__migiGS, GS);
+    this.__migiGS = mix.gs({}, this.__migiGS, GS);
     if(this.constructor == cons) {
       var a = document.createElement('a');
       this.__migiNode = a.__migiNode = a;
-      mix.p(a, this);
+      this.$ = a;
+      mix.ref(this, a, this.__migiGS);
       Object.defineProperties(a, this.__migiGS);
       return a;
     }

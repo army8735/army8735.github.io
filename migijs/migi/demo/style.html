@@ -8,7 +8,6 @@
   <script src="es5-sham.js"></script>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
-
 </head>
 <body>
 <div id="example"></div>
@@ -46,7 +45,8 @@
 </style>
 <script type="text/jsx">
   import jaw from 'jaw';
-  var style = document.querySelector('style[type="text/jsx"]').textContent;
+  var style = document.querySelector('style[type="text/jsx"]');
+  style = style.textContent || style.innerHTML;
 
   class Switch extends migi.Component {
     constructor(...data) {
@@ -107,7 +107,7 @@
     code.appendChild(text);
     var code2 = document.querySelector('pre code[class="brush:css"]');
     var css = document.querySelector('style[type="text/jsx"]');
-    var source2 = css.textContent || css.firstChild && css.firstChild.nodeValue || '';
+    var source2 = css.textContent || css.innerHTML;
     source2 = source2.trim().replace(/\n[ ]{2}/g, '\n');
     var text2 = document.createTextNode(source2);
     code2.appendChild(text2);

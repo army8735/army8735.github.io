@@ -8,7 +8,7 @@
   <script src="es5-sham.js"></script>
   <script src="es6-shim.js"></script>
   <script src="sea.js"></script>
-  <script src="jquery-2.1.0.min.js"></script>
+  <script src="jquery-1.11.3.js"></script>
   <style>
     .select{
       position:relative;
@@ -167,23 +167,23 @@
     }
     render() {
       return (
-        <div class="select" onClick={ this.handleClick }>
+        <div class={ this.show ? 'select show' : 'select' } onClick={ this.handleClick }>
           <input type="hidden" value={ this.value }/>
           <div class="place">
             {
               this.list.map(function(item) {
-                  return <div>{ item.name }</div>;
-            })
+                return <div>{ item.name }</div>;
+              })
             }
           </div>
           <strong>{ this.value || '&nbsp;' }</strong>
           <b></b>
           <ul class={ this.show ? 'c show' : 'c' } onMouseOver={ this.handlerOver }>
-            {
-              this.list.map(function(item) {
-                  return <li title={ item.name }>{ item.name }</li>;
+          {
+            this.list.map(function(item) {
+              return <li title={ item.name }>{ item.name }</li>;
             })
-            }
+          }
           </ul>
         </div>
       );

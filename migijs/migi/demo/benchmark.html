@@ -2,8 +2,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="description" content="DBMON NOT REACT"/>
-  <link href="bootstrap.min.css" rel="stylesheet" type="text/css"/>
   <title>dbmon (migi)</title>
+  <link href="bootstrap.min.css" rel="stylesheet" type="text/css"/>
+  <script src="es5-shim.js"></script>
+  <script src="es5-sham.js"></script>
+  <script src="es6-shim.js"></script>
   <style>
     .Query{
       position:relative;
@@ -23,7 +26,7 @@
       var self = this;
       self._list = [];
       self.on(migi.Event.DOM, function() {
-        self.list = ENV.generateData().toArray();
+        self.$.list = ENV.generateData().toArray();
         Monitoring.renderRate.ping();
         setTimeout(arguments.callee, ENV.timeout);
       });
@@ -84,11 +87,8 @@
   );
 </script>
 <div id="dbmon"></div>
-<script src="es5-shim.js"></script>
-<script src="es5-sham.js"></script>
-<script src="es6-shim.js"></script>
 <script src="sea.js"></script>
-<script src="jquery-2.1.0.min.js"></script>
+<script src="jquery-1.11.3.js"></script>
 <script src="ENV.js"></script>
 <script src="memory-stats.js"></script>
 <script src="monitor.js"></script>

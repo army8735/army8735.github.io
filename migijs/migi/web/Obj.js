@@ -17,20 +17,17 @@ var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("def
   Obj.prototype.setV = function(v) {
     this.v = util.clone(v);
   }
+  //prop为true时作为prop渲染转义，否则为innerHTML转义
   Obj.prototype.toString = function(prop) {
     //array调用join包括转码
     if(Array.isArray(this.v)) {
       return util.joinArray(this.v, prop);
     }
-    //防止undefined的变量
-    if(this.v === void 0 || this.v === null) {
-      return '';
-    }
-    var s = this.v.toString();
+    var s = util.stringify(this.v);
     if(prop) {
       return util.encodeHtml(s, prop);
     }
-    return this.v instanceof Element || browser.lie && this.v && this.v.__migiEL ? s : util.encodeHtml(s, prop);
+    return this.v instanceof Element || browser.lie && this.v && this.v.__migiEL ? s : util.encodeHtml(s);
   }
   Obj.prototype.update = function(ov) {
     var nv = this.cb.call(this.context);
