@@ -12,6 +12,7 @@ var domDiff=function(){var _10=require('./domDiff');return _10.hasOwnProperty("d
 var type=function(){var _11=require('./type');return _11.hasOwnProperty("default")?_11["default"]:_11}();
 var fixEvent=function(){var _12=require('./fixEvent');return _12.hasOwnProperty("default")?_12["default"]:_12}();
 var attr=function(){var _13=require('./attr');return _13.hasOwnProperty("default")?_13["default"]:_13}();
+var hash=function(){var _14=require('./hash');return _14.hasOwnProperty("default")?_14["default"]:_14}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -33,7 +34,66 @@ var SELF_CLOSE = {
   'wbr': true
 };
 
-!function(){var _14=Object.create(Element.prototype);_14.constructor=VirtualDom;VirtualDom.prototype=_14}();
+function convertSelector(selector) {
+  if(selector instanceof Element || browser.lie && selector && selector.__migiEL) {
+    return selector.name + '[migi-uid="' + selector.uid + '"]';
+  }
+  return selector.replace(/(^|\s|,|])([A-Z][\w$]*)\b/, '$1[migi-name="$2"]');
+}
+
+function find(name, children) {
+  return findAll(name, children, true)[0] || null;
+}
+function findAll(name, children, first) {
+  return __findAll(name, children, [], first);
+}
+function __findAll(name, children, res, first) {
+  for(var i = 0, len = children.length; i < len; i++) {
+    var child = children[i];
+    if(child instanceof Element || browser.lie && child && child.__migiEL) {
+      res = __findEq(name, child, res, first);
+    }
+    else if(child instanceof Obj) {
+      child = child.v;
+      if(Array.isArray(child)) {
+        res = __findAll(name, child, res, first);
+      }
+      else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+        res = __findEq(name, child, res, first);
+      }
+    }
+    else if(Array.isArray(child)) {
+      res = __findAll(name, child, res, first);
+    }
+    if(first && res.length) {
+      break;
+    }
+  }
+  return res;
+}
+function __findEq(name, child, res, first) {
+  //cp不递归
+  if(child instanceof Component || browser.lie && child && child.__migiCP) {
+    if(child instanceof name
+      || browser.lie && child.__migiCP && child.__migiCP instanceof name) {
+      res.push(child);
+    }
+  }
+  //vd递归
+  else {
+    if(child instanceof name
+      || browser.lie && child.__migiVD && child.__migiVD instanceof name) {
+      res.push(child);
+      if(first) {
+        return res;
+      }
+    }
+    res = res.concat(child.findAll(name, first));
+  }
+  return res;
+}
+
+!function(){var _15=Object.create(Element.prototype);_15.constructor=VirtualDom;VirtualDom.prototype=_15}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
     if(props===void 0)props={};if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
@@ -362,35 +422,9 @@ var SELF_CLOSE = {
       }
       var elem = self.element;
       if(name == 'tap') {
-        if(!browser.lie && !elem.attachEvent) {
-          var x1 = 0;
-          var y1 = 0;
-          var x2 = 0;
-          var y2 = 0;
-          self.__addListener('touchstart', function(e) {
-            //多指不视作tap事件
-            if(e.touches.length != 1) {
-              return;
-            }
-            var touch = e.touches[0];
-            x1 = x2 = touch.pageX;
-            y1 = y2 = touch.pageY;
-          });
-          self.__addListener('touchmove', function(e) {
-            var touch = e.touches[0];
-            x2 = touch.pageX;
-            y2 = touch.pageY;
-          });
-          self.__addListener('touchend', function(e) {
-            //>30px不视作tap事件
-            if(x2 && Math.abs(x1 - x2) < 30
-              || y2 && Math.abs(y1 - y2) < 30) {
-              cb(e);
-            }
-          });
-        }
+        name = 'click';
       }
-      else if(browser.lie && elem.attachEvent) {
+      if(browser.lie && elem.attachEvent) {
         //ie8没有input
         if(name == 'input') {
           name = 'keyup';
@@ -434,57 +468,33 @@ var SELF_CLOSE = {
     }
   }
 
-  VirtualDom.prototype.find = function(name) {
-    return this.findAll(name, true)[0];
-  }
-  VirtualDom.prototype.findAll = function(name, first) {
-    return this.__findAll(name, this.children, [], first);
-  }
-  VirtualDom.prototype.__findAll = function(name, children, res, first) {
-    for(var i = 0, len = children.length; i < len; i++) {
-      var child = children[i];
-      if(child instanceof Element || browser.lie && child && child.__migiEL) {
-        res = this.__findEq(name, child, res, first);
-      }
-      else if(child instanceof Obj) {
-        child = child.v;
-        if(Array.isArray(child)) {
-          res = this.__findAll(name, child, res, first);
-        }
-        else if(child instanceof Element || browser.lie && child && child.__migiEL) {
-          res = this.__findEq(name, child, res, first);
-        }
-      }
-      else if(Array.isArray(child)) {
-        res = this.__findAll(name, child, res, first);
-      }
-      if(first && res.length) {
-        break;
-      }
+  VirtualDom.prototype.find = function(selector) {
+    if(util.isFunction(selector)) {
+      return find(selector, this.children);
     }
-    return res;
-  }
-  VirtualDom.prototype.__findEq = function(name, child, res, first) {
-    //cp不递归
-    if(child instanceof Component || browser.lie && child && child.__migiCP) {
-      //传入的可能是个class或者string
-      if(child.name == name
-        || util.isFunction(name) && child instanceof name
-        || browser.lie && child.__migiCP && util.isFunction(name) && child.__migiCP instanceof name) {
-        res.push(child);
-      }
+    if(this.element) {
+      var node = this.element.querySelector(convertSelector(selector));
+      var uid = node.getAttribute('migi-uid');
+      return hash.get(uid) || null;
     }
-    //vd递归
-    else {
-      if(child.name == name
-        || util.isFunction(name) && child instanceof name
-        || browser.lie && child.__migiVD && util.isFunction(name) && child.__migiVD instanceof name) {
-        res.push(child);
-        if(first) {
-          return res;
+    return null;
+  }
+  VirtualDom.prototype.findAll = function(selector) {
+    if(util.isFunction(selector)) {
+      return findAll(selector, this.children);
+    }
+    var res = [];
+    if(this.element) {
+      var nodes = this.element.querySelectorAll(convertSelector(selector));
+      Array.from(nodes).forEach(function(node) {
+        if(node) {
+          var uid = node.getAttribute('migi-uid');
+          var vd = hash.get(uid) || null;
+          if(vd) {
+            res.push(vd);
+          }
         }
-      }
-      res = res.concat(child.findAll(name, first));
+      });
     }
     return res;
   }
@@ -661,6 +671,9 @@ var SELF_CLOSE = {
         if(child.update(ov)) {
           domDiff.diff(this.element, ov, child.v, ranges, option, history);
         }
+        else {
+          self.__checkObj(k, child.v, ranges, option, history);
+        }
       }
       else {
         self.__checkObj(k, child.v, ranges, option, history);
@@ -792,7 +805,6 @@ var SELF_CLOSE = {
     this.__hover = false;
     this.__active = false;
     this.__listener = null;
-    this.__hasDes = true;
     this.__parent = null;
     this.__top = null;
     this.__dom = false;

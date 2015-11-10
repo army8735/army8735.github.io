@@ -461,7 +461,7 @@ exports.diff=diff;function diff(elem, ov, nv, ranges, option, history) {
       option.state = DOM_TO_DOM;
     }
   }
-  diffChild(elem, ov, nv, ranges, option, history, true);
+  diffChild(elem, ov, nv, ranges, option, history);
   //当最后一次对比是类型变换时记录，因为随后的text可能要更新
   if(!option.t2d && !option.d2t) {
     if(option.state == TEXT_TO_DOM) {
@@ -693,22 +693,23 @@ function diffChild(elem, ovd, nvd, ranges, option, history) {
               elem.insertAdjacentHTML('afterend', nvd.toString());
               elem.parentNode.removeChild(elem);
               nvd.emit(Event.DOM);
+              //缓存对象池
+              cachePool.add(ovd.__destroy());
             }
             break;
           //Component和VirtualDom变化则直接重绘
-          //Component变化直接重绘
           default:
             elem = ovd.element;
             elem.insertAdjacentHTML('afterend', nvd.toString());
             elem.parentNode.removeChild(elem);
             nvd.emit(Event.DOM);
+            //缓存对象池
+            cachePool.add(ovd.__destroy());
             break;
         }
         option.state = DOM_TO_DOM;
         option.prev = type.DOM;
         option.start++;
-        //缓存对象池
-        cachePool.add(ovd.__destroy());
         break;
     }
     //非可视组件被当作空字符串处理，连同其他组件，不要忘了DOM事件
