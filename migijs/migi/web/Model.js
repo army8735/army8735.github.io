@@ -3,7 +3,7 @@ var EventBus=function(){var _1=require('./EventBus');return _1.hasOwnProperty("d
 var util=function(){var _2=require('./util');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 var browser=function(){var _3=require('./browser');return _3.hasOwnProperty("default")?_3["default"]:_3}();
 var Component=function(){var _4=require('./Component');return _4.hasOwnProperty("default")?_4["default"]:_4}();
-var bridgeStream=function(){var _5=require('./bridgeStream');return _5.hasOwnProperty("default")?_5["default"]:_5}();
+var Stream=function(){var _5=require('./Stream');return _5.hasOwnProperty("default")?_5["default"]:_5}();
 
 var uid = 0;
 
@@ -14,7 +14,7 @@ var uid = 0;
     this.uid = 'm' + uid++;
     this.__name = this.constructor.__migiName;
     this.__ref = [];
-    this.__bridgeHash = null;
+    this.__bridgeHash = {};
 
     this.on(Event.DATA, this.__onData);
 
@@ -45,7 +45,7 @@ var uid = 0;
   }
 Object.keys(Event).forEach(function(k){Model[k]=Event[k]});
 //完全一样的桥接数据流方法，复用
-['__record', 'bridge', 'bridgeTo', '__brcb'].forEach(function(k) {
+['__data', '__record', 'bridge', 'bridgeTo', '__unRecord', 'unBridge', 'unBridgeTo'].forEach(function(k) {
   Model.prototype[k] = Component.prototype[k];
 });
 

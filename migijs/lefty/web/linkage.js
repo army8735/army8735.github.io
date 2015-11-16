@@ -33,7 +33,10 @@ function parse(node, res) {
     case Node.ADDEXPR:
     case Node.MTPLEXPR:
       parse(node.first(), res);
-      parse(node.last(), res);
+      //可能有连续多个表达式
+      for(var i = 2, leaves = node.leaves(), len = leaves.length; i < len; i += 2) {
+        parse(node.leaf(i), res);
+      }
       break;
     case Node.UNARYEXPR:
     case Node.NEWEXPR:
@@ -130,6 +133,25 @@ function mmbexpr(node, res) {
   }
   else if(prmr.name() == Node.MMBEXPR) {
     mmbexpr(prmr, res);
+    var dot = prmr.next();
+    if(dot.isToken() && dot.token().content() == '[') {
+      var expr = dot.next();
+      if(expr.name() == Node.EXPR) {
+        parse(expr.last(), res);
+      }
+      else if(expr.name() == Node.PRMREXPR) {
+        var s = expr.first();
+        if(s.isToken()) {
+          s = s.token();
+          if(s.type() == Token.STRING) {
+            res[s.val()] = true;
+          }
+        }
+      }
+      else {
+        parse(expr, res);
+      }
+    }
   }
 }
 function callexpr(node, res) {

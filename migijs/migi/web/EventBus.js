@@ -1,46 +1,64 @@
 define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("default")?_2["default"]:_2}();
-var bridgeStream=function(){var _3=require('./bridgeStream');return _3.hasOwnProperty("default")?_3["default"]:_3}();
 
 var uid = 0;
 
-!function(){var _4=Object.create(Event.prototype);_4.constructor=EventBus;EventBus.prototype=_4}();
+!function(){var _3=Object.create(Event.prototype);_3.constructor=EventBus;EventBus.prototype=_3}();
   function EventBus() {
     Event.call(this);
     this.uid = 'e' + uid++; //为数据流历史记录hack
-    this.__listener = {};
+    this.__bridgeHash = {};
     this.on(Event.DATA, this.__brcb);
   }
-  EventBus.prototype.__brcb = function(k, v) {
-    if(this.__listener.hasOwnProperty(k)) {
-      var arr = this.__listener[k];
+  EventBus.prototype.__brcb = function(k, v, stream) {
+    if(this.__bridgeHash.hasOwnProperty(k)) {
+      var arr = this.__bridgeHash[k];
       for(var i = 0, len = arr.length; i < len; i++) {
-        var stream = arr[i];
-        var target = stream.target;
-        var name = stream.name;
-        var middleware = stream.middleware;
-        if(!bridgeStream.pass(target, name)) {
-          if(target.hasOwnProperty('__flag')) {
-            target.__flag = true;
-          }
-          target[name] = middleware ? middleware.call(target, v) : v;
-          if(target.hasOwnProperty('__flag')) {
-            target.__flag = false;
+        var item = arr[i];
+        var target = item.target;
+        var name = item.name;
+        var middleware = item.middleware;
+        if(!stream.has(target.uid)) {
+          stream.add(target.uid);
+          //必须大于桥接对象的sid才生效
+          var tItem = migi.CacheComponent.getSid(target);
+          if(stream.sid > tItem) {
+            //先设置桥接对象数据为桥接模式，修改数据后再恢复
+            target.__stream = stream;
+            target[name] = middleware ? middleware.call(target, v) : v;
+            target.__stream = null;
           }
         }
       }
     }
   }
   EventBus.prototype.__record = function(target, src, name, middleware) {
+    var self = this;
+    var arr = this.__bridgeHash[src] = this.__bridgeHash[src] || [];
+    //防止重复桥接
+    arr.forEach(function(item) {
+      if(item.target == target && item.name == name) {
+        throw new Error('duplicate bridge: ' + self + '.' + src + ' -> ' + target + '.' + name);
+      }
+    });
     //记录桥接单向数据流关系
-    bridgeStream.record(this.uid, target.uid, src, name);
-    this.__listener[src] = this.__listener[src] || [];
-    this.__listener[src].push({
+    arr.push({
       target:target,
       name:name,
       middleware:middleware
     });
+  }
+  EventBus.prototype.__unRecord = function(target, src, name) {
+    var self = this;
+    var arr = self.__bridgeHash[src] || [];
+    for(var i = 0, len = arr.length; i < len; i++) {
+      var item = arr[i];
+      if(item.target == target && item.name == name) {
+        arr.splice(i, 1);
+        return;
+      }
+    }
   }
   EventBus.prototype.bridge = function(target, src, name, middleware) {
     var self = this;
@@ -85,6 +103,35 @@ var uid = 0;
   }
   EventBus.prototype.bridgeTo = function(target, datas) {
     datas=[].slice.call(arguments, 1);target.bridge.apply(target,[this].concat(Array.from(datas)));
+  }
+  EventBus.prototype.unBridge = function(target, src, name) {
+    var self = this;
+    //重载
+    if(arguments.length == 2) {
+      if(util.isString(src)) {
+        self.__unRecord(target, src, src);
+      }
+      else {
+        Object.keys(src).forEach(function(k) {
+          var o = src[k];
+          if(util.isString(o)) {
+            self.__unRecord(target, k, o);
+          }
+          else if(util.isFunction(o)) {
+            self.__unRecord(target, k, k);
+          }
+          else if(o.name) {
+            self.__unRecord(target, k, o.name);
+          }
+        });
+      }
+    }
+    else {
+      self.__unRecord(target, src, name);
+    }
+  }
+  EventBus.prototype.unBridgeTo = function(target, datas) {
+    datas=[].slice.call(arguments, 1);target.unBridge.apply(target,[this].concat(Array.from(datas)));
   }
 Object.keys(Event).forEach(function(k){EventBus[k]=Event[k]});
 
