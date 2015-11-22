@@ -20,7 +20,7 @@ var hash=function(){var _17=require('./hash');return _17.hasOwnProperty("default
 var migi = {
   render:function(element, dom) {
     if(dom) {
-      element.inTo(dom);
+      element.appendTo(dom);
     }
     return element;
   },
@@ -48,7 +48,8 @@ var migi = {
   util:util,
   browser:browser,
   sort:sort,
-  mix:mix
+  mix:mix,
+  hash:hash
 };
 
 if(typeof window != 'undefined') {

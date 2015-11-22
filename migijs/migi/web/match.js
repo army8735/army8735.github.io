@@ -2,6 +2,8 @@ define(function(require, exports, module){var VirtualDom=function(){var _0=requi
 var Event=function(){var _1=require('./Event');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var sort=function(){var _2=require('./sort');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 var browser=function(){var _3=require('./browser');return _3.hasOwnProperty("default")?_3["default"]:_3}();
+var hash=function(){var _4=require('./hash');return _4.hasOwnProperty("default")?_4["default"]:_4}();
+var matchHash=function(){var _5=require('./matchHash');return _5.hasOwnProperty("default")?_5["default"]:_5}();
 
 //names,classes,ids为从当前节点开始往上的列表
 //style为jaw传入的总样式对象
@@ -41,65 +43,58 @@ function match(names, classes, ids, style, virtualDom, first) {
 //过程中只要不匹配就跳出，i从最大到0
 function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, first) {
   var item2;history[cur] = true;
-  //id、class、name可能单个或组合出现，每种都要匹配
-  var combo = [];
-  combo.push(names[i]);
+  var hasId = 0;
   var hasClass = 0;
-  if(classes[i]) {
-    combo.push(classes[i]);
+  var name = names[i];
+  var klass = classes[i];
+  var id = ids[i];
+  //class可能有多个，任意个class的组合也要匹配
+  if(klass && klass.length) {
+    var comboClass = comboArr(klass, klass.length);
     hasClass = 1;
   }
-  var hasId = 0;
-  if(ids[i]) {
-    combo.push(ids[i]);
+  //id、class、name可能单个或组合出现，每种都要匹配
+  var combo = [name];
+  if(id) {
     hasId = 2;
   }
-  //排序，name<class<id
-  sort(combo, function(a, b) {
-    return a < b;
-  });
-  //将可能的组合添加进入combo
+  //各种*的情况标识
+  var hasStarClass = style.hasOwnProperty('_*.');
+  var hasStarId = style.hasOwnProperty('_*#');
+  var hasStarIdClass = style.hasOwnProperty('_*.#');
   //只有当前有_*时说明有*才匹配
   if(style.hasOwnProperty('_*')) {
     combo.push('*');
   }
-  switch(hasClass + hasId) {
-    //只有class
-    case 1:
-      combo.push(combo[0] + combo[1]);
-      if(style.hasOwnProperty('_*.')) {
-        combo.push('*' + combo[1]);
+  //将各种可能的组合添加进入combo
+  if(hasClass) {
+    comboClass.forEach(function(klass) {
+      combo.push(klass);
+      combo.push(name + klass);
+      if(hasStarClass) {
+        combo.push('*' + klass);
       }
-      break;
-    //只有id
-    case 2:
-      combo.push(combo[0] + combo[1]);
-      if(style.hasOwnProperty('_*#')) {
-        combo.push('*' + combo[1]);
+      if(hasId) {
+        combo.push(klass + id);
+        combo.push(name + klass + id);
+        if(hasStarIdClass) {
+          combo.push('*' + klass + id);
+        }
       }
-      break;
-    //class和id都有
-    case 3:
-      combo.push(combo[0] + combo[1]);
-      combo.push(combo[0] + combo[2]);
-      combo.push(combo[1] + combo[2]);
-      combo.push(combo[0] + combo[1] + combo[2]);
-      if(style.hasOwnProperty('_*.')) {
-        combo.push('*' + combo[1]);
-      }
-      if(style.hasOwnProperty('_*#')) {
-        combo.push('*' + combo[2]);
-      }
-      if(style.hasOwnProperty('_*.#')) {
-        combo.push('*' + combo[1] + combo[2]);
-      }
-      break;
+    });
+  }
+  if(hasId) {
+    combo.push(id);
+    combo.push(name + id);
+    if(hasStarId) {
+      combo.push('*' + id);
+    }
   }
   for(var j = 0, len = combo.length; j < len; j++) {
     var k = combo[j];
     if(style.hasOwnProperty(k)) {
       var item = style[k];
-      //_d记录着深度，没有深度（为0）不记录即不存在_d跳出
+      //还未到根节点继续匹配
       if(i) {
         matchSel(i - 1, names, classes, ids, item, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
         //多层级时需递归所有层级组合，如<div><p><span>对应div span{}的样式时，并非一一对应
@@ -110,7 +105,7 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
           }
         }
       }
-      //i到0说明匹配完成，将值存入
+      //将当前层次的值存入
       if(item.hasOwnProperty('_v')) {
         dealStyle(res, item);
       }
@@ -118,77 +113,68 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
       if(first && item.hasOwnProperty('_:')) {
         item['_:'].forEach(function(pseudoItem) {
           pseudoItem[0].forEach(function(pseudo) {
-            var elem = virtualDom.element;
+            var uid = virtualDom.uid;
             switch(pseudo) {
               case 'hover':
+                function onHover() {
+                  //因为vd可能destroy导致被回收，所以每次动态从hash中取当前的vd
+                  hash.get(uid).__hover = true;
+                  hash.get(uid).__updateStyle();
+                }
+                function outHover() {
+                  hash.get(uid).__hover = false;
+                  hash.get(uid).__updateStyle();
+                }
                 virtualDom.on(Event.DOM, function() {
-                  if(browser.lie && elem.attachEvent) {
-                    virtualDom.element.attachEvent('onmouseenter', function(e) {
-                      virtualDom.__hover = true;
-                      virtualDom.__updateStyle();
-                    });
-                    virtualDom.element.attachEvent('onmouseleave', function(e) {
-                      virtualDom.__hover = false;
-                      virtualDom.__updateStyle();
-                    });
+                  if(browser.lie && virtualDom.element.attachEvent) {
+                    virtualDom.element.attachEvent('onmouseenter', onHover);
+                    virtualDom.element.attachEvent('onmouseleave', outHover);
                   }
                   else {
-                    virtualDom.element.addEventListener('mouseenter', function(e) {
-                      virtualDom.__hover = true;
-                      virtualDom.__updateStyle();
-                    });
-                    virtualDom.element.addEventListener('mouseleave', function(e) {
-                      virtualDom.__hover = false;
-                      virtualDom.__updateStyle();
-                    });
+                    virtualDom.element.addEventListener('mouseenter', onHover);
+                    virtualDom.element.addEventListener('mouseleave', outHover);
                   }
                 });
+                //记录缓存当destryo时移除
+                virtualDom.__onHover = onHover;
+                virtualDom.__outHover = outHover;
                 break;
               case 'active':
+                function onActive() {
+                  //因为vd可能destroy导致被回收，所以每次动态从hash中取当前的vd
+                  hash.get(uid).__active = true;
+                  hash.get(uid).__updateStyle();
+                }
+                function outActive() {
+                  hash.get(uid).__active = false;
+                  hash.get(uid).__updateStyle();
+                }
                 virtualDom.on(Event.DOM, function() {
-                  if(browser.lie && elem.attachEvent) {
-                    virtualDom.element.attachEvent('onmousedown', function(e) {
-                      virtualDom.__active = true;
-                      virtualDom.__updateStyle();
-                    });
+                  if(browser.lie && virtualDom.element.attachEvent) {
+                    virtualDom.element.attachEvent('onmousedown', onActive);
                     //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
-                    document.body.attachEvent('onmouseup', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    }, true);
+                    window.attachEvent('onmouseup', outActive, true);
                     //window失焦时也需判断
-                    window.attachEvent('onblur', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    });
+                    window.attachEvent('onblur', outActive);
                     //drag结束时也需判断
-                    window.attachEvent('ondragend', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    });
+                    window.attachEvent('ondragend', outActive);
                   }
                   else {
-                    virtualDom.element.addEventListener('mousedown', function(e) {
-                      virtualDom.__active = true;
-                      virtualDom.__updateStyle();
-                    });
+                    virtualDom.element.addEventListener('mousedown', onActive);
                     //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
-                    document.body.addEventListener('mouseup', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    }, true);
+                    window.addEventListener('mouseup', outActive, true);
+                    //touchend也失焦
+                    window.addEventListener('touchend', outActive, true);
+                    //touchcancel也失焦
+                    window.addEventListener('touchcancel', outActive, true);
                     //window失焦时也需判断
-                    window.addEventListener('blur', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    });
+                    window.addEventListener('blur', outActive);
                     //drag结束时也需判断
-                    window.addEventListener('dragend', function(e) {
-                      virtualDom.__active = false;
-                      virtualDom.__updateStyle();
-                    });
+                    window.addEventListener('dragend', outActive);
                   }
                 });
+                //对window的侦听需要在destroy后移除，先记录下来
+                matchHash.add(uid, outActive);
                 break;
             }
           });
@@ -351,6 +337,17 @@ function dealStyle(res, item) {
     style[2] = item._p;
     res.push(style);
   });
+}
+
+function comboArr(arr, len, res, i) {
+  if(res===void 0)res=[];if(i===void 0)i=0;if(len - i > 1) {
+    comboArr(arr, len, res, i + 1);
+    for(var j = 0, len2 = res.length; j < len2; j++) {
+      res.push(res[j] + '.' + arr[i]);
+    }
+  }
+  res.push('.' + arr[i]);
+  return res;
 }
 
 exports["default"]=match;});
