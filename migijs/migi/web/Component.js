@@ -6,14 +6,16 @@ var browser=function(){var _4=require('./browser');return _4.hasOwnProperty("def
 var EventBus=function(){var _5=require('./EventBus');return _5.hasOwnProperty("default")?_5["default"]:_5}();
 var Model=function(){var _6=require('./Model');return _6.hasOwnProperty("default")?_6["default"]:_6}();
 var Stream=function(){var _7=require('./Stream');return _7.hasOwnProperty("default")?_7["default"]:_7}();
+var Fastclick=function(){var _8=require('./Fastclick');return _8.hasOwnProperty("default")?_8["default"]:_8}();
 
 var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mousedown', 'mousemove', 'mouseover',
   'mouseup', 'mouseout', 'mousewheel', 'resize', 'scroll', 'select', 'submit', 'DOMActivate', 'DOMFocusIn',
   'DOMFocusOut', 'keydown', 'keypress', 'keyup', 'drag', 'dragstart', 'dragover', 'dragenter', 'dragleave',
-  'dragend', 'drop', 'formchange', 'forminput', 'input', 'cut', 'paste', 'reset', 'touch', 'touchstart',
-  'touchmove', 'touchend'];
+  'dragend', 'drop', 'formchange', 'forminput', 'input', 'cut', 'paste', 'reset', 'touchstart',
+  'touchmove', 'touchend', 'MSGestureEnd', 'MSPointerDown', 'pointerdown', 'MSPointerMove', 'pointermove',
+  'MSPointerUp', 'pointerup', 'MSPointerCancel', 'pointercancel'];
 
-!function(){var _8=Object.create(Element.prototype);_8.constructor=Component;Component.prototype=_8}();
+!function(){var _9=Object.create(Element.prototype);_9.constructor=Component;Component.prototype=_9}();
   function Component(props, children) {
     //fix循环依赖
     if(props===void 0)props=[];if(children===void 0)children=[];if(Model.hasOwnProperty('default')) {
@@ -201,9 +203,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     function stopPropagation(e) {
       e = e || window.event;
       if(e.target != elem && e.srcElement != elem) {
-        if(browser.lie) {
-          e.cancelBubble = true;
-        }
+        e.cancelBubble = true;
         e.stopPropagation && e.stopPropagation();
       }
     }
@@ -217,6 +217,8 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
           elem.addEventListener(name, stopPropagation);
         }
       });
+    //fastclick处理移动点击点透
+    Fastclick.attach(this.element);
   }
   Component.prototype.__data = function(k) {
     var self = this;
