@@ -15,8 +15,7 @@ function match(names, classes, ids, style, virtualDom, first) {
     VirtualDom = VirtualDom['default'];
   }
   var res = [];
-  var history = {};
-  matchSel(names.length - 1, names, classes, ids, style, virtualDom, res, String(names.length - 1), history, first);
+  matchSel(names.length - 1, names, classes, ids, style, virtualDom, res, first);
   sort(res, function(a, b) {
     var pa = a[2];
     var pb = b[2];
@@ -41,9 +40,8 @@ function match(names, classes, ids, style, virtualDom, first) {
 }
 //从底部往上匹配，即.a .b这样的选择器是.b->.a逆序对比
 //过程中只要不匹配就跳出，i从最大到0
-function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, first) {
-  var item2;history[cur] = true;
-  var hasId = 0;
+function matchSel(i, names, classes, ids, style, virtualDom, res, first, isChild) {
+  var item2;var hasId = 0;
   var hasClass = 0;
   var name = names[i];
   var klass = classes[i];
@@ -96,12 +94,11 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
       var item = style[k];
       //还未到根节点继续匹配
       if(i) {
-        matchSel(i - 1, names, classes, ids, item, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
+        matchSel(i - 1, names, classes, ids, item, virtualDom.parent, res);
         //多层级时需递归所有层级组合，如<div><p><span>对应div span{}的样式时，并非一一对应
-        for(var l = i - 2; l >= 0; l--) {
-          var key = cur + ',' + l + ':' + j;
-          if(!history.hasOwnProperty(key)) {
-            matchSel(l, names, classes, ids, item, virtualDom.parent, res, key, history);
+        if(!isChild) {
+          for(var l = i - 2; l >= 0; l--) {
+            matchSel(l, names, classes, ids, item, virtualDom.parent, res);
           }
         }
       }
@@ -250,7 +247,7 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
               item2 = pseudoItem[1];
               //同普通匹配一样
               if(i) {
-                matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
+                matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res);
               }
               if(item2.hasOwnProperty('_v')) {
                 dealStyle(res, item2);
@@ -266,57 +263,57 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
               var attrs = attrItem[0];
               var isMatch = true;
               outer:
-                for(var j = 0, len = attrs.length; j < len; j++) {
-                  var attr = attrs[j];
-                  //[attr]形式，只要有属性即可
-                  if(attr.length == 1) {
-                    if(!virtualDom.__cache.hasOwnProperty(attr[0])) {
-                      isMatch = false;
-                      break;
-                    }
-                  }
-                  //[attr=xxx]形式，需比较值
-                  else {
-                    var p = virtualDom.__cache[attr[0]];
-                    if(p === void 0) {
-                      isMatch = false;
-                      break outer;
-                    }
-                    var v = attr[2];
-                    switch(attr[1]) {
-                      case '=':
-                        isMatch = p == v;
-                        break;
-                      case '^=':
-                        isMatch = p.indexOf(v) == 0;
-                        break;
-                      case '$=':
-                        isMatch = p.length >= v.length && p.indexOf(v) == p.length - v.length;
-                        break;
-                      case '~=':
-                        var reg = new RegExp('\\b' + v + '\\b');
-                        isMatch = reg.test(p);
-                        break;
-                      case '*=':
-                        isMatch = p.indexOf(v) > -1;
-                        break;
-                      case '|=':
-                        isMatch = p.indexOf(v) == 0 || p.indexOf(v + '-') == 0;
-                        break;
-                      default:
-                        isMatch = false;
-                        break outer;
-                    }
-                    if(!isMatch) {
-                      break outer;
-                    }
+              for(var j = 0, len = attrs.length; j < len; j++) {
+                var attr = attrs[j];
+                //[attr]形式，只要有属性即可
+                if(attr.length == 1) {
+                  if(!virtualDom.__cache.hasOwnProperty(attr[0])) {
+                    isMatch = false;
+                    break;
                   }
                 }
+                //[attr=xxx]形式，需比较值
+                else {
+                  var p = virtualDom.__cache[attr[0]];
+                  if(p === void 0) {
+                    isMatch = false;
+                    break;
+                  }
+                  var v = attr[2];
+                  switch(attr[1]) {
+                    case '=':
+                      isMatch = p == v;
+                      break;
+                    case '^=':
+                      isMatch = p.indexOf(v) == 0;
+                      break;
+                    case '$=':
+                      isMatch = p.length >= v.length && p.indexOf(v) == p.length - v.length;
+                      break;
+                    case '~=':
+                      var reg = new RegExp('\\b' + v + '\\b');
+                      isMatch = reg.test(p);
+                      break;
+                    case '*=':
+                      isMatch = p.indexOf(v) > -1;
+                      break;
+                    case '|=':
+                      isMatch = p.indexOf(v) == 0 || p.indexOf(v + '-') == 0;
+                      break;
+                    default:
+                      isMatch = false;
+                      break outer;
+                  }
+                  if(!isMatch) {
+                    break;
+                  }
+                }
+              }
               if(isMatch) {
                 item2 = attrItem[1];
                 //同普通匹配一样
                 if(i) {
-                  matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res, cur + ',' + (i - 1) + ':' + j, history);
+                  matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res);
                 }
                 if(item2.hasOwnProperty('_v')) {
                   dealStyle(res, item2);
@@ -327,6 +324,80 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, cur, history, 
         }
         inAttr(item);
         inAttr(item2);}();
+      }
+      //父子选择器
+      if(item.hasOwnProperty('_>')) {
+        var item2 = item['_>'];
+        matchSel(i - 1, names, classes, ids, item2, virtualDom.parent, res, false, isChild);
+      }
+      //相邻兄弟选择器
+      if(item.hasOwnProperty('_+')) {
+        var item2 = item['_+'];
+        var prev = virtualDom.prev();
+        if(prev) {
+          Object.keys(item2).forEach(function(k) {
+            var nodeName = /^[a-z\d]+/i.exec(k);
+            if(nodeName && nodeName[0].toUpperCase() != prev.__name.toUpperCase()) {
+              return;
+            }
+            var className = k.match(/\.[a-z\d_-]+/ig);
+            if(className) {
+              for(var j = className.length - 1; j >= 0; j--) {
+                if(!new RegExp('\\b' + className[j].slice(1) + '\\b', 'i').test(prev.__cache.class)) {
+                  return;
+                }
+              }
+            }
+            var id = /#[a-z\d_-]+/i.exec(k);
+            if(id && id[0].toUpperCase() != prev.__cache.id.toUpperCase()) {
+              return;
+            }
+            //将当前层次的值存入
+            if(item2[k].hasOwnProperty('_v')) {
+              dealStyle(res, item2[k]);
+            }
+            matchSel(i - 1, names, classes, ids, item2[k], virtualDom.parent, res, false, isChild);
+          });
+        }
+      }
+      //兄弟选择器
+      if(item.hasOwnProperty('_~')) {
+        var item2 = item['_~'];
+        var prevAll = virtualDom.prevAll();
+        if(prevAll.length) {
+          var hasSibiling = false;
+          for(var j = prevAll.length - 1; j >= 0; j--) {
+            var prev = prevAll[j];
+            Object.keys(item2).forEach(function(k) {
+              var nodeName = /^[a-z\d]+/i.exec(k);
+              if(nodeName && nodeName[0].toUpperCase() != prev.__name.toUpperCase()) {
+                return;
+              }
+              var className = k.match(/\.[a-z\d_-]+/ig);
+              if(className) {
+                for(var j = className.length - 1; j >= 0; j--) {
+                  if(!new RegExp('\\b' + className[j].slice(1) + '\\b', 'i').test(prev.__cache.class)) {
+                    return;
+                  }
+                }
+              }
+              var id = /#[a-z\d_-]+/i.exec(k);
+              if(id && id[0].toUpperCase() != prev.__cache.id.toUpperCase()) {
+                return;
+              }
+              //将当前层次的值存入
+              if(item2[k].hasOwnProperty('_v')) {
+                dealStyle(res, item2[k]);
+              }
+              hasSibiling = true;
+              matchSel(i - 1, names, classes, ids, item2[k], virtualDom.parent, res, false, isChild);
+            });
+            //一旦前方出现一次，即说明命中兄弟选择器，可以跳出继续判断下去的循环
+            if(hasSibiling) {
+              break;
+            }
+          }
+        }
       }
     }
   }
