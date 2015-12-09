@@ -10,10 +10,10 @@ var Node = homunculus.getClass('node', 'css');
     this.node = null;
   }
 
-  Jaw.prototype.parse = function(code) {
-    this.parser = homunculus.getParser('css');
+  Jaw.prototype.parse = function(code, option) {
+    if(option===void 0)option={};this.parser = homunculus.getParser('css');
     this.node = this.parser.parse(code);
-    return serialize(this.node);
+    return serialize(this.node, option);
   }
 
   Jaw.prototype.tokens = function() {

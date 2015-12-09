@@ -14,6 +14,8 @@ var fixEvent=function(){var _12=require('./fixEvent');return _12.hasOwnProperty(
 var attr=function(){var _13=require('./attr');return _13.hasOwnProperty("default")?_13["default"]:_13}();
 var hash=function(){var _14=require('./hash');return _14.hasOwnProperty("default")?_14["default"]:_14}();
 var touch=function(){var _15=require('./touch');return _15.hasOwnProperty("default")?_15["default"]:_15}();
+var delegate=function(){var _16=require('./delegate');return _16.hasOwnProperty("default")?_16["default"]:_16}();
+var matchUtil=function(){var _17=require('./matchUtil');return _17.hasOwnProperty("default")?_17["default"]:_17}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -104,7 +106,7 @@ function __findEq(name, child, res, first) {
   return res;
 }
 
-!function(){var _16=Object.create(Element.prototype);_16.constructor=VirtualDom;VirtualDom.prototype=_16}();
+!function(){var _18=Object.create(Element.prototype);_18.constructor=VirtualDom;VirtualDom.prototype=_18}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
     if(props===void 0)props=[];if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
@@ -257,17 +259,28 @@ function __findEq(name, child, res, first) {
         if(fake) {
           return;
         }
-        var name = k.slice(2).replace(/[A-Z]/g, function(up) {
-          return up.toLowerCase();
-        });
+        var name = k.slice(2).toLowerCase();
         self.__addListener(name, function(e) {
           e = e || window.event;
           fixEvent(e);
           if(v instanceof Cb) {
             v.cb.call(v.context, e);
           }
-          else {
+          else if(util.isFunction(v)) {
             v(e);
+          }
+          else if(Array.isArray(v)) {
+            v.forEach(function(item) {
+              var cb = item[1];
+              if(delegate(e, item[0], self)) {
+                if(cb instanceof Cb) {
+                  cb.cb.call(cb.context, e);
+                }
+                else if(util.isFunction(cb)) {
+                  cb(e);
+                }
+              }
+            });
           }
         });
       });
@@ -785,24 +798,9 @@ function __findEq(name, child, res, first) {
       this.__classes = [];
       this.__ids = [];
     }
-    var klass = (this.__cache['class'] || '').trim();
-    if(klass) {
-      klass = klass.split(/\s+/);
-      sort(klass, function(a, b) {
-        return a > b;
-      });
-      this.__classes.push(klass);
-    }
-    else {
-      this.__classes.push('');
-    }
-    var id = (this.__cache.id || '').trim();
-    if(id) {
-      this.__ids.push('#' + id);
-    }
-    else {
-      this.__ids.push('');
-    }
+    //预处理class和id，class分为数组形式，id判断#开头
+    this.__classes.push(matchUtil.splitClass(this.__cache['class']));
+    this.__ids.push(matchUtil.preId(this.__cache.id));
     //TODO: css3伪类
     var matches = match(this.__names, this.__classes, this.__ids, this.__style, this, first);
     //本身的inline最高优先级追加到末尾
