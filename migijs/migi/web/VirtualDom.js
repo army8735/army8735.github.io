@@ -248,12 +248,52 @@ function __findEq(name, child, res, first) {
     });
     return res.prev;
   }
+  VirtualDom.prototype.next = function() {
+    var res = {};
+    getNext(this.parent.children, this, res, function(child) {
+      res.next = child;
+      res.done = true;
+    });
+    return res.next;
+  }
+  VirtualDom.prototype.nextAll = function() {
+    var res = {
+      next: []
+    };
+    getNext(this.parent.children, this, res, function(child) {
+      res.next.push(child);
+    });
+    return res.next;
+  }
+  VirtualDom.prototype.isOnly = function() {
+    var parent = this.parent;
+    var all = allChildren(parent.children);
+    return all.length == 1;
+  }
+  VirtualDom.prototype.isFirstOfType = function(sel) {
+    var prevAll = this.prevAll();
+    for(var i = 0, len = prevAll.length; i < len; i++) {
+      if(!matchUtil.nci(sel, prevAll[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  VirtualDom.prototype.isLastOfType = function(sel) {
+    var nextAll = this.nextAll();
+    for(var i = 0, len = nextAll.length; i < len; i++) {
+      if(!matchUtil.nci(sel, nextAll[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   VirtualDom.prototype.__renderProp = function(k, v) {
     var self = this;
     var res = '';
     //onXxx侦听处理
-    if(/^on[A-Z]/.test(k)) {
+    if(/^on[a-zA-Z]/.test(k)) {
       self.once(Event.DOM, function(fake) {
         //防止fake未真实添加DOM
         if(fake) {
@@ -379,7 +419,12 @@ function __findEq(name, child, res, first) {
               var v = e.target.value;
               item.setV(v);
               var key = item.k;
-              item.context[key] = v;
+              if(key.indexOf('model.') == 0) {
+                item.context.model[key.slice(6)] = v;
+              }
+              else {
+                item.context[key] = v;
+              }
             }
             var type = self.__cache.type;
             if(type === void 0 || type === null) {
@@ -421,7 +466,12 @@ function __findEq(name, child, res, first) {
               var v = e.target.value;
               item.setV(v);
               var key = item.k;
-              item.context[key] = v;
+              if(key.indexOf('model.') == 0) {
+                item.context.model[key.slice(6)] = v;
+              }
+              else {
+                item.context[key] = v;
+              }
             }
             self.__addListener('change', cb);
           });
@@ -967,6 +1017,41 @@ function getPrev(child, target, res, cb) {
   else if(child instanceof Obj) {
     getPrev(child.v, target, res, cb);
   }
+}
+function getNext(child, target, res, cb) {
+  if(Array.isArray(child)) {
+    for(var i = 0, len = child.length; i < len; i++) {
+      getNext(child[i], target, res, cb);
+      if(res.done) {
+        break;
+      }
+    }
+  }
+  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+    if(target == child) {
+      res.start = true;
+    }
+    else if(res.start) {
+      cb(child);
+    }
+  }
+  else if(child instanceof Obj) {
+    getNext(child.v, target, res, cb);
+  }
+}
+function allChildren(child, res) {
+  if(res===void 0)res=[];if(Array.isArray(child)) {
+    for(var i = 0, len = child.length; i < len; i++) {
+      allChildren(child[i], res);
+    }
+  }
+  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+    res.push(child);
+  }
+  else if(child instanceof Obj) {
+    allChildren(child.v, res);
+  }
+  return res;
 }
 
 exports["default"]=VirtualDom;});
