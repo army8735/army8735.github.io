@@ -194,8 +194,8 @@
       nodes.forEach(function(node, i) {
         var res = jaw.parse(node.textContent || node.innerText || node.firstChild && node.firstChild.nodeValue);
         res = JSONFormat(JSON.stringify(res));
-        var ast = jaw.ast;
-        var tokens = jaw.tokens;
+        var ast = jaw.ast();
+        var tokens = jaw.tokens();
         var pre = node.parentNode;
         var ncode = document.createElement('code');
         var npre = document.createElement('pre');
