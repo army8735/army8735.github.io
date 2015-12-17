@@ -413,6 +413,9 @@ function diffVd(ovd, nvd) {
       nvd.__updateAttr(k, v);
     }
   });
+  if(nvd.__style) {
+    nvd.__initCI();
+  }
   var ol = ovd.children.length;
   var nl = nvd.children.length;
   //渲染children
@@ -704,9 +707,11 @@ function diffChild(elem, ovd, nvd, ranges, option, history, parent) {
             }
             else {
               elem = ovd.element;
+              nvd.$$.style = ovd.$$.style;
               elem.insertAdjacentHTML('afterend', nvd.toString());
               elem.parentNode.removeChild(elem);
               nvd.emit(Event.DOM);
+              matchHash.del(ovd.uid);
               //缓存对象池
               cachePool.add(ovd.__destroy());
             }
