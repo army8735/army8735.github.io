@@ -12,11 +12,207 @@ var matchUtil=function(){var _6=require('./matchUtil');return _6.hasOwnProperty(
 //first为初始化时第一次
 function match(names, classes, ids, style, virtualDom, first) {
   //fix循环依赖
-  if(VirtualDom.hasOwnProperty('default')) {
+  var timeout;if(VirtualDom.hasOwnProperty('default')) {
     VirtualDom = VirtualDom['default'];
   }
   var res = [];
-  matchSel(names.length - 1, names, classes, ids, style, virtualDom, res, first);
+  matchSel(names.length - 1, names, classes, ids, style.default, virtualDom, res, first);
+  //如果有media query
+  if(style.media) {
+    style.media.forEach(function(media) {
+      var match = false;
+      media.query.forEach(function(qlist) {
+        //中一个即命中不再往下匹配
+        if(match) {
+          return;
+        }
+        for(var i = 0, len = qlist.length; i < len; i++) {
+          var item = qlist[i];
+          //Array/String类型标明是否有值，目前只支持Array
+          if(Array.isArray(item)) {
+            var k = item[0].replace(/^-[a-z]+-/i, '').replace(/^mso-/, '').toLowerCase();
+            var v = item[1];
+            //只支持px单位
+            if(/(px|\d)$/.test(v)) {
+              v = v.replace(/px$/, '');
+              switch(k) {
+                case 'width':
+                case 'height':
+                  var cur = getCur(k);
+                  if(cur == v) {
+                    match = true;
+                    matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                    return;
+                  }
+                  break;
+                case 'min-width':
+                case 'max-width':
+                case 'min-height':
+                case 'max-height':
+                  var cur = getCur(k.slice(4));
+                  if(k.indexOf('min-') == 0) {
+                    if(cur >= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  else {
+                    if(cur <= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  break;
+                case 'device-width':
+                case 'device-height':
+                  var cur = window.screen[k.slice(7)];
+                  if(cur == v) {
+                    match = true;
+                    matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                  }
+                  break;
+                case 'min-device-width':
+                case 'min-device-height':
+                case 'max-device-width':
+                case 'max-device-height':
+                  var cur = window.screen[k.slice(11)];
+                  if(k.indexOf('min-') == 0) {
+                    if(cur >= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  else {
+                    if(cur <= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  break;
+                case 'aspect-ratio':
+                  var w = getCur('width');
+                  var h = getCur('height');
+                  var cur = w / h;
+                  var val = v.split('/');
+                  val = val[0] / val[1];
+                  if(cur == val) {
+                    match = true;
+                    matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                    return;
+                  }
+                  break;
+                case 'min-aspect-ratio':
+                case 'max-aspect-ratio':
+                  var w = getCur('width');
+                  var h = getCur('height');
+                  var cur = w / h;
+                  var val = v.split('/');
+                  val = val[0] / val[1];
+                  if(k.indexOf('min-') == 0) {
+                    if(cur >= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  else {
+                    if(cur <= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  break;
+                case 'device-aspect-ratio':
+                  var w = window.screen.width;
+                  var h = window.screen.height;
+                  var cur = w / h;
+                  var val = v.split('/');
+                  val = val[0] / val[1];
+                  if(cur == val) {
+                    match = true;
+                    matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                    return;
+                  }
+                  break;
+                case 'min-device-aspect-ratio':
+                case 'max-device-aspect-ratio':
+                  var w = window.screen.width;
+                  var h = window.screen.height;
+                  var cur = w / h;
+                  var val = v.split('/');
+                  val = val[0] / val[1];
+                  if(k.indexOf('min-') == 0) {
+                    if(cur >= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  else {
+                    if(cur <= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  break;
+                case 'device-pixel-ratio':
+                  var cur = window.devicePixelRatio;
+                  if(cur == v) {
+                    match = true;
+                    matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                    return;
+                  }
+                  break;
+                case 'min-device-pixel-ratio':
+                case 'max-device-pixel-ratio':
+                  var cur = window.devicePixelRatio;
+                  if(k.indexOf('min-') == 0) {
+                    if(cur >= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  else {
+                    if(cur <= v) {
+                      match = true;
+                      matchSel(names.length - 1, names, classes, ids, media.style, virtualDom, res, first);
+                      return;
+                    }
+                  }
+                  break;
+              }
+            }
+          }
+        }
+      });
+    });
+    //窗口resize时重新匹配@media query
+    if(first) {!function(){
+      timeout;
+      function resize() {
+        if(timeout) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(function() {
+          hash.get(virtualDom.uid).__updateStyle();
+        }, 100);
+      }
+      if(browser.lie && document.attachEvent) {
+        window.attachEvent('onresize', resize);
+      }
+      else {
+        window.addEventListener('resize', resize);
+      }
+      matchHash.add(virtualDom.uid, resize);}();
+    }
+  }
   sort(res, function(a, b) {
     var pa = a[2];
     var pb = b[2];
@@ -78,7 +274,7 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first, isChild
                   hash.get(uid).__updateStyle();
                 }
                 virtualDom.on(Event.DOM, function() {
-                  if(browser.lie && virtualDom.element.attachEvent) {
+                  if(browser.lie && document.attachEvent) {
                     virtualDom.element.attachEvent('onmouseenter', onHover);
                     virtualDom.element.attachEvent('onmouseleave', outHover);
                   }
@@ -102,7 +298,7 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first, isChild
                   hash.get(uid).__updateStyle();
                 }
                 virtualDom.on(Event.DOM, function() {
-                  if(browser.lie && virtualDom.element.attachEvent) {
+                  if(browser.lie && document.attachEvent) {
                     virtualDom.element.attachEvent('onmousedown', onActive);
                     //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
                     window.attachEvent('onmouseup', outActive, true);
@@ -231,6 +427,13 @@ function dealStyle(res, item) {
     style[2] = item._p;
     res.push(style);
   });
+}
+
+function getCur(k) {
+  var key = k.charAt(0).toUpperCase() + k.slice(1);
+  return window['inner' + key]
+    || document.documentElement['client' + key]
+    || document.body['client' + key];
 }
 
 exports["default"]=match;});

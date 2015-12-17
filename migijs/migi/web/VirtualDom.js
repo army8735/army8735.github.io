@@ -239,12 +239,14 @@ function __findEq(name, child, res, first) {
     });
     return res.prev;
   }
-  VirtualDom.prototype.prevAll = function() {
+  VirtualDom.prototype.prevAll = function(sel) {
     var res = {
       prev: []
     };
     getPrev(this.parent.children, this, res, function(child) {
-      res.prev.push(child);
+      if(sel && !matchUtil.nci(sel, child) || !sel) {
+        res.prev.push(child);
+      }
     });
     return res.prev;
   }
@@ -256,22 +258,33 @@ function __findEq(name, child, res, first) {
     });
     return res.next;
   }
-  VirtualDom.prototype.nextAll = function() {
+  VirtualDom.prototype.nextAll = function(sel) {
     var res = {
       next: []
     };
     getNext(this.parent.children, this, res, function(child) {
-      res.next.push(child);
+      if(sel && !matchUtil.nci(sel, child) || !sel) {
+        res.next.push(child);
+      }
     });
     return res.next;
   }
   VirtualDom.prototype.isOnly = function() {
-    var parent = this.parent;
-    var all = allChildren(parent.children);
-    return all.length == 1;
+    return this.siblings().length == 1;
+  }
+  VirtualDom.prototype.isOnlyOfType = function(sel) {
+    var self = this;
+    var all = self.siblings();
+    for(var i = 0, len = all.length; i < len; i++) {
+      var item = all[i];
+      if(item != self && !matchUtil.nci(sel, item)) {
+        return false;
+      }
+    }
+    return true;
   }
   VirtualDom.prototype.isFirstOfType = function(sel) {
-    var prevAll = this.prevAll();
+    var prevAll = this.prevAll(sel);
     for(var i = 0, len = prevAll.length; i < len; i++) {
       if(!matchUtil.nci(sel, prevAll[i])) {
         return false;
@@ -280,13 +293,40 @@ function __findEq(name, child, res, first) {
     return true;
   }
   VirtualDom.prototype.isLastOfType = function(sel) {
-    var nextAll = this.nextAll();
+    var nextAll = this.nextAll(sel);
     for(var i = 0, len = nextAll.length; i < len; i++) {
       if(!matchUtil.nci(sel, nextAll[i])) {
         return false;
       }
     }
     return true;
+  }
+  VirtualDom.prototype.siblings = function() {
+    var parent = this.parent;
+    var all = allChildren(parent.children);
+    return all;
+  }
+  VirtualDom.prototype.getIdx = function(reverse) {
+    var siblings = this.siblings();
+    var i = siblings.indexOf(this);
+    if(i > -1) {
+      return reverse ? siblings.length - i - 1 : i;
+    }
+    return -1;
+  }
+  VirtualDom.prototype.getIdxOfType = function(sel, reverse) {
+    var siblings = reverse ? this.nextAll(sel) : this.prevAll(sel);
+    if(reverse) {
+      siblings.unshift(this);
+    }
+    else {
+      siblings.push(this);
+    }
+    var i = siblings.indexOf(this);
+    if(i > -1) {
+      return reverse ? siblings.length - i - 1 : i;
+    }
+    return -1;
   }
 
   VirtualDom.prototype.__renderProp = function(k, v) {

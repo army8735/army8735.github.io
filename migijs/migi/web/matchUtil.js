@@ -72,7 +72,8 @@ exports["default"]={
   },
   pseudo: function(pseudos, virtualDom, sel) {
     for(var j = 0, len = pseudos.length; j < len; j++) {
-      switch(pseudos[j]) {
+      var pseudo = pseudos[j];
+      switch(pseudo) {
         case 'hover':
           if(!virtualDom.__hover) {
             return false;
@@ -118,6 +119,11 @@ exports["default"]={
             return false;
           }
           break;
+        case 'only-of-type':
+          if(!virtualDom.isOnlyOfType(sel)) {
+            return false;
+          }
+          break;
         case 'first-of-type':
           if(!virtualDom.isFirstOfType(sel)) {
             return false;
@@ -128,9 +134,39 @@ exports["default"]={
             return false;
           }
           break;
-        //TODO:其它伪类
+        //除了nth外不支持
         default:
-          return false;
+          if(pseudo.indexOf('nth-child') == 0) {
+            var idx = virtualDom.getIdx();
+            var n = /\((.+)\)/.exec(pseudo)[1];
+            if(!nth(idx, n)) {
+              return false;
+            }
+          }
+          else if(pseudo.indexOf('nth-last-child') == 0) {
+            var idx = virtualDom.getIdx(true);
+            var n = /\((.+)\)/.exec(pseudo)[1];
+            if(!nth(idx, n)) {
+              return false;
+            }
+          }
+          else if(pseudo.indexOf('nth-of-type') == 0) {
+            var idx = virtualDom.getIdxOfType(sel);
+            var n = /\((.+)\)/.exec(pseudo)[1];
+            if(!nth(idx, n)) {
+              return false;
+            }
+          }
+          else if(pseudo.indexOf('nth-last-of-type') == 0) {
+            var idx = virtualDom.getIdxOfType(sel, true);
+            var n = /\((.+)\)/.exec(pseudo)[1];
+            if(!nth(idx, n)) {
+              return false;
+            }
+          }
+          else {
+            return false;
+          }
       }
     }
     return true;
@@ -215,4 +251,36 @@ function comboArr(arr, len, res, i) {
   }
   res.push('.' + arr[i]);
   return res;
+}
+
+function nth(idx, n) {
+  if(n == 'odd') {
+    if(idx % 2 == 1) {
+      return false;
+    }
+  }
+  else if(n == 'even') {
+    if(idx % 2 == 0) {
+      return false;
+    }
+  }
+  else if(/^\d+$/.test(n)) {
+    if(idx != n - 1) {
+      return false;
+    }
+  }
+  else {
+    var mc = /(\d+)?n(?:\+(\d+))?/.exec(n);
+    var res = false;
+    for(var k = 0; k <= Math.ceil(idx / mc[1]); k++) {
+      if((mc[1] || 1) * k + (mc[2] || 0) == idx + 1) {
+        res = true;
+        break;
+      }
+    }
+    if(!res) {
+      return false;
+    }
+  }
+  return true;
 }});
