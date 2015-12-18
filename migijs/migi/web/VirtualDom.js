@@ -881,7 +881,7 @@ function __findEq(name, child, res, first) {
     this.__inline = this.__cache.style || '';
     //预处理class和id，class分为数组形式，id判断#开头
     this.__initCI();
-    var matches = match(this.__names, this.__classes, this.__ids, this.__style, this, first);
+    var matches = match(this.__names, this.__classes, this.__ids, this.__style || { default:{} }, this, first);
     //本身的inline最高优先级追加到末尾
     return matches + this.__inline;
   }
@@ -899,10 +899,14 @@ function __findEq(name, child, res, first) {
     this.__classes.push(matchUtil.splitClass(this.__cache['class']));
     this.__ids.push(matchUtil.preId(this.__cache.id));
   }
-  VirtualDom.prototype.__updateStyle = function() {
-    var s = this.__match();
+  VirtualDom.prototype.__updateStyle = function(first) {
+    var s = this.__match(first);
     if(this.element.getAttribute('style') != s) {
       this.element.setAttribute('style', s);
+    }
+    //diff调用初始化nvd时自上而下，忽略children
+    if(first) {
+      return;
     }
     this.children.forEach(function(child) {
       if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {

@@ -117,7 +117,7 @@ function add(elem, vd, ranges, option, history, temp, last, parent) {
     || browser.lie && vd && vd.__migiEL && !vd.__migiNV) {
     vd.__parent = parent;
     vd.__top = parent.top;
-    vd.style = parent.style;
+    vd.$$.style = parent.$$.style;
     hash.set(vd);
     if(temp.hasOwnProperty('prev')) {
       if(option.prev == type.TEXT) {
@@ -414,7 +414,7 @@ function diffVd(ovd, nvd) {
     }
   });
   if(nvd.__style) {
-    nvd.__initCI();
+    nvd.__updateStyle(true);
   }
   var ol = ovd.children.length;
   var nl = nvd.children.length;
@@ -657,7 +657,7 @@ function diffChild(elem, ovd, nvd, ranges, option, history, parent) {
         //这种情况下相当于add新vd，无parent和style引用
         nvd.__parent = parent;
         nvd.__top = parent.top;
-        nvd.style = parent.style;
+        nvd.$$.style = parent.$$.style;
         hash.set(nvd);
         var cns = elem.childNodes;
         if(option.first) {
@@ -703,15 +703,20 @@ function diffChild(elem, ovd, nvd, ranges, option, history, parent) {
           //DOM名没变递归diff，否则重绘
           case 0:
             if(ovd.name == nvd.name) {
+              ovd.__parent = parent;
+              ovd.__top = parent.$$.top;
               diffVd(ovd, nvd);
             }
             else {
+              nvd.__parent = parent;
+              nvd.__top = parent.top;
+              nvd.$$.style = parent.$$.style;
               elem = ovd.element;
-              nvd.$$.style = ovd.$$.style;
               elem.insertAdjacentHTML('afterend', nvd.toString());
               elem.parentNode.removeChild(elem);
               nvd.emit(Event.DOM);
               matchHash.del(ovd.uid);
+              hash.set(nvd);
               //缓存对象池
               cachePool.add(ovd.__destroy());
             }
@@ -721,14 +726,18 @@ function diffChild(elem, ovd, nvd, ranges, option, history, parent) {
             elem = ovd.element;
             elem.insertAdjacentHTML('afterend', nvd.toString());
             elem.parentNode.removeChild(elem);
-            nvd.emit(Event.DOM);
+            nvd.__parent = parent;
+            nvd.__top = parent.top;
             //match中为模拟style的:active伪类注册了window的一些事件，需检查移除
             if(ncp) {
               matchHash.del(ovd.virtualDom.uid);
             }
             else {
               matchHash.del(ovd.uid);
+              nvd.$$.style = parent.$$.style;
             }
+            nvd.emit(Event.DOM);
+            hash.set(nvd);
             //缓存对象池
             cachePool.add(ovd.__destroy());
             break;
