@@ -145,6 +145,7 @@ define(function(require, exports, module){var util=function(){var _0=require('./
         lineHeight *= fontSize;
       }
     }
+    lineHeight *= 2;
     lineHeight = Math.max(lineHeight, fontSize);
 
     font = fontStyle + ' ' + fontVariant + ' ' + fontWeight + ' ' + fontSize + 'px/' + lineHeight + 'px ' + fontFamily;
