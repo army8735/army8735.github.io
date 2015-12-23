@@ -1,15 +1,15 @@
 define(function(require, exports, module){var util=function(){var _0=require('./util');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 
-  var colors = ['4A90E2', 'C374DE', 'F36342', 'F3A642', '93C93F', '50E3C2'];
+var colors = ['4A90E2', 'C374DE', 'F36342', 'F3A642', '93C93F', '50E3C2'];
 
-  function getColor(option, i) {
-    var idx = i % colors.length;
-    var color = option.colors[idx] || colors[idx];
-    if(color.indexOf(0) != '#' && color.charAt(0) != 'r') {
-      color = '#' + color;
-    }
-    return color;
+function getColor(option, i) {
+  var idx = i % colors.length;
+  var color = option.colors[idx] || colors[idx];
+  if(color.indexOf(0) != '#' && color.charAt(0) != 'r') {
+    color = '#' + color;
   }
+  return color;
+}
 
 
   function Radio(dom, data, option) {
@@ -129,7 +129,6 @@ define(function(require, exports, module){var util=function(){var _0=require('./
       fontSize = parseInt(this.option.fontSize) || 12;
     }
     fontSize = Math.max(fontSize, 12);
-    fontSize *= 2;
 
     if(this.option.lineHeight) {
       lineHeight = this.option.lineHeight;
@@ -145,8 +144,10 @@ define(function(require, exports, module){var util=function(){var _0=require('./
         lineHeight *= fontSize;
       }
     }
-    lineHeight *= 2;
-    lineHeight = Math.max(lineHeight, fontSize);
+    else {
+      lineHeight = fontSize * 1.5;
+    }
+    lineHeight = Math.max(lineHeight, fontSize);console.log(lineHeight)
 
     font = fontStyle + ' ' + fontVariant + ' ' + fontWeight + ' ' + fontSize + 'px/' + lineHeight + 'px ' + fontFamily;
     context.font = font;
@@ -210,5 +211,5 @@ define(function(require, exports, module){var util=function(){var _0=require('./
   }
 
 
-  exports["default"]=Radio;
+exports["default"]=Radio;
 });
