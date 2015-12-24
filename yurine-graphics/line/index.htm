@@ -33,7 +33,7 @@
 </form>
 <script src="../sea.js"></script>
 <script>
-  seajs.use('init', function(Line) {
+  seajs.use('line/init', function(Line) {
     var search = location.search || '';
     search = search.replace(/^\?/, '');
     search = JSON.parse(decodeURIComponent(search) || '{}') || {};
