@@ -145,20 +145,25 @@ exports["default"]={
     switch(k) {
       case 'className':
         k = 'class';
-      case 'id':
-      case 'class':
-        //jaw导入style时改写migi-前缀
-        if(jaw) {
-          k = 'migi-' + k;
-        }
-      default:
-        if(v === null || v === void 0) {
-          element.removeAttribute(k);
-        }
-        else {
-          element.setAttribute(k, v);
-        }
         break;
+      case 'htmlFor':
+        k = 'for';
+        break;
+    }
+    //jaw导入style时改写migi-前缀
+    if(jaw) {
+      switch(k) {
+        case 'id':
+        case 'class':
+          k = 'migi-' + k;
+          break;
+      }
+    }
+    if(v === null || v === void 0) {
+      element.removeAttribute(k);
+    }
+    else {
+      element.setAttribute(k, v);
     }
   }
 };});

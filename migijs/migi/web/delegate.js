@@ -10,25 +10,33 @@ function delegate(e, json, top) {
   var names = [];
   var classes = [];
   var ids = [];
-  //可能添加侦听本身
-  if(vd != top) {
-    push(top, names, classes, ids);
-  }
+  push(vd, names, classes, ids);
   var temp = vd;
   while(temp.parent && temp.parent != top) {
     temp = temp.parent;
     push(temp, names, classes, ids);
   }
-  push(vd, names, classes, ids);
+  //可能添加侦听本身
+  if(vd != top) {
+    push(top, names, classes, ids);
+  }
   res = false;
   matchSel(names.length - 1, names, classes, ids, json, vd);
-  return res;
+  //不同于样式，事件是冒泡的，所以最里层叶子结点也许是事件产生者，但没侦听，结果冒泡到父层被响应
+  while(!res && names.length) {
+    vd = vd.parent;
+    names.pop();
+    classes.pop();
+    ids.pop();
+    matchSel(names.length - 1, names, classes, ids, json, vd);
+  }console.log(vd.name)
+  return [res, vd];
 }
 
 function push(vd, names, classes, ids) {
-  names.push(vd.name);
-  classes.push(matchUtil.splitClass(vd.__cache['class']));
-  ids.push(matchUtil.preId(vd.__cache.id));
+  names.unshift(vd.name);
+  classes.unshift(matchUtil.splitClass(vd.__cache['class']));
+  ids.unshift(matchUtil.preId(vd.__cache.id));
 }
 
 //从底部往上匹配，即.a .b这样的选择器是.b->.a逆序对比
