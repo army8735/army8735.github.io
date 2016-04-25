@@ -1,6 +1,5 @@
 define(function(require, exports, module){var Element=function(){var _0=require('./Element');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")?_1["default"]:_1}();
-var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 
 
   function Obj(k, context, cb) {
@@ -27,7 +26,7 @@ var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("def
     if(prop) {
       return util.encodeHtml(s, prop);
     }
-    return this.v instanceof Element || browser.lie && this.v && this.v.__migiEL ? s : util.encodeHtml(s);
+    return this.v instanceof Element ? s : util.encodeHtml(s);
   }
   Obj.prototype.update = function(ov) {
     var nv = this.cb.call(this.context);
@@ -38,4 +37,5 @@ var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("def
   }
 
 
-exports["default"]=Obj;});
+exports["default"]=Obj;
+});

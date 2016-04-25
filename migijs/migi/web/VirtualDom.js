@@ -1,21 +1,19 @@
 define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var Component=function(){var _2=require('./Component');return _2.hasOwnProperty("default")?_2["default"]:_2}();
-var browser=function(){var _3=require('./browser');return _3.hasOwnProperty("default")?_3["default"]:_3}();
-var util=function(){var _4=require('./util');return _4.hasOwnProperty("default")?_4["default"]:_4}();
-var Obj=function(){var _5=require('./Obj');return _5.hasOwnProperty("default")?_5["default"]:_5}();
-var Cb=function(){var _6=require('./Cb');return _6.hasOwnProperty("default")?_6["default"]:_6}();
-var range=function(){var _7=require('./range');return _7.hasOwnProperty("default")?_7["default"]:_7}();
-var match=function(){var _8=require('./match');return _8.hasOwnProperty("default")?_8["default"]:_8}();
-var sort=function(){var _9=require('./sort');return _9.hasOwnProperty("default")?_9["default"]:_9}();
-var domDiff=function(){var _10=require('./domDiff');return _10.hasOwnProperty("default")?_10["default"]:_10}();
-var type=function(){var _11=require('./type');return _11.hasOwnProperty("default")?_11["default"]:_11}();
-var fixEvent=function(){var _12=require('./fixEvent');return _12.hasOwnProperty("default")?_12["default"]:_12}();
-var attr=function(){var _13=require('./attr');return _13.hasOwnProperty("default")?_13["default"]:_13}();
-var hash=function(){var _14=require('./hash');return _14.hasOwnProperty("default")?_14["default"]:_14}();
-var touch=function(){var _15=require('./touch');return _15.hasOwnProperty("default")?_15["default"]:_15}();
-var delegate=function(){var _16=require('./delegate');return _16.hasOwnProperty("default")?_16["default"]:_16}();
-var matchUtil=function(){var _17=require('./matchUtil');return _17.hasOwnProperty("default")?_17["default"]:_17}();
+var util=function(){var _3=require('./util');return _3.hasOwnProperty("default")?_3["default"]:_3}();
+var Obj=function(){var _4=require('./Obj');return _4.hasOwnProperty("default")?_4["default"]:_4}();
+var Cb=function(){var _5=require('./Cb');return _5.hasOwnProperty("default")?_5["default"]:_5}();
+var range=function(){var _6=require('./range');return _6.hasOwnProperty("default")?_6["default"]:_6}();
+var match=function(){var _7=require('./match');return _7.hasOwnProperty("default")?_7["default"]:_7}();
+var domDiff=function(){var _8=require('./domDiff');return _8.hasOwnProperty("default")?_8["default"]:_8}();
+var type=function(){var _9=require('./type');return _9.hasOwnProperty("default")?_9["default"]:_9}();
+var fixEvent=function(){var _10=require('./fixEvent');return _10.hasOwnProperty("default")?_10["default"]:_10}();
+var attr=function(){var _11=require('./attr');return _11.hasOwnProperty("default")?_11["default"]:_11}();
+var hash=function(){var _12=require('./hash');return _12.hasOwnProperty("default")?_12["default"]:_12}();
+var touch=function(){var _13=require('./touch');return _13.hasOwnProperty("default")?_13["default"]:_13}();
+var delegate=function(){var _14=require('./delegate');return _14.hasOwnProperty("default")?_14["default"]:_14}();
+var matchUtil=function(){var _15=require('./matchUtil');return _15.hasOwnProperty("default")?_15["default"]:_15}();
 
 var SELF_CLOSE = {
   'img': true,
@@ -48,7 +46,7 @@ var TOUCH = {
 };
 
 function convertSelector(selector) {
-  if(selector instanceof Element || browser.lie && selector && selector.__migiEL) {
+  if(selector instanceof Element) {
     return selector.name + '[migi-uid="' + selector.uid + '"]';
   }
   return selector.replace(/(^|\s|,|])([A-Z][\w$]*)\b/, '$1[migi-name="$2"]');
@@ -63,7 +61,7 @@ function findAll(name, children, first) {
 function __findAll(name, children, res, first) {
   for(var i = 0, len = children.length; i < len; i++) {
     var child = children[i];
-    if(child instanceof Element || browser.lie && child && child.__migiEL) {
+    if(child instanceof Element) {
       res = __findEq(name, child, res, first);
     }
     else if(child instanceof Obj) {
@@ -71,7 +69,7 @@ function __findAll(name, children, res, first) {
       if(Array.isArray(child)) {
         res = __findAll(name, child, res, first);
       }
-      else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+      else if(child instanceof Element) {
         res = __findEq(name, child, res, first);
       }
     }
@@ -86,16 +84,14 @@ function __findAll(name, children, res, first) {
 }
 function __findEq(name, child, res, first) {
   //cp不递归
-  if(child instanceof Component || browser.lie && child && child.__migiCP) {
-    if(child instanceof name
-      || browser.lie && child.__migiCP && child.__migiCP instanceof name) {
+  if(child instanceof Component) {
+    if(child instanceof name) {
       res.push(child);
     }
   }
   //vd递归
   else {
-    if(child instanceof name
-      || browser.lie && child.__migiVD && child.__migiVD instanceof name) {
+    if(child instanceof name) {
       res.push(child);
       if(first) {
         return res;
@@ -106,7 +102,7 @@ function __findEq(name, child, res, first) {
   return res;
 }
 
-!function(){var _18=Object.create(Element.prototype);_18.constructor=VirtualDom;VirtualDom.prototype=_18}();
+!function(){var _16=Object.create(Element.prototype);_16.constructor=VirtualDom;VirtualDom.prototype=_16}();
   function VirtualDom(name, props, children) {
     //fix循环依赖
     if(props===void 0)props=[];if(children===void 0)children=[];if(Component.hasOwnProperty('default')) {
@@ -127,11 +123,6 @@ function __findEq(name, child, res, first) {
     self.__active = false; //是否处于鼠标active状态
     self.__listener = null; //添加的event的cb引用，remove时使用
     self.__init(name, children);
-
-    if(browser.lie) {
-      self.__migiVD = this;
-      return self.__hackLie(VirtualDom, GS);
-    }
   }
 
   //@override
@@ -172,7 +163,7 @@ function __findEq(name, child, res, first) {
   //始终以缓存的props属性为准，哪怕更改了真实DOM的属性
   VirtualDom.prototype.isFirst = function(children) {
     //本身就是Component的唯一节点
-    if(this.parent instanceof Component || browser.lie && this.parent && this.parent.__migiCP) {
+    if(this.parent instanceof Component) {
       return true;
     }
     children = children || this.parent.children;
@@ -184,7 +175,7 @@ function __findEq(name, child, res, first) {
       else if(child == this) {
         return true;
       }
-      else if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+      else if(child instanceof VirtualDom) {
         return false;
       }
       else if(child instanceof Obj) {
@@ -197,7 +188,7 @@ function __findEq(name, child, res, first) {
   }
   VirtualDom.prototype.isLast = function(children) {
     //本身就是Component的唯一节点
-    if(this.parent instanceof Component || browser.lie && this.parent && this.parent.__migiCP) {
+    if(this.parent instanceof Component) {
       return true;
     }
     children = children || this.parent.children;
@@ -209,7 +200,7 @@ function __findEq(name, child, res, first) {
       else if(child == this) {
         return true;
       }
-      else if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+      else if(child instanceof VirtualDom) {
         return false;
       }
       else if(child instanceof Obj) {
@@ -341,7 +332,6 @@ function __findEq(name, child, res, first) {
         }
         var name = k.slice(2).toLowerCase();
         self.__addListener(name, function(e) {
-          e = e || window.event;
           fixEvent(e);
           var target = e.target;
           var uid = target.getAttribute('migi-uid');
@@ -464,7 +454,6 @@ function __findEq(name, child, res, first) {
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
-              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               item.setV(v);
@@ -508,7 +497,6 @@ function __findEq(name, child, res, first) {
         if(item instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
-              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               item.setV(v);
@@ -533,7 +521,6 @@ function __findEq(name, child, res, first) {
         if(child instanceof Obj) {
           self.once(Event.DOM, function() {
             function cb(e) {
-              e = e || window.event;
               fixEvent(e);
               var v = e.target.value;
               child.setV(v);
@@ -567,17 +554,7 @@ function __findEq(name, child, res, first) {
       }
       //记录下来留待清除
       self.__listener.push([name, cb]);
-      //pc注册侦听
-      if(browser.lie && elem.attachEvent) {
-        //ie8没有input
-        if(name == 'input') {
-          name = 'keyup';
-        }
-        elem.attachEvent('on' + name, cb);
-      }
-      else {
-        elem.addEventListener(name, cb);
-      }
+      elem.addEventListener(name, cb);
     }
   }
   VirtualDom.prototype.__removeListener = function() {
@@ -585,12 +562,7 @@ function __findEq(name, child, res, first) {
     if(self.__listener) {
       var elem = self.element;
       self.__listener.forEach(function(arr) {
-        if(browser.lie && elem.attachEvent) {
-          elem.detachEvent('on' + arr[0], arr[1]);
-        }
-        else {
-          elem.removeEventListener(arr[0], arr[1]);
-        }
+        elem.removeEventListener(arr[0], arr[1]);
       });
     }
   }
@@ -655,8 +627,7 @@ function __findEq(name, child, res, first) {
         self.__domChild(item, index, len, option);
       });
     }
-    else if(child instanceof Element && !(child instanceof migi.NonVisualComponent)
-      || browser.lie && child && child.__migiEL && !child.__migiNV) {
+    else if(child instanceof Element && !(child instanceof migi.NonVisualComponent)) {
       //前面的连续的空白节点需插入一个空TextNode
       if(option.empty) {
         self.__insertBlank(option.start);
@@ -677,7 +648,7 @@ function __findEq(name, child, res, first) {
       self.__domChild(child.v, index, len, option);
     }
     else if(isEmptyText(child)) {
-      if(child instanceof migi.NonVisualComponent || browser.lie && child && child.__migiNV) {
+      if(child instanceof migi.NonVisualComponent) {
         child.emit(Event.DOM);
       }
       //前方如有兄弟文本节点，无需插入，否则先记录empty，等后面检查是否有非空text出现，再插入空白节点
@@ -713,6 +684,10 @@ function __findEq(name, child, res, first) {
   //@override
   VirtualDom.prototype.__onData = function(k) {
     var self = this;
+    //尚未添加到dom时无效
+    if(!self.dom) {
+      return;
+    }
     //联动属性值
     self.__props.forEach(function(item) {
       var key = item[0];
@@ -778,7 +753,7 @@ function __findEq(name, child, res, first) {
       });
     }
   }
-  //first标明是否第一个，因为child为数组时会展开，当child不是第1个时其展开项都有prev
+  //option.first标明是否第一个，因为child为数组时会展开，当child不是第1个时其展开项都有prev
   VirtualDom.prototype.__checkObj = function(k, child, ranges, option, history) {
     var self = this;
     //当Component和VirtualDom则start++，且前面是非空文本节点时再++，因为有2个节点
@@ -827,10 +802,10 @@ function __findEq(name, child, res, first) {
       }
     }
     //递归通知，增加索引
-    else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+    else if(child instanceof Element) {
       delete option.t2d;
       delete option.d2t;
-      if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+      if(child instanceof VirtualDom) {
         child.__onData(k);
       }
       option.start++;
@@ -894,7 +869,7 @@ function __findEq(name, child, res, first) {
   }
   VirtualDom.prototype.__initCI = function() {
     var p = this.parent;
-    if(p instanceof VirtualDom || browser.lie && p && p.__migiVD) {
+    if(p instanceof VirtualDom) {
       this.__classes = p.__classes.slice();
       this.__ids = p.__ids.slice();
     }
@@ -916,7 +891,7 @@ function __findEq(name, child, res, first) {
       return;
     }
     this.children.forEach(function(child) {
-      if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+      if(child instanceof VirtualDom) {
         child.__updateStyle();
       }
     });
@@ -936,14 +911,8 @@ function __findEq(name, child, res, first) {
   }
   VirtualDom.prototype.__destroy = function() {
     if(this.__onHover || this.__outHover) {
-      if(browser.lie && document.attachEvent) {
-        this.element.detachEvent('onmouseenter', this.__onHover);
-        this.element.detachEvent('onmouseleave', this.__outHover);
-      }
-      else {
-        this.element.removeEventListener('mouseenter', this.__onHover);
-        this.element.removeEventListener('mouseleave', this.__outHover);
-      }
+      this.element.removeEventListener('mouseenter', this.__onHover);
+      this.element.removeEventListener('mouseleave', this.__outHover);
     }
     this.__hash = {};
     this.__cache = {};
@@ -961,49 +930,38 @@ function __findEq(name, child, res, first) {
     this.__element = null;
     return this;
   }
-Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
 
-var GS = {
-  names: {
-    get: function() {
-      return this.__names || (this.__names = []);
-    }
-  },
-  element: {
-    get: function() {
-      return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.uid + '"]'));
-    }
-  },
-  style: {
-    get: function() {
-      return this.__style;
-    },
-    set: function(v) {
-      var self = this;
-      self.__style = v;
-      if(self.parent instanceof VirtualDom || browser.lie && self.parent && self.parent.__migiVD) {
-        self.__names = self.parent.names.slice();
-      }
-      else {
-        self.__names = [];
-      }
-      self.__names.push(self.name);
-      self.children.forEach(function(child) {
-        childStyle(child, v);
-      });
-    }
+  var _17={};_17.names={};_17.names.get =function() {
+    return this.__names || (this.__names = []);
   }
-};
-if(!browser.lie) {
-  Object.defineProperties(VirtualDom.prototype, GS);
-}
+  _17.element={};_17.element.get =function() {
+    return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.uid + '"]'));
+  }
+  _17.style={};_17.style.get =function() {
+    return this.__style;
+  }
+  _17.style.set =function(v) {
+    var self = this;
+    self.__style = v;
+    if(self.parent instanceof VirtualDom) {
+      self.__names = self.parent.names.slice();
+    }
+    else {
+      self.__names = [];
+    }
+    self.__names.push(self.name);
+    self.children.forEach(function(child) {
+      childStyle(child, v);
+    });
+  }
+Object.keys(_17).forEach(function(k){Object.defineProperty(VirtualDom.prototype,k,_17[k])});Object.keys(Element).forEach(function(k){VirtualDom[k]=Element[k]});
 
 //静态文本节点，包括空、undefined、null、空数组
 function isEmptyText(item) {
   return item === void 0 || item === null || !item.toString();
 }
 function renderChild(child) {
-  if(child instanceof Element || child instanceof Obj || browser.lie && child.__migiEL) {
+  if(child instanceof Element || child instanceof Obj) {
     return child.toString();
   }
   if(Array.isArray(child)) {
@@ -1021,7 +979,7 @@ function childParent(child, parent) {
       childParent(item, parent);
     });
   }
-  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+  else if(child instanceof Element) {
     child.__parent = parent;
   }
   else if(child instanceof Obj) {
@@ -1034,7 +992,7 @@ function childStyle(child, style) {
       childStyle(item, style);
     });
   }
-  else if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+  else if(child instanceof VirtualDom) {
     child.style = style;
   }
   else if(child instanceof Obj) {
@@ -1051,7 +1009,7 @@ function childEmpty(child) {
       }
     }
   }
-  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+  else if(child instanceof Element) {
     res = false;
   }
   else if(child instanceof Obj) {
@@ -1071,7 +1029,7 @@ function getPrev(child, target, res, cb) {
       }
     }
   }
-  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+  else if(child instanceof Element) {
     if(target == child) {
       res.done = true;
       return;
@@ -1091,7 +1049,7 @@ function getNext(child, target, res, cb) {
       }
     }
   }
-  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+  else if(child instanceof Element) {
     if(target == child) {
       res.start = true;
     }
@@ -1109,7 +1067,7 @@ function allChildren(child, res) {
       allChildren(child[i], res);
     }
   }
-  else if(child instanceof Element || browser.lie && child && child.__migiEL) {
+  else if(child instanceof Element) {
     res.push(child);
   }
   else if(child instanceof Obj) {
@@ -1118,4 +1076,5 @@ function allChildren(child, res) {
   return res;
 }
 
-exports["default"]=VirtualDom;});
+exports["default"]=VirtualDom;
+});

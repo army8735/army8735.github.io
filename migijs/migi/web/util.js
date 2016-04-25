@@ -1,5 +1,4 @@
 define(function(require, exports, module){var Element=function(){var _0=require('./Element');return _0.hasOwnProperty("default")?_0["default"]:_0}();
-var browser=function(){var _1=require('./browser');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 
 function clone(obj) {
   if(obj instanceof Element) {
@@ -12,7 +11,7 @@ function clone(obj) {
   for(var i in obj) {
     if(obj.hasOwnProperty(i)) {
       var item = obj[i];
-      if(item instanceof Element || browser.lie && item && item.__migiEL) {
+      if(item instanceof Element) {
         o[i] = item;
       }
       else if(util.isDate(item)) {
@@ -38,7 +37,7 @@ function isOrigin(o) {
 }
 function equal(a, b) {
   //vd常量
-  if(a instanceof Element || b instanceof Element || browser.lie && (a && a.__migiEL || b && b.__migiEL)) {
+  if(a instanceof Element || b instanceof Element) {
     return a == b;
   }
   if(isOrigin(a) || isOrigin(b)) {
@@ -88,7 +87,7 @@ function joinArray(arr, prop) {
     if(Array.isArray(item)) {
       res += joinArray(item);
     }
-    else if(item instanceof Element || browser.lie && item && item.__migiEL) {
+    else if(item instanceof Element) {
       res += prop ? encodeHtml(item.toString(), prop) : item.toString();
     }
     else {
@@ -141,4 +140,5 @@ var util = {
   }
 };
 
-exports["default"]=util;});
+exports["default"]=util;
+});

@@ -1,10 +1,9 @@
 define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var util=function(){var _1=require('./util');return _1.hasOwnProperty("default")?_1["default"]:_1}();
-var browser=function(){var _2=require('./browser');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 
 var uid = 0;
 
-!function(){var _3=Object.create(Event.prototype);_3.constructor=EventBus;EventBus.prototype=_3}();
+!function(){var _2=Object.create(Event.prototype);_2.constructor=EventBus;EventBus.prototype=_2}();
   function EventBus() {
     Event.call(this);
     this.uid = 'e' + uid++; //为数据流历史记录hack
@@ -67,8 +66,7 @@ var uid = 0;
     }
     if(!target
       || !(target instanceof migi.Component)
-        && !(target instanceof migi.Model)
-        && (browser.lie && !target.__migiCP && !target.__migiMD)) {
+        && !(target instanceof migi.Model)) {
       throw new Error('can only bridge to Component/Model: ' + self);
     }
     //重载
@@ -135,4 +133,5 @@ var uid = 0;
   }
 Object.keys(Event).forEach(function(k){EventBus[k]=Event[k]});
 
-exports["default"]=EventBus;});
+exports["default"]=EventBus;
+});

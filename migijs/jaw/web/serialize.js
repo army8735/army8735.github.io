@@ -9,12 +9,12 @@ var idx;
 
 function parse(node, option) {
   idx = 0;
-  var res = {
+  var res = option.noMedia ? {} : {
     default: {}
   };
   node.leaves().forEach(function(leaf, i) {
     if(leaf.name() == Node.STYLESET) {
-      styleset(leaf, res.default, option);
+      styleset(leaf, option.noMedia ? res : res.default, option);
     }
     else if(leaf.name() == Node.MEDIA) {
       res.media = res.media || [];
@@ -246,10 +246,15 @@ function record(sel, idx, styles, res, option) {
     }
     res = save(temp, res);
   }
-  res._v = res._v || [];
-  styles.forEach(function(style) {
-    res._v.push([idx, style]);
-  });
+  if(option.noValue) {
+    res._v = true;
+  }
+  else {
+    res._v = res._v || [];
+    styles.forEach(function(style) {
+      res._v.push([idx, style]);
+    });
+  }
   if(!option.noPriority) {
     res._p = _p;
   }

@@ -1,10 +1,9 @@
 define(function(require, exports, module){var VirtualDom=function(){var _0=require('./VirtualDom');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var Event=function(){var _1=require('./Event');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var sort=function(){var _2=require('./sort');return _2.hasOwnProperty("default")?_2["default"]:_2}();
-var browser=function(){var _3=require('./browser');return _3.hasOwnProperty("default")?_3["default"]:_3}();
-var hash=function(){var _4=require('./hash');return _4.hasOwnProperty("default")?_4["default"]:_4}();
-var matchHash=function(){var _5=require('./matchHash');return _5.hasOwnProperty("default")?_5["default"]:_5}();
-var matchUtil=function(){var _6=require('./matchUtil');return _6.hasOwnProperty("default")?_6["default"]:_6}();
+var hash=function(){var _3=require('./hash');return _3.hasOwnProperty("default")?_3["default"]:_3}();
+var matchHash=function(){var _4=require('./matchHash');return _4.hasOwnProperty("default")?_4["default"]:_4}();
+var matchUtil=function(){var _5=require('./matchUtil');return _5.hasOwnProperty("default")?_5["default"]:_5}();
 
 //names,classes,ids为从当前节点开始往上的列表
 //style为jaw传入的总样式对象
@@ -204,23 +203,18 @@ function match(names, classes, ids, style, virtualDom, first) {
           hash.get(virtualDom.uid).__updateStyle();
         }, 100);
       }
-      if(browser.lie && document.attachEvent) {
-        window.attachEvent('onresize', resize);
-      }
-      else {
-        window.addEventListener('resize', resize);
-      }
+      window.addEventListener('resize', resize);
       matchHash.add(virtualDom.uid, resize);}();
     }
   }
   sort(res, function(a, b) {
     var pa = a[2];
     var pb = b[2];
-    //引用相等
+    //引用相等比较出现顺序
     if(pa == pb) {
       return a[0] > b[0];
     }
-    //优先级内容不相等
+    //优先级不相等
     for(var i = 0; i < 3; i++) {
       if(pa[i] != pb[i]) {
         return pa[i] > pb[i];
@@ -274,14 +268,8 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first, isChild
                   hash.get(uid).__updateStyle();
                 }
                 function cb() {
-                  if(browser.lie && document.attachEvent) {
-                    virtualDom.element.attachEvent('onmouseenter', onHover);
-                    virtualDom.element.attachEvent('onmouseleave', outHover);
-                  }
-                  else {
-                    virtualDom.element.addEventListener('mouseenter', onHover);
-                    virtualDom.element.addEventListener('mouseleave', outHover);
-                  }
+                  virtualDom.element.addEventListener('mouseenter', onHover);
+                  virtualDom.element.addEventListener('mouseleave', outHover);
                 }
                 //可能由DOMDiff发起，此时已经在DOM上了
                 if(virtualDom.__dom) {
@@ -305,28 +293,17 @@ function matchSel(i, names, classes, ids, style, virtualDom, res, first, isChild
                   hash.get(uid).__updateStyle();
                 }
                 function cb2() {
-                  if(browser.lie && document.attachEvent) {
-                    virtualDom.element.attachEvent('onmousedown', onActive);
-                    //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
-                    window.attachEvent('onmouseup', outActive, true);
-                    //window失焦时也需判断
-                    window.attachEvent('onblur', outActive);
-                    //drag结束时也需判断
-                    window.attachEvent('ondragend', outActive);
-                  }
-                  else {
-                    virtualDom.element.addEventListener('mousedown', onActive);
-                    //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
-                    window.addEventListener('mouseup', outActive, true);
-                    //touchend也失焦
-                    window.addEventListener('touchend', outActive, true);
-                    //touchcancel也失焦
-                    window.addEventListener('touchcancel', outActive, true);
-                    //window失焦时也需判断
-                    window.addEventListener('blur', outActive);
-                    //drag结束时也需判断
-                    window.addEventListener('dragend', outActive);
-                  }
+                  virtualDom.element.addEventListener('mousedown', onActive);
+                  //鼠标弹起捕获body，因为可能会移出元素后再弹起，且事件被shadow化阻止冒泡了
+                  window.addEventListener('mouseup', outActive, true);
+                  //touchend也失焦
+                  window.addEventListener('touchend', outActive, true);
+                  //touchcancel也失焦
+                  window.addEventListener('touchcancel', outActive, true);
+                  //window失焦时也需判断
+                  window.addEventListener('blur', outActive);
+                  //drag结束时也需判断
+                  window.addEventListener('dragend', outActive);
                 }
                 //可能由DOMDiff发起，此时已经在DOM上了
                 if(virtualDom.__dom) {
@@ -450,4 +427,5 @@ function getCur(k) {
     || document.body['client' + key];
 }
 
-exports["default"]=match;});
+exports["default"]=match;
+});

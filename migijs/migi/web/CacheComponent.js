@@ -1,12 +1,10 @@
 define(function(require, exports, module){var Event=function(){var _0=require('./Event');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 var Component=function(){var _1=require('./Component');return _1.hasOwnProperty("default")?_1["default"]:_1}();
-var util=function(){var _2=require('./util');return _2.hasOwnProperty("default")?_2["default"]:_2}();
-var browser=function(){var _3=require('./browser');return _3.hasOwnProperty("default")?_3["default"]:_3}();
-var EventBus=function(){var _4=require('./EventBus');return _4.hasOwnProperty("default")?_4["default"]:_4}();
-var Stream=function(){var _5=require('./Stream');return _5.hasOwnProperty("default")?_5["default"]:_5}();
-var CacheModel=function(){var _6=require('./CacheModel');return _6.hasOwnProperty("default")?_6["default"]:_6}();
+var EventBus=function(){var _2=require('./EventBus');return _2.hasOwnProperty("default")?_2["default"]:_2}();
+var Stream=function(){var _3=require('./Stream');return _3.hasOwnProperty("default")?_3["default"]:_3}();
+var CacheModel=function(){var _4=require('./CacheModel');return _4.hasOwnProperty("default")?_4["default"]:_4}();
 
-!function(){var _7=Object.create(Component.prototype);_7.constructor=CacheComponent;CacheComponent.prototype=_7}();
+!function(){var _5=Object.create(Component.prototype);_5.constructor=CacheComponent;CacheComponent.prototype=_5}();
   function CacheComponent(data) {
     data=[].slice.call(arguments, 0);Component.apply(this,[].concat(Array.from(data)));
     this.__handler = {}; //缓存data key的hash
@@ -14,17 +12,11 @@ var CacheModel=function(){var _6=require('./CacheModel');return _6.hasOwnPropert
     this.__handler2 = {}; //handler的副本，每次handler被重置为空后保留缓存值
     this.__timeout;
     this.__timecb;
-
-    //ie8的对象识别hack
-    if(browser.lie) {
-      this.__migiCC = true;
-      return this.__hackLie(CacheComponent);
-    }
   }
 
   //@overwrite
   CacheComponent.prototype.__data = function(k) {
-    var _8=this;var self = this;
+    var _6=this;var self = this;
     //没有缓存根据是否桥接模式赋予stream对象或生成sid
     if(!self.__handler.hasOwnProperty(k)) {
       self.__handler[k] = self.__stream || Stream.gen();
@@ -140,7 +132,6 @@ var CacheModel=function(){var _6=require('./CacheModel');return _6.hasOwnPropert
       CacheModel = CacheModel['default'];
     }
     if(target instanceof CacheComponent
-      || browser.lie && target.__migiCC
       || target instanceof CacheModel) {
       var tItem = target.__handler[name] || target.__handler2[name] || 0;
       return tItem.sid || tItem;
@@ -149,4 +140,5 @@ var CacheModel=function(){var _6=require('./CacheModel');return _6.hasOwnPropert
   }
 Object.keys(Component).forEach(function(k){CacheComponent[k]=Component[k]});
 
-exports["default"]=CacheComponent;});
+exports["default"]=CacheComponent;
+});

@@ -2,20 +2,19 @@ define(function(require, exports, module){var Event=function(){var _0=require('.
 var Element=function(){var _1=require('./Element');return _1.hasOwnProperty("default")?_1["default"]:_1}();
 var VirtualDom=function(){var _2=require('./VirtualDom');return _2.hasOwnProperty("default")?_2["default"]:_2}();
 var util=function(){var _3=require('./util');return _3.hasOwnProperty("default")?_3["default"]:_3}();
-var browser=function(){var _4=require('./browser');return _4.hasOwnProperty("default")?_4["default"]:_4}();
-var EventBus=function(){var _5=require('./EventBus');return _5.hasOwnProperty("default")?_5["default"]:_5}();
-var Model=function(){var _6=require('./Model');return _6.hasOwnProperty("default")?_6["default"]:_6}();
-var Stream=function(){var _7=require('./Stream');return _7.hasOwnProperty("default")?_7["default"]:_7}();
-var Fastclick=function(){var _8=require('./Fastclick');return _8.hasOwnProperty("default")?_8["default"]:_8}();
+var EventBus=function(){var _4=require('./EventBus');return _4.hasOwnProperty("default")?_4["default"]:_4}();
+var Model=function(){var _5=require('./Model');return _5.hasOwnProperty("default")?_5["default"]:_5}();
+var Stream=function(){var _6=require('./Stream');return _6.hasOwnProperty("default")?_6["default"]:_6}();
+var Fastclick=function(){var _7=require('./Fastclick');return _7.hasOwnProperty("default")?_7["default"]:_7}();
 
 var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mousedown', 'mousemove', 'mouseover',
   'mouseup', 'mouseout', 'mousewheel', 'resize', 'scroll', 'select', 'submit', 'DOMActivate', 'DOMFocusIn',
   'DOMFocusOut', 'keydown', 'keypress', 'keyup', 'drag', 'dragstart', 'dragover', 'dragenter', 'dragleave',
   'dragend', 'drop', 'formchange', 'forminput', 'input', 'cut', 'paste', 'reset', 'touchstart',
-  'touchmove', 'touchend', 'MSGestureEnd', 'MSPointerDown', 'pointerdown', 'MSPointerMove', 'pointermove',
+  'touchmove', 'touchend', 'touchcancel', 'MSGestureEnd', 'MSPointerDown', 'pointerdown', 'MSPointerMove', 'pointermove',
   'MSPointerUp', 'pointerup', 'MSPointerCancel', 'pointercancel'];
 
-!function(){var _9=Object.create(Element.prototype);_9.constructor=Component;Component.prototype=_9}();
+!function(){var _8=Object.create(Element.prototype);_8.constructor=Component;Component.prototype=_8}();
   function Component(props, children) {
     //fix循环依赖
     if(props===void 0)props=[];if(children===void 0)children=[];if(Model.hasOwnProperty('default')) {
@@ -30,6 +29,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.__ref = {}; //以ref为attr的vd快速访问引用
     self.__stop = null; //停止冒泡的fn引用
     self.__model = null; //数据模型引用
+    self.__allowPropagation = false; //默认是否允许冒泡
     self.__bridgeHash = {}; //桥接记录
     self.__stream = null; //桥接过程中传递的stream对象
     self.state = {}; //兼容rc
@@ -41,12 +41,6 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     });
 
     self.on(Event.DATA, self.__onData);
-
-    //ie8的对象识别hack
-    if(browser.lie) {
-      self.__migiCP = this;
-      return self.__hackLie(Component, GS);
-    }
   }
   Component.prototype.__init = function(k, v) {
     if(/^on[a-zA-Z]/.test(k)) {
@@ -66,15 +60,6 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
   }
   //@override
   Component.prototype.toString = function() {
-    //lie下构造器中设置style无法触发get/set，特殊hack
-    if(browser.lie && this.$$.style && this.$$.style != this.$$.__style) {
-      this.$$.__style = this.$$.style;
-    }
-    //还有model
-    if(browser.lie && this.$$.model && this.$$.model != this.$$.__model) {
-      this.$.model = this.$$.__model = this.$$.model;
-    }
-
     this.__virtualDom = this.render();
     if(!this.__virtualDom) {
       throw new Error('render must return a VirtualDom: ' + this.name);
@@ -92,7 +77,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     var res = [];
     for(var i = 0, len = this.children.length; i < len; i++) {
       var child = this.children[i];
-      if(child instanceof Element || browser.lie && child && child.__migiEL) {
+      if(child instanceof Element) {
         if(child instanceof Component) {
           if(child.name == name || util.isFunction(name) && child instanceof name) {
             res.push(child);
@@ -144,8 +129,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     if(!target
       || !(target instanceof EventBus)
         && !(target instanceof Component)
-        && !(target instanceof Model)
-        && (browser.lie && !target.__migiCP && !target.__migiMD)) {
+        && !(target instanceof Model)) {
       throw new Error('can only bridge to EventBus/Component/Model: ' + self.name);
     }
     //重载
@@ -195,7 +179,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
       Component.fakeDom(self.children);
     }
     //指定允许冒泡
-    if(self.props.allowPropagation) {
+    if(self.props.allowPropagation ||  self.allowPropagation) {
       return;
     }
     //将所有组件DOM事件停止冒泡，形成shadow特性，但不能阻止捕获
@@ -209,13 +193,8 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.__stop = stopPropagation;
     //仅考虑用户事件，媒体等忽略
     STOP.forEach(function(name) {
-        if(browser.lie && elem.attachEvent) {
-          elem.attachEvent('on' + name, stopPropagation);
-        }
-        else {
-          elem.addEventListener(name, stopPropagation);
-        }
-      });
+      elem.addEventListener(name, stopPropagation);
+    });
     //fastclick处理移动点击点透
     Fastclick.attach(this.element);
   }
@@ -250,10 +229,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
       this.virtualDom.__onData(k);
     }
     this.children.forEach(function(child) {
-      if(child instanceof Component || browser.lie && child && child.__migiCP) {
-        child.emit(Event.DATA, k);
-      }
-      else if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+      if(child instanceof VirtualDom) {
         child.__onData(k);
       }
     });
@@ -263,12 +239,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     if(self.__stop) {
       var elem = self.element;
       STOP.forEach(function(name) {
-        if(browser.lie && elem.attachEvent) {
-          elem.detachEvent('on' + name, self.__stop);
-        }
-        else {
-          elem.removeEventListener(name, self.__stop);
-        }
+        elem.removeEventListener(name, self.__stop);
       });
     }
     if(self.model) {
@@ -285,62 +256,57 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     this.__data('state');
   }
 
+  var _9={};_9.allowPropagation={};_9.allowPropagation.get =function() {
+    return this.__allowPropagation;
+  }
+  _9.allowPropagation.set =function(v) {
+    this.__allowPropagation = v;
+  }
+  _9.element={};_9.element.get =function() {
+    return this.virtualDom ? this.virtualDom.element : null;
+  }
+  _9.style={};_9.style.get =function() {
+    return this.__style;
+  }
+  _9.style.set =function(v) {
+    this.__style = v;
+  }
+  _9.model={};_9.model.get =function() {
+    return this.__model;
+  }
+  _9.model.set =function(v) {
+    if(!(v instanceof Model)) {
+      throw new Error('can not set model to a non Model: ' + v);
+    }
+    this.__model = v;
+    v.__add(this);
+  }
+  _9.virtualDom={};_9.virtualDom.get =function() {
+    return this.__virtualDom;
+  }
+  _9.ref={};_9.ref.get =function() {
+    return this.__ref;
+  }
+
   Component.fakeDom=function(child) {
     if(Array.isArray(child)) {
       child.forEach(function(item) {
         Component.fakeDom(item);
       });
     }
-    else if(child instanceof Component || browser.lie && child && child.__migiCP) {
+    else if(child instanceof Component) {
       child.emit(Event.DOM, true);
     }
-    else if(child instanceof VirtualDom || browser.lie && child && child.__migiVD) {
+    else if(child instanceof VirtualDom) {
       child.emit(Event.DOM, true);
     }
   }
-Object.keys(Element).forEach(function(k){Component[k]=Element[k]});
+Object.keys(_9).forEach(function(k){Object.defineProperty(Component.prototype,k,_9[k])});Object.keys(Element).forEach(function(k){Component[k]=Element[k]});
 
-//hack ie8，clone get/set in Element
-var GS = {
-  element: {
-    get: function() {
-      return this.virtualDom ? this.virtualDom.element : null;
-    }
-  },
-  style: {
-    get: function() {
-      return this.__style;
-    },
-    set: function(v) {
-      this.__style = v;
-    }
-  },
-  model: {
-    get: function() {
-      return this.__model;
-    },
-    set: function(v) {
-      if(!(v instanceof Model) && browser.lie && !v.__migiMD) {
-        throw new Error('can not set model to a non Model: ' + v);
-      }
-      this.__model = v;
-      v.__add(this);
-    }
-  }
-};
 //完全一样的桥接数据流方法，复用
 ['__record', '__unRecord', 'bridgeTo', 'unBridge', 'unBridgeTo'].forEach(function(k) {
   Component.prototype[k] = EventBus.prototype[k];
 });
-['virtualDom', 'ref'].forEach(function(item) {
-  GS[item] = {
-    get: function() {
-      return this['__' + item];
-    }
-  };
-});
-if(!browser.lie) {
-  Object.defineProperties(Component.prototype, GS);
-}
 
-exports["default"]=Component;});
+exports["default"]=Component;
+});

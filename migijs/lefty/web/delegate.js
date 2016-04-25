@@ -61,7 +61,7 @@ function recursion(objltr) {
       res += '[';
       var proptname = leaf.first();
       var s = join(proptname).replace(/^(["'])(.+)\1$/, '$2') + '{}';
-      s = jaw.parse(s, { noPriority: true }).default;
+      s = jaw.parse(s, { noPriority: true, noValue: true, noMedia: true });
       res += JSON.stringify(s);
       res += ',';
       res += filter(join(leaf.last()));
