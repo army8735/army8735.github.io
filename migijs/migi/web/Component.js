@@ -29,9 +29,10 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.__ref = {}; //以ref为attr的vd快速访问引用
     self.__stop = null; //停止冒泡的fn引用
     self.__model = null; //数据模型引用
-    self.__allowPropagation = false; //默认是否允许冒泡
+    self.__allowPropagation = true; //默认是否允许冒泡
     self.__bridgeHash = {}; //桥接记录
     self.__stream = null; //桥接过程中传递的stream对象
+    self.__canData = false; //防止添加至DOM前触发无谓的数据更新
     self.state = {}; //兼容rc
 
     self.__props.forEach(function(item) {
@@ -178,8 +179,11 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     if(!fake && self.children != self.virtualDom.children) {
       Component.fakeDom(self.children);
     }
-    //指定允许冒泡
-    if(self.props.allowPropagation ||  self.allowPropagation) {
+    //指定不允许冒泡，默认是全部冒泡
+    if(self.props.allowPropagation == 'true') {
+      return;
+    }
+    else if(self.props.allowPropagation != 'false' && self.allowPropagation) {
       return;
     }
     //将所有组件DOM事件停止冒泡，形成shadow特性，但不能阻止捕获
@@ -196,11 +200,16 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
       elem.addEventListener(name, stopPropagation);
     });
     //fastclick处理移动点击点透
-    Fastclick.attach(this.element);
+    Fastclick.attach(elem);
   }
   Component.prototype.__data = function(k) {
     var self = this;
+    //set触发数据变更时，若已DOM则打开开关
+    if(self.dom) {
+      self.__canData = true;
+    }
     self.emit(Event.DATA, k);
+    
     var bridge = self.__bridgeHash[k];
     if(bridge) {
       var stream = self.__stream || new Stream(self.uid);
@@ -225,6 +234,10 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
   }
   //@overwrite
   Component.prototype.__onData = function(k) {
+    //未DOM或开关时不触发更新
+    if(!this.dom || !this.canData) {
+      return;
+    }
     if(this.virtualDom) {
       this.virtualDom.__onData(k);
     }
@@ -286,6 +299,9 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
   }
   _9.ref={};_9.ref.get =function() {
     return this.__ref;
+  }
+  _9.canData={};_9.canData.get =function() {
+    return this.__canData;
   }
 
   Component.fakeDom=function(child) {

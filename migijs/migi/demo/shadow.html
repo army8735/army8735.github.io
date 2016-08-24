@@ -27,6 +27,8 @@
   class Shadow extends migi.Component {
     constructor(...data) {
       super(...data);
+      // 下面这句可以达到同样的效果，但优先级不如DOM属性
+      // this.allowPropagation = false;
     }
     click() {
       alert('inner');
@@ -38,12 +40,12 @@
       return <p class="p" onClick={ this.click2 }><span onClick={ this.click }>text</span></p>;
     }
   }
-
+  
   migi.render(
-    <Shadow/>,
+    <Shadow allowPropagation="false"/>,
     '#example'
   );
-
+  
   document.body.addEventListener('click', function() {
     //点文字不会被执行，点红色空白会，但其不属于span所有没有inner弹出
     alert('outer');
