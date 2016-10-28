@@ -33,7 +33,6 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.__bridgeHash = {}; //桥接记录
     self.__stream = null; //桥接过程中传递的stream对象
     self.__canData = false; //防止添加至DOM前触发无谓的数据更新
-    self.state = {}; //兼容rc
 
     self.__props.forEach(function(item) {
       var k = item[0];
@@ -210,27 +209,32 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     }
     self.emit(Event.DATA, k);
     
-    var bridge = self.__bridgeHash[k];
-    if(bridge) {
-      var stream = self.__stream || new Stream(self.uid);
-      bridge.forEach(function(item) {
-        var target = item.target;
-        var name = item.name;
-        var middleware = item.middleware;
-        if(!stream.has(target.uid)) {
-          stream.add(target.uid);
-          if(target instanceof EventBus) {
-            target.emit(Event.DATA, name, middleware ? middleware.call(self, self[k]) : self[k], stream);
-          }
-          //先设置桥接对象数据为桥接模式，修改数据后再恢复
-          else {
-            target.__stream = stream;
-            target[name] = middleware ? middleware.call(self, self[k]) : self[k];
-            target.__stream = null;
-          }
-        }
-      });
+    if(!Array.isArray(k)) {
+      k = [k];
     }
+    k.forEach(function(k) {
+      var bridge = self.__bridgeHash[k];
+      if(bridge) {
+        var stream = self.__stream || new Stream(self.uid);
+        bridge.forEach(function(item) {
+          var target = item.target;
+          var name = item.name;
+          var middleware = item.middleware;
+          if(!stream.has(target.uid)) {
+            stream.add(target.uid);
+            if(target instanceof EventBus) {
+              target.emit(Event.DATA, name, middleware ? middleware.call(self, self[k]) : self[k], stream);
+            }
+            //先设置桥接对象数据为桥接模式，修改数据后再恢复
+            else {
+              target.__stream = stream;
+              target[name] = middleware ? middleware.call(self, self[k]) : self[k];
+              target.__stream = null;
+            }
+          }
+        });
+      }
+    });
   }
   //@overwrite
   Component.prototype.__onData = function(k) {
@@ -262,11 +266,6 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.emit(Event.DESTROY);
     self.__hash = {};
     return vd;
-  }
-
-  Component.prototype.setState = function(state) {
-    this.state = state;
-    this.__data('state');
   }
 
   var _9={};_9.allowPropagation={};_9.allowPropagation.get =function() {

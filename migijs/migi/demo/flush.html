@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
-  <title>find</title>
+  <title>flush</title>
   <link href="style.css" media="all" rel="stylesheet"/>
   <script src="es5-shim.js"></script>
   <script src="es5-sham.js"></script>
@@ -14,29 +14,38 @@
 <div id="example"></div>
 <pre><code class="brush:jsx"></code></pre>
 <script type="text/jsx">
-  class Component extends migi.Component {
+  class Cache extends migi.CacheComponent {
     constructor(...data) {
       super(...data);
-      this.on(migi.Event.DOM, function() {
-        console.log(this.find('span'));
-        console.log(this.findAll('span'));
-        console.log(this.findChild('span'));
-        console.log(this.findChildren('span'));
+      var self = this;
+      self.i = 0;
+      self.handler = null;
+      self.on(migi.Event.DOM, function() {
+        for(var j = 0; j < 100000; j++) {
+          self.count++;
+          if(j == 50000) {
+            self.flush();
+          }
+        }
+      });
+      self.on(migi.Event.DATA, function(k) {
+        console.log(k);
       });
     }
+    get count() {
+      return this.i;
+    }
+    @bind
+    set count(v) {
+      this.i = v;
+    }
     render() {
-      return <div>
-        <span>1</span>
-        <span>2</span>
-      </div>;
+      return <p>count: {this.count}</p>;
     }
   }
 
   migi.render(
-    <Component>
-      <span>3</span>
-      <span>4</span>
-    </Component>,
+    <Cache />,
     '#example'
   );
 </script>
