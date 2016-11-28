@@ -61,12 +61,7 @@
       data = JSON.parse(decodeURIComponent(search));
     }
     if(!data.length) {
-      data = [
-        ['默认a', 72],
-        ['默认b', 53],
-        ['默认c', 26],
-        ['默认d', 39]
-      ];
+      data = [72,53,26,39];
     }
     for(var i = 0; i < data.length; i++) {
       var item = data[i];
@@ -120,8 +115,8 @@
         </li>';
     });
     new Radio('#canvas', data, {
-      width: 600,
-      height: 300,
+//      width: 600,
+//      height: 300,
       fontSize: 24,
       lineWidth: 30
     });
