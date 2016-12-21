@@ -337,7 +337,10 @@ function del(elem, vd, ranges, option, temp, last) {
   }
 }
 function removeAt(elem, start) {
-  elem.removeChild(elem.childNodes[start]);
+  // 当table省略tbody直接写tr时，浏览器可能会自动生成tbody节点，diff时不在对比内会造成bug，提前判断下
+  if(elem.childNodes[start]) {
+    elem.removeChild(elem.childNodes[start]);
+  }
 }
 
 function equalText(a, b) {
@@ -359,7 +362,7 @@ function addRange(ranges, option) {
 
 function diffVd(ovd, nvd) {
   //相同引用说明没发生变更，在一些使用常量、变量未变的情况下会如此
-  if(ovd === nvd) {
+  if(ovd == nvd) {
     return;
   }
   //特殊的uid，以及一些引用赋给新vd
@@ -434,35 +437,8 @@ function diffVd(ovd, nvd) {
   if(nvd.__style) {
     nvd.__updateStyle(true);
   }
-  var ol = ovd.children.length;
-  var nl = nvd.children.length;
-  //渲染children
   var ranges = [];
-  var option = { start: 0, record: [], first: true };
-  var history;
-  //遍历孩子，长度取新老vd最小值
-  for(var i = 0, len = Math.min(ol, nl); i < len; i++) {
-    var oc = ovd.children[i];
-    var nc = nvd.children[i];
-    //history记录着当前child索引，可能它是个数组，递归记录
-    history = [i];
-    //vd的child可能是vd、文本、变量和数组，但已不可能是Obj
-    diffChild(elem, oc, nc, ranges, option, history, nvd);
-  }
-  temp = {};
-  //老的多余的删除
-  if(i < ol) {
-    for(;i < ol; i++) {
-      del(elem, ovd.children[i], ranges, option, temp, i == ol - 1);
-    }
-  }
-  //新的多余的插入
-  else if(i < nl) {
-    for(;i < nl; i++) {
-      history[history.length - 1] = i;
-      add(elem, nvd.children[i], ranges, option, history, temp, i == nl - 1, nvd);
-    }
-  }
+  diffChild(elem, ovd.children, nvd.children, ranges, { start: 0, record: [], first: true }, [], nvd);
   if(ranges.length) {
     //textarea特殊判断
     if(nvd.name == 'textarea') {
