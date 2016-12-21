@@ -18,9 +18,16 @@ function getCtrol(x0, y0, x1, y1, x2, y2, x3, y3) {
 }
 
 function getTop(coords) {
-  var top = coords[0][1];
+  var top = null;
   coords.forEach(function(item) {
-    top = Math.min(top, item[1]);
+    if(item) {
+      if(top !== null) {
+        top = Math.min(top, item[1]);
+      }
+      else {
+        top = item[1];
+      }
+    }
   });
   return top;
 }
@@ -431,7 +438,7 @@ function getGdr(context, top, y, fill) {
         return;
       }
       if(item.length == 1) {
-        self.renderOne(context, item[0], lineHeight, color);
+        self.renderOne(context, item[0], lineHeight, color, i);
         return;
       }
       var style = self.option.styles[i];
@@ -440,17 +447,19 @@ function getGdr(context, top, y, fill) {
       self.renderLine(context, item, i, lw, bw, lineHeight, color, breakColor, breakDash, style, height - bottom, top, left, right, xLineNum, yLineNum);
     });
   }
-  Line.prototype.renderOne = function(context, item, lineHeight, color) {
+  Line.prototype.renderOne = function(context, item, lineHeight, color, index) {
     var self = this;
     if(self.option.discRadio) {
-      var discRadio = parseInt(self.option.discRadio) || 1;
-      discRadio = Math.max(discRadio, 1);
-      discRadio = Math.min(discRadio, lineHeight >> 1);
-      context.fillStyle = color;
-      context.beginPath();
-      context.arc(item[0], item[1], discRadio, 0, (Math.PI/180)*360);
-      context.fill();
-      context.closePath();
+      var discRadio = Array.isArray(self.option.discRadio) ? parseInt(self.option.discRadio[index]) : parseInt(self.option.discRadio);
+      if(discRadio) {
+        discRadio = Math.max(discRadio, 1);
+        discRadio = Math.min(discRadio, lineHeight >> 1);
+        context.fillStyle = color;
+        context.beginPath();
+        context.arc(item[0], item[1], discRadio, 0, (Math.PI / 180) * 360);
+        context.fill();
+        context.closePath();
+      }
     }
   }
   Line.prototype.renderLine = function(context, coords, index, lineWidth, breakLineWidth, lineHeight, color, breakColor, breakDash, style, y, y0, left, right, xLineNum, yLineNum) {
@@ -464,19 +473,20 @@ function getGdr(context, top, y, fill) {
         break;
     }
     if(self.option.discRadio) {
-      var discRadio = parseInt(self.option.discRadio) || 1;
-      discRadio = Math.max(discRadio, 1);
-      discRadio = Math.min(discRadio, lineHeight >> 1);
-      coords.forEach(function(item) {
-        if(item === null || item === undefined) {
-          return;
-        }
-        context.fillStyle = color;
-        context.beginPath();
-        context.arc(item[0], item[1], discRadio, 0, (Math.PI/180)*360);
-        context.fill();
-        context.closePath();
-      });
+      var discRadio = Array.isArray(self.option.discRadio) ? parseInt(self.option.discRadio[index]) : parseInt(self.option.discRadio);
+      if(discRadio) {
+        discRadio = Math.max(discRadio, 1);
+        coords.forEach(function(item) {
+          if (item === null || item === undefined) {
+            return;
+          }
+          context.fillStyle = color;
+          context.beginPath();
+          context.arc(item[0], item[1], discRadio, 0, (Math.PI / 180) * 360);
+          context.fill();
+          context.closePath();
+        });
+      }
     }
   }
   Line.prototype.renderCurve = function(context, coords, index, y, y0, left, right, color, lineWidth, breakLineWidth, breakColor, breakDash, xLineNum, yLineNum) {
@@ -570,7 +580,11 @@ function getGdr(context, top, y, fill) {
           count++;
         }
       }
-      if(i > 0 && this.option.breakStart !== undefined && this.option.breakStart < i) {
+      //空线
+      if(i == this.data.label.length) {
+        return;
+      }
+      if(i > 0 && this.option.breakStart !== undefined && this.option.breakStart !== null && this.option.breakStart < i) {
         var x = left + (right - left) * this.option.breakStart / (this.data.label.length - 1 || 1);
         context.strokeStyle = breakColor;
         context.lineWidth = breakLineWidth;
@@ -583,6 +597,7 @@ function getGdr(context, top, y, fill) {
       }
       var begin = clone[0];
       var last = clone[0];
+      var lastIndex = i;
       context.strokeStyle = color;
       context.lineWidth = lineWidth;
       context.setLineDash && context.setLineDash([1, 0]);
@@ -591,6 +606,7 @@ function getGdr(context, top, y, fill) {
       for(++i; i < len - 1; i++) {
         if(coords[i]) {
           last = coords[i];
+          lastIndex = i;
           if(isPrevBreak) {
             begin = coords[i];
             context.strokeStyle = color;
@@ -638,17 +654,24 @@ function getGdr(context, top, y, fill) {
           }
           if(coords[next]) {
             i = next - 1;
-            context.strokeStyle = breakColor;
-            context.lineWidth = breakLineWidth;
-            context.setLineDash && context.setLineDash(breakDash);
-            context.lineTo(coords[next][0], coords[next][1]);
-            context.stroke();
-            context.closePath();
-            context.beginPath();
+            if(this.option.breakStart !== undefined && this.option.breakStart !== null && this.option.breakStart <= next
+              || this.option.breakEnd !== undefined && this.option.breakEnd !== null && this.option.breakEnd >= next) {
+              context.strokeStyle = breakColor;
+              context.lineWidth = breakLineWidth;
+              context.setLineDash && context.setLineDash(breakDash);
+              context.lineTo(coords[next][0], coords[next][1]);
+              context.stroke();
+              context.closePath();
+              context.beginPath();
+            }
+          }
+          else {
+            i = next;
           }
           isPrevBreak = true;
         }
       }
+      
       if(coords[i]) {
         last = coords[i];
         if(!isPrevBreak) {
@@ -678,22 +701,19 @@ function getGdr(context, top, y, fill) {
           context.fill();
         }
         context.closePath();
-        context.beginPath();
-        context.moveTo(last[0], last[1]);
-        context.strokeStyle = breakColor;
-        context.lineWidth = breakLineWidth;
-        context.setLineDash && context.setLineDash(breakDash);
-        if(!this.option.breakEnd || this.option.breakEnd <= 0) {
-          context.lineTo(right, last[1]);
-        }
-        else {
+        if(this.option.breakEnd !== undefined && this.option.breakEnd !== null && this.option.breakEnd > lastIndex) {
+          context.beginPath();
+          context.moveTo(last[0], last[1]);
+          context.strokeStyle = breakColor;
+          context.lineWidth = breakLineWidth;
+          context.setLineDash && context.setLineDash(breakDash);
           var x = left + (right - left) * this.option.breakEnd / (this.data.label.length - 1 || 1);
           if(x > last[0]) {
             context.lineTo(x, last[1]);
           }
+          context.stroke();
+          context.closePath();
         }
-        context.stroke();
-        context.closePath();
       }
 
       if(this.option.gridOnArea) {
@@ -764,7 +784,11 @@ function getGdr(context, top, y, fill) {
           break;
         }
       }
-      if(i > 0 && this.option.breakStart !== undefined && this.option.breakStart < i) {
+      // 空线
+      if(i == this.data.label.length) {
+        return;
+      }
+      if(i > 0 && this.option.breakStart !== undefined && this.option.breakStart !== null && this.option.breakStart < i) {
         var x = left + (right - left) * this.option.breakStart / (this.data.label.length - 1 || 1);
         context.strokeStyle = breakColor;
         context.lineWidth = breakLineWidth;
@@ -777,6 +801,7 @@ function getGdr(context, top, y, fill) {
       }
       var begin = coords[i];
       var last = coords[i];
+      var lastIndex = i;
       var isPrevBreak = false;
       context.strokeStyle = color;
       context.lineWidth = lineWidth;
@@ -785,6 +810,7 @@ function getGdr(context, top, y, fill) {
       for(++i; i < len - 1; i++) {
         if(coords[i]) {
           last = coords[i];
+          lastIndex = i;
           if(isPrevBreak) {
             begin = coords[i];
             context.strokeStyle = color;
@@ -817,13 +843,19 @@ function getGdr(context, top, y, fill) {
           }
           if(coords[next]) {
             i = next - 1;
-            context.strokeStyle = breakColor;
-            context.lineWidth = breakLineWidth;
-            context.setLineDash && context.setLineDash(breakDash);
-            context.lineTo(coords[next][0], coords[next][1]);
-            context.stroke();
-            context.closePath();
-            context.beginPath();
+            if(this.option.breakStart !== undefined && this.option.breakStart !== null && this.option.breakStart <= next
+              || this.option.breakEnd !== undefined && this.option.breakEnd !== null && this.option.breakEnd >= next) {
+              context.strokeStyle = breakColor;
+              context.lineWidth = breakLineWidth;
+              context.setLineDash && context.setLineDash(breakDash);
+              context.lineTo(coords[next][0], coords[next][1]);
+              context.stroke();
+              context.closePath();
+              context.beginPath();
+            }
+          }
+          else {
+            i = next;
           }
           isPrevBreak = true;
         }
@@ -852,22 +884,19 @@ function getGdr(context, top, y, fill) {
           context.fill();
         }
         context.closePath();
-        context.beginPath();
-        context.moveTo(last[0], last[1]);
-        context.strokeStyle = breakColor;
-        context.lineWidth = breakLineWidth;
-        context.setLineDash && context.setLineDash(breakDash);
-        if(!this.option.breakEnd || this.option.breakEnd <= 0) {
-          context.lineTo(right, last[1]);
-        }
-        else {
+        if(this.option.breakEnd !== undefined && this.option.breakEnd !== null && this.option.breakEnd > lastIndex) {
+          context.beginPath();
+          context.moveTo(last[0], last[1]);
+          context.strokeStyle = breakColor;
+          context.lineWidth = breakLineWidth;
+          context.setLineDash && context.setLineDash(breakDash);
           var x = left + (right - left) * this.option.breakEnd / (this.data.label.length - 1 || 1);
           if(x > last[0]) {
             context.lineTo(x, last[1]);
           }
+          context.stroke();
+          context.closePath();
         }
-        context.stroke();
-        context.closePath();
       }
     }
 
