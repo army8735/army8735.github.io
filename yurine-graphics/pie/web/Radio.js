@@ -1,5 +1,14 @@
 define(function(require, exports, module){var util=function(){var _0=require('./util');return _0.hasOwnProperty("default")?_0["default"]:_0}();
 
+window.requestAnimationFrame = function() {
+  return window.requestAnimationFrame
+    || window.webkitRequestAnimationFrame
+    || window.mozRequestAnimationFrame
+    || function(callback) {
+      window.setTimeout(callback, 1000 / 60);
+    };
+}();
+
 var colors = ['4A90E2', 'C374DE', 'F36342', 'F3A642', '93C93F', '50E3C2'];
 
 function getColor(option, i) {
@@ -25,14 +34,20 @@ function getColor(option, i) {
     this.option.colors = this.option.colors || [];
     this.option.offset = this.option.offset || 0;
     this.points = [];
+    this.destroy = false;
+    this.context = this.dom.getContext('2d');
+    this.width = this.option.width || this.dom.getAttribute('width') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('width')) || 300;
+    this.height = this.option.height || this.dom.getAttribute('height') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('height')) || 150;
     this.render();
   }
 
   Radio.prototype.render = function() {
-    var y;var x;var context = this.dom.getContext('2d');
-    var width = this.option.width || this.dom.getAttribute('width') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('width')) || 300;
-    var height = this.option.height || this.dom.getAttribute('height') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('height')) || 150;
-    var padding = this.option.padding === undefined ? [10, 10, 10, 10] : this.option.padding;
+    var data;var offset;var ease;var count;var speed;var y;var x;var self = this;
+    var context = self.context;
+    var width = self.width;
+    var height = self.height;
+    context.clearRect(0, 0, width, height);
+    var padding = self.option.padding === undefined ? [10, 10, 10, 10] : self.option.padding;
     if(Array.isArray(padding)) {
       switch(padding.length) {
         case 0:
@@ -56,17 +71,17 @@ function getColor(option, i) {
     var paddingX = padding[1] + padding[3];
     var paddingY = padding[0] + padding[2];
     var min = Math.min(width - paddingX, height - paddingY);
-    var lineWidth = this.option.lineWidth || 20;
+    var lineWidth = self.option.lineWidth || 20;
     lineWidth = Math.max(lineWidth, 1);
     lineWidth = Math.min(lineWidth, min >> 1);
-    var shadowWidth = this.option.shadowWidth || lineWidth;
+    var shadowWidth = self.option.shadowWidth || lineWidth;
     shadowWidth = Math.max(lineWidth, shadowWidth);
     shadowWidth = Math.min(shadowWidth, min >> 1);
     if(shadowWidth > lineWidth && shadowWidth == min >> 1) {
       var diff = shadowWidth - lineWidth;
       lineWidth -= diff / 2;
     }
-    var size = String(this.option.size || 1);
+    var size = String(self.option.size || 1);
     if(/%$/.test(size)) {
       size = parseFloat(size) * 0.01;
     }
@@ -81,13 +96,51 @@ function getColor(option, i) {
       sizeOffset = (height - paddingY) * (1 - size) * 0.5;
     }
 
-    (function(){var _1= this.renderBg(context, radio, lineWidth, padding, width, shadowWidth, sizeOffset);x=_1[0];y=_1[1]}).call(this);
-    this.renderFg(context, radio, lineWidth, x, y);
+    (function(){var _1= self.renderBg(context, radio, lineWidth, padding, width, shadowWidth, sizeOffset);x=_1[0];y=_1[1]}).call(this);
+    self.renderFg(context, radio, lineWidth, x, y);
+    
+    if(self.option.animation) {!function(){
+      speed = parseInt(self.option.speed) || 1;
+      speed = Math.max(speed, 1);
+      count = 1;
+      ease = self.option.ease;
+      offset = self.option.offset;
+      data = context.getImageData(0, 0, width, height);
+      context.clearRect(0, 0, width, height);
+      function draw() {
+        if(self.destroy) {
+          return;
+        }
+        context.clearRect(0, 0, width, height);
+        context.globalCompositeOperation = "source-over";
+        context.putImageData(data, 0, 0);
+        context.globalCompositeOperation = "destination-in";
+        var start = offset;
+        var end = Math.min(360, count) + offset;
+        context.beginPath();
+        context.arc(x, y, radio, start * Math.PI / 180, end * Math.PI / 180);
+        context.stroke();
+        context.closePath();
+        if(count < 360 && !self.destroy) {
+          count += speed;
+          if(ease == 'in') {
+            speed += speed * 0.05;
+            speed = Math.max(speed, 1);
+          }
+          else if(ease == 'out') {
+            speed -= speed * 0.05;
+            speed = Math.max(speed, 1);
+          }
+          requestAnimationFrame(draw);
+        }
+      }
+      requestAnimationFrame(draw);}.call(this);
+    }
   }
   Radio.prototype.renderBg = function(context, radio, lineWidth, padding, width, shadowWidth, sizeOffset) {
     var x = ((width - padding[1] - padding[3]) >> 1) + padding[3];
     var y = padding[0] + radio + (shadowWidth >> 1) + sizeOffset;
-    var shadowColor = this.option.shadowColor || 'rgba(0,0,0,0.1)';
+    var shadowColor = this.option.shadowColor || '#EEE';
     if(shadowWidth && shadowWidth > lineWidth) {
       context.beginPath();
       context.strokeStyle = shadowColor;
@@ -110,8 +163,11 @@ function getColor(option, i) {
     var self = this;
     var sum = 0;
     self.data.forEach(function(item) {
-      sum += parseFloat(item);
+      sum += Math.max(parseFloat(item) || 0, 0);
     });
+    if(isNaN(sum) || sum <= 0) {
+      return;
+    }
     var count = 0;
     self.data.forEach(function(item, i) {
       self.renderItem(item, i, context, radio, lineWidth, count, sum, x, y);
@@ -121,7 +177,10 @@ function getColor(option, i) {
   Radio.prototype.renderItem = function(item, i, context, radio, lineWidth, count, sum, x, y) {
     var color = getColor(this.option, i);
     var start = (360*count/sum + this.option.offset);
-    var num = parseFloat(item);
+    var num = Math.max(parseFloat(item) || 0, 0);
+    if(num == 0) {
+      return;
+    }
     var end = start + (360*num/sum);
     if(Array.isArray(color)) {
       var count = 0;
@@ -175,10 +234,14 @@ function getColor(option, i) {
       this.points.push([xx, yy]);
     }
   }
+  Radio.prototype.clear = function() {
+    this.destroy = true;
+    this.context.clearRect(0, 0, this.width, this.height);
+  }
 
   var _2={};_2.COLORS={};_2.COLORS.get =function() {
     return colors;
-  }
+  };
 Object.keys(_2).forEach(function(k){Object.defineProperty(Radio,k,_2[k])});
 
 exports["default"]=Radio;
