@@ -35,6 +35,7 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     self.__stream = null; //桥接过程中传递的stream对象
     self.__canData = false; //防止添加至DOM前触发无谓的数据更新
     self.__bindHash = {}; //缩略语法中是否设置过默认值
+    self.__ob = []; //被array们的__ob__引用
 
     self.__props.forEach(function(item) {
       var k = item[0];
@@ -181,7 +182,9 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     var self = this;
     self.virtualDom.emit(Event.DOM, fake);
     var elem = self.element;
-    elem.setAttribute('migi-name', self.name);
+    if(self.name) {
+      elem.setAttribute('migi-name', self.name);
+    }
     //无覆盖render时渲染标签的children；有时渲染render的children
     //标签的children没被添加到DOM上但父级组件DOM已构建完，因此以参数区分触发fake的DOM事件
     if(!fake && self.children != self.virtualDom.children) {
@@ -273,6 +276,14 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
     if(self.model) {
       self.model.__del(self);
     }
+    //侦听array里面的引用需删除
+    self.__ob.forEach(function(arr) {
+      var i = arr.__ob__.indexOf(self);
+      if(i > -1) {
+        arr.__ob__.splice(i, 1);
+        arr.__cb__.splice(i, 1);
+      }
+    });
     var vd = self.virtualDom.__destroy();
     self.emit(Event.DESTROY);
     self.__hash = {};
@@ -296,10 +307,16 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
   Component.prototype.__array = function(name, v) {
     var self = this;
     //检查array类型，替换并侦听array的原型方法
-    if(Array.isArray(v) && v.__proto__ != array) {
+    if(Array.isArray(v)) {
       v.__proto__ = array;
-      v.__ob__ = function() {
-        self[name] = self[name];
+      v.__ob__ = v.__ob__ || [];
+      v.__cb__ = v.__cb__ || [];
+      if(v.__ob__.indexOf(self) == -1) {console.log(self,self.__ob);
+        self.__ob.push(v);
+        v.__ob__.push(self);
+        v.__cb__.push(function() {
+          self[name] = self[name];
+        });
       }
     }
   }

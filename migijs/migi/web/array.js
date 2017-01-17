@@ -11,7 +11,11 @@ var arrayMethods = Object.create(arrayProto);
         args[i] = arguments[i];
       }
       var result = original.apply(this, args);
-      this.__ob__(result);
+      if(Array.isArray(this.__cb__)) {
+        this.__cb__.forEach(function(cb) {
+          cb();
+        });
+      }
       return result;
     }
   });
