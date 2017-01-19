@@ -12,8 +12,10 @@ window.requestAnimationFrame = function() {
 var colors = ['4A90E2', 'C374DE', 'F36342', 'F3A642', '93C93F', '50E3C2'];
 
 function getColor(option, i) {
-  var idx = i % colors.length;
-  var color = option.colors[idx] || colors[idx];
+  var color = option.colors[i];
+  if(!color) {
+    color = colors[i % colors.length];
+  }
   if(Array.isArray(color)) {
     return color;
   }
@@ -47,6 +49,7 @@ function getColor(option, i) {
     var width = self.width;
     var height = self.height;
     context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = "source-over";
     var padding = self.option.padding === undefined ? [10, 10, 10, 10] : self.option.padding;
     if(Array.isArray(padding)) {
       switch(padding.length) {
