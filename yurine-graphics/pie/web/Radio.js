@@ -40,11 +40,13 @@ function getColor(option, i) {
     this.context = this.dom.getContext('2d');
     this.width = this.option.width || this.dom.getAttribute('width') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('width')) || 300;
     this.height = this.option.height || this.dom.getAttribute('height') || parseInt(window.getComputedStyle(this.dom, null).getPropertyValue('height')) || 150;
+    this.animationDegree = this.option.animationDegree || 0;
+    this.speed = parseInt(this.option.speed) || 1;
     this.render();
   }
 
   Radio.prototype.render = function() {
-    var data;var offset;var ease;var count;var speed;var y;var x;var self = this;
+    var data;var offset;var ease;var y;var x;var self = this;
     var context = self.context;
     var width = self.width;
     var height = self.height;
@@ -103,9 +105,7 @@ function getColor(option, i) {
     self.renderFg(context, radio, lineWidth, x, y);
     
     if(self.option.animation) {!function(){
-      speed = parseInt(self.option.speed) || 1;
-      speed = Math.max(speed, 1);
-      count = 1;
+      self.speed = Math.max(self.speed, 1);
       ease = self.option.ease;
       offset = self.option.offset;
       data = context.getImageData(0, 0, width, height);
@@ -119,24 +119,26 @@ function getColor(option, i) {
         context.putImageData(data, 0, 0);
         context.globalCompositeOperation = "destination-in";
         var start = offset;
-        var end = Math.min(360, count) + offset;
+        var end = Math.min(360, self.animationDegree) + offset;
         context.beginPath();
         context.arc(x, y, radio, start * Math.PI / 180, end * Math.PI / 180);
         context.stroke();
         context.closePath();
-        if(count < 360 && !self.destroy) {
-          count += speed;
+        if(self.animationDegree < 360 && !self.destroy) {
+          self.animationDegree += self.speed;
+          self.animationDegree = Math.min(self.animationDegree, 360);
           if(ease == 'in') {
-            speed += speed * 0.05;
-            speed = Math.max(speed, 1);
+            self.speed += self.speed * 0.05;
+            self.speed = Math.max(self.speed, 1);
           }
           else if(ease == 'out') {
-            speed -= speed * 0.05;
-            speed = Math.max(speed, 1);
+            self.speed -= self.speed * 0.05;
+            self.speed = Math.max(self.speed, 1);
           }
           requestAnimationFrame(draw);
         }
       }
+      draw();
       requestAnimationFrame(draw);}.call(this);
     }
   }
@@ -241,11 +243,23 @@ function getColor(option, i) {
     this.destroy = true;
     this.context.clearRect(0, 0, this.width, this.height);
   }
+  var _2={};_2.animationDegree={};_2.animationDegree.get =function() {
+    return this._animationDegree;
+  };
+  _2.animationDegree.set =function(v) {
+    this._animationDegree = v;
+  };
+  _2.speed={};_2.speed.get =function() {
+    return this._speed;
+  };
+  _2.speed.set =function(v) {
+    this._speed = v;
+  };
 
-  var _2={};_2.COLORS={};_2.COLORS.get =function() {
+  var _3={};_3.COLORS={};_3.COLORS.get =function() {
     return colors;
   };
-Object.keys(_2).forEach(function(k){Object.defineProperty(Radio,k,_2[k])});
+Object.keys(_2).forEach(function(k){Object.defineProperty(Radio.prototype,k,_2[k])});Object.keys(_3).forEach(function(k){Object.defineProperty(Radio,k,_3[k])});
 
 exports["default"]=Radio;
 });
