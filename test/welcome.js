@@ -55,8 +55,9 @@ setInterval(function() {
 }, 1000);
 
 var $yuyue = $('#yuyue');
-$yuyue.on('click', function() {
-  window.open('https://api.weibo.com/oauth2/authorize?client_id=4191980082&response_type=code&redirect_uri=http%3A%2F%2Farmy8735.github.io%2Ftest%2Fcb.html');
+$yuyue.on('click', function(e) {
+  e.preventDefault();
+  window.open('https://api.weibo.com/oauth2/authorize?client_id=4191980082&response_type=code&redirect_uri=http%3A%2F%2Farmy8735.github.io%2Ftest%2Ftest.html');
 });
 
 var now = new Date();
