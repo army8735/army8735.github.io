@@ -68,13 +68,30 @@ var _hash = require('./hash');
 
 var _hash2 = _interopRequireDefault(_hash);
 
-var _Fastclick = require('./Fastclick');
+var _match = require('./match');
 
-var _Fastclick2 = _interopRequireDefault(_Fastclick);
+var _match2 = _interopRequireDefault(_match);
+
+var _matchHash = require('./matchHash');
+
+var _matchHash2 = _interopRequireDefault(_matchHash);
+
+var _attr = require('./attr');
+
+var _attr2 = _interopRequireDefault(_attr);
+
+var _selfClose = require('./selfClose');
+
+var _selfClose2 = _interopRequireDefault(_selfClose);
+
+var _FastClick = require('./FastClick');
+
+var _FastClick2 = _interopRequireDefault(_FastClick);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var migi = {
+  uid: 0,
   render: function render(element, dom) {
     if (dom) {
       element.appendTo(dom);
@@ -87,17 +104,17 @@ var migi = {
     return element.toString();
   },
   preExist: function preExist(element) {
-    element.toString();
+    element.preString();
     return element.emit(_Event2.default.DOM);
   },
   createCp: function createCp(cp, props, children) {
-    return _hash2.default.set(new cp(props, children));
+    return _hash2.default.set(new cp(this.uid++, props, children));
   },
   createVd: function createVd(name, props, children) {
     if (name == 'style' || name == 'script') {
       throw new Error('can not create VirtualDom of: ' + name);
     }
-    return _hash2.default.set(_cachePool2.default.index ? _cachePool2.default.get().__reset(name, props, children) : new _VirtualDom2.default(name, props, children));
+    return _hash2.default.set(_cachePool2.default.index ? _cachePool2.default.get().__reset(this.uid++, name, props, children) : new _VirtualDom2.default(this.uid++, name, props, children));
   },
 
   Event: _Event2.default,
@@ -116,23 +133,37 @@ var migi = {
   browser: _browser2.default,
   sort: _sort2.default,
   hash: _hash2.default,
-  Fastclick: _Fastclick2.default,
+  match: _match2.default,
+  matchHash: _matchHash2.default,
+  attr: _attr2.default,
+  selfClose: _selfClose2.default,
+  FastClick: _FastClick2.default,
   name: function name(Class, _name) {
     if (_Component2.default.prototype.isPrototypeOf(Class.prototype)) {
       Class.__migiName = _name;
     }
+  },
+  resetUid: function resetUid(n) {
+    this.uid = n || 0;
+  },
+  clone: function clone() {
+    var clone = Object.create(migi);
+    clone.uid = 0;
+    return clone;
   }
 };
 
 if (typeof window != 'undefined') {
   window.migi = migi;
   if (document.body) {
-    _Fastclick2.default.attach(document.body);
+    _FastClick2.default.attach(document.body);
   } else {
     document.addEventListener('DOMContentLoaded', function () {
-      _Fastclick2.default.attach(document.body);
+      _FastClick2.default.attach(document.body);
     });
   }
+} else if (typeof global != 'undefined') {
+  global.migi = migi;
 }
 
 exports.default = migi;});

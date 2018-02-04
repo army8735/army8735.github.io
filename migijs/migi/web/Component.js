@@ -24,6 +24,10 @@ var _util = require('./util');
 
 var _util2 = _interopRequireDefault(_util);
 
+var _Obj = require('./Obj');
+
+var _Obj2 = _interopRequireDefault(_Obj);
+
 var _EventBus = require('./EventBus');
 
 var _EventBus2 = _interopRequireDefault(_EventBus);
@@ -36,9 +40,9 @@ var _Stream = require('./Stream');
 
 var _Stream2 = _interopRequireDefault(_Stream);
 
-var _Fastclick = require('./Fastclick');
+var _FastClick = require('./FastClick');
 
-var _Fastclick2 = _interopRequireDefault(_Fastclick);
+var _FastClick2 = _interopRequireDefault(_FastClick);
 
 var _array = require('./array');
 
@@ -57,13 +61,13 @@ var STOP = ['click', 'dblclick', 'focus', 'blur', 'change', 'contextmenu', 'mous
 var Component = function (_Element) {
   _inherits(Component, _Element);
 
-  function Component() {
-    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    var children = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+  function Component(uid) {
+    var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    var children = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
     _classCallCheck(this, Component);
 
-    var _this = _possibleConstructorReturn(this, (Component.__proto__ || Object.getPrototypeOf(Component)).call(this, null, props, children));
+    var _this = _possibleConstructorReturn(this, (Component.__proto__ || Object.getPrototypeOf(Component)).call(this, uid, null, props, children));
 
     var self = _this;
     self.__name = self.constructor.__migiName;
@@ -72,25 +76,24 @@ var Component = function (_Element) {
     self.__stop = null; //停止冒泡的fn引用
     self.__model = null; //数据模型引用
     self.__allowPropagation = true; //默认是否允许冒泡
-    // self.__bridgeHash = {}; //桥接记录
+    // self.__bridgeHash = {}; //桥接记录，延迟初始化
     self.__stream = null; //桥接过程中传递的stream对象
     self.__canData = false; //防止添加至DOM前触发无谓的数据更新
     self.__bindHash = {}; //缩略语法中是否设置过默认值
     self.__ob = []; //被array们的__ob__引用
+    self.__bindProperty = {}; //@property语法，出现在组件属性上时联动父层@bind值更新
 
-    self.__props.forEach(function (item) {
+    self.__props.forEach(function (item, index) {
       var k = item[0];
       var v = item[1];
-      self.__init(k, v);
+      self.__init(k, v, index);
     });
-
-    // self.on(Event.DATA, self.__onData);
     return _this;
   }
 
   _createClass(Component, [{
     key: '__init',
-    value: function __init(k, v) {
+    value: function __init(k, v, index) {
       var self = this;
       if (/^on[a-zA-Z]/.test(k)) {
         var name = k.slice(2).toLowerCase();
@@ -99,11 +102,15 @@ var Component = function (_Element) {
         });
       } else if (/^on-[a-zA-Z\d_]/.test(k) && _util2.default.isFunction(v)) {
         var name = k.slice(3);
-        this.on(name, function () {
+        self.on(name, function () {
           v.apply(undefined, arguments);
         });
       } else if (k == 'model') {
         self.model = v;
+      } else if (v instanceof _Obj2.default) {
+        self.__props[index] = v.v;
+        self.props[k] = v.v;
+        self.__bindProperty[v.k] = [k, v];
       }
     }
     //需要被子类覆盖
@@ -112,7 +119,7 @@ var Component = function (_Element) {
   }, {
     key: 'render',
     value: function render() {
-      return new _VirtualDom2.default('div', this.props, this.children);
+      return new _VirtualDom2.default(this.__uid, 'div', this.__props, this.children);
     }
     //@override
 
@@ -128,6 +135,13 @@ var Component = function (_Element) {
         this.__virtualDom.style = this.__style;
       }
       return this.__virtualDom.toString();
+    }
+    //@override
+
+  }, {
+    key: 'preString',
+    value: function preString() {
+      this.toString();
     }
   }, {
     key: 'findChild',
@@ -260,8 +274,8 @@ var Component = function (_Element) {
       STOP.forEach(function (name) {
         elem.addEventListener(name, stopPropagation);
       });
-      //fastclick处理移动点击点透
-      _Fastclick2.default.attach(elem);
+      //FastClick处理移动点击点透
+      _FastClick2.default.attach(elem);
     }
   }, {
     key: '__data',
@@ -282,14 +296,14 @@ var Component = function (_Element) {
           //分析桥接
           var bridge = self.__bridgeHash[k];
           if (bridge) {
-            var stream = self.__stream || new _Stream2.default(self.uid);
+            var stream = self.__stream || new _Stream2.default(self.__uid);
             var v = self[k];
             bridge.forEach(function (item) {
               var target = item.target;
               var name = item.name;
               var middleware = item.middleware;
-              if (!stream.has(target.uid)) {
-                stream.add(target.uid);
+              if (!stream.has(target.__uid)) {
+                stream.add(target.__uid);
                 if (target instanceof _EventBus2.default) {
                   target.emit(_Event2.default.DATA, name, middleware ? middleware.call(self, v) : v, stream);
                 }
@@ -325,6 +339,18 @@ var Component = function (_Element) {
       }
     }
   }, {
+    key: '__notifyBindProperty',
+    value: function __notifyBindProperty(k) {
+      if (this.__bindProperty.hasOwnProperty(k)) {
+        var arr = this.__bindProperty[k];
+        var bindProperty = arr[0];
+        var obj = arr[1];
+        if (obj.update(obj.v)) {
+          this[bindProperty] = obj.v;
+        }
+      }
+    }
+  }, {
     key: '__destroy',
     value: function __destroy() {
       var self = this;
@@ -349,27 +375,23 @@ var Component = function (_Element) {
       self.emit(_Event2.default.DESTROY);
       self.__hash = {};
       self.__bridgeHash = null;
+      self.__bindProperty = null;
       return vd;
     }
   }, {
     key: '__initBind',
     value: function __initBind(name) {
-      if (this.__bindHash.hasOwnProperty(name)) {
-        return false;
-      }
-      this.__bindHash[name] = true;
-      return true;
+      return !this.__bindHash.hasOwnProperty(name);
     }
   }, {
     key: '__getBind',
     value: function __getBind(name) {
-      return this[name + '__'];
+      return this.__bindHash[name];
     }
   }, {
     key: '__setBind',
     value: function __setBind(name, v) {
-      this.__bindHash[name] = true;
-      this[name + '__'] = v;
+      this.__bindHash[name] = v;
       this.__array(name, v);
     }
   }, {

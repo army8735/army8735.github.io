@@ -31,7 +31,7 @@ function elem(node, isBind, isCb, param) {
         //open和close之间的空白不能忽略
         if(/^\s+$/.test(s)) {
           if(leaf.prev().name() == Node.JSXOpeningElement && leaf.next().name() == Node.JSXClosingElement) {
-            res += '"' + s.replace(/"/g, '\\"').replace(/\n/g, '\\\n') + '"';
+            res += '"' + s.replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n') + '"';
           }
           else {
             res += s;
@@ -42,7 +42,7 @@ function elem(node, isBind, isCb, param) {
             res += ',';
             comma = false;
           }
-          res += '"' + s.replace(/"/g, '\\"').replace(/\n/g, '\\\n') + '"';
+          res += '"' + s.replace(/"/g, '\\"').replace(/\n/g, '\\n\\\n') + '"';
           comma = true;
         }
         break;
@@ -64,7 +64,9 @@ function elem(node, isBind, isCb, param) {
 function selfClose(node, isBind, isCb, param) {
   var res = '';
   var name = node.leaf(1).token().content();
+  var isCp;
   if(/^[A-Z]/.test(name)) {
+    isCp = true;
     res += 'migi.createCp(';
     res += name;
   }
@@ -79,8 +81,11 @@ function selfClose(node, isBind, isCb, param) {
       res += ',';
     }
     switch(leaf.name()) {
-      case Node.JSXAttribute:
+      case Node.JSXBindAttribute:
         res += attr(leaf, isBind, isCb, param);
+        break;
+      case Node.JSXAttribute:
+        res += attr(leaf, isBind && !isCp, isCb, param);
         break;
       case Node.JSXSpreadAttribute:
         res += spread(leaf);
@@ -93,6 +98,9 @@ function selfClose(node, isBind, isCb, param) {
 function attr(node, isBind, isCb, param) {
   var res = '';
   var key = node.first().token().content();
+  if(key.charAt(0) == '@') {
+    key = key.slice(1);
+  }
   var k = '["' + key + '"';
   res += k + ',';
   var v = node.last();
@@ -100,7 +108,7 @@ function attr(node, isBind, isCb, param) {
     v = v.token().content();
     res += v;
   }
-  else if(/^on[a-zA-Z]/.test(key)) {
+  else if(/^on-?[a-zA-Z]/.test(key)) {
     res += onEvent(v, isBind, isCb, param);
   }
   else {

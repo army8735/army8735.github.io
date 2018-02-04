@@ -76,6 +76,10 @@ var _eventCaseName = require('./eventCaseName');
 
 var _eventCaseName2 = _interopRequireDefault(_eventCaseName);
 
+var _selfClose = require('./selfClose');
+
+var _selfClose2 = _interopRequireDefault(_selfClose);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -83,26 +87,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var SELF_CLOSE = {
-  'img': true,
-  'meta': true,
-  'link': true,
-  'br': true,
-  'basefont': true,
-  'base': true,
-  'col': true,
-  'embed': true,
-  'frame': true,
-  'hr': true,
-  'input': true,
-  'keygen': true,
-  'area': true,
-  'param': true,
-  'source': true,
-  'track': true,
-  'wbr': true
-};
 
 var TOUCH = {
   'swipe': true,
@@ -116,7 +100,7 @@ var TOUCH = {
 
 function convertSelector(selector) {
   if (selector instanceof _Element3.default) {
-    return selector.name + '[migi-uid="' + selector.uid + '"]';
+    return selector.name + '[migi-uid="' + selector.__uid + '"]';
   }
   return selector.replace(/(^|\s|,|])([A-Z][\w$]*)\b/, '$1[migi-name="$2"]');
 }
@@ -171,18 +155,18 @@ function __findEq(name, child, res, first) {
 var VirtualDom = function (_Element) {
   _inherits(VirtualDom, _Element);
 
-  function VirtualDom(name) {
-    var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var children = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  function VirtualDom(uid, name) {
+    var props = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    var children = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
 
     _classCallCheck(this, VirtualDom);
 
     //自闭合标签不能有children
-    if (SELF_CLOSE.hasOwnProperty(name) && children.length) {
+    if (_selfClose2.default.hasOwnProperty(name) && children.length) {
       throw new Error('self-close tag can not has chilren: ' + name);
     }
 
-    var _this = _possibleConstructorReturn(this, (VirtualDom.__proto__ || Object.getPrototypeOf(VirtualDom)).call(this, name, props, children));
+    var _this = _possibleConstructorReturn(this, (VirtualDom.__proto__ || Object.getPrototypeOf(VirtualDom)).call(this, uid, name, props, children));
 
     var self = _this;
     self.__names = null; //从Component根节点到自己的tagName列表，以便css计算
@@ -221,7 +205,7 @@ var VirtualDom = function (_Element) {
           }
         }
       }
-      res += ' migi-uid="' + self.uid + '"';
+      res += ' migi-uid="' + self.__uid + '"';
       //:input要侦听数据绑定
       self.__checkListener();
       //自闭合标签特殊处理
@@ -229,10 +213,44 @@ var VirtualDom = function (_Element) {
         return res + '/>';
       }
       res += '>';
+      //有dangerouslySetInnerHTML直接返回
+      if (self.props.dangerouslySetInnerHTML) {
+        var s = self.props.dangerouslySetInnerHTML;
+        if (s instanceof _Obj2.default) {
+          s = s.toSourceString();
+        } else if (Array.isArray(s)) {
+          s = _util2.default.joinSourceArray(s);
+        } else {
+          s = _util2.default.stringify(s);
+        }
+        res += s;
+      }
       //渲染children
-      res += self.__renderChildren();
+      else {
+          res += self.__renderChildren();
+        }
       res += '</' + self.name + '>';
       return res;
+    }
+    //@override
+
+  }, {
+    key: 'preString',
+    value: function preString() {
+      var self = this;
+      //处理属性
+      for (var i = 0, len = self.__props.length; i < len; i++) {
+        var item = self.__props[i];
+        self.__renderProp(item[0], item[1]);
+      }
+      //使用jaw内联css需解析
+      if (self.__style) {
+        self.__match(true);
+      }
+      //:input要侦听数据绑定
+      self.__checkListener();
+      //渲染children
+      self.__renderChildren();
     }
 
     //始终以缓存的props属性为准，哪怕更改了真实DOM的属性
@@ -442,9 +460,6 @@ var VirtualDom = function (_Element) {
       else if (v instanceof _Obj2.default) {
           //特殊html不转义
           if (k == 'dangerouslySetInnerHTML') {
-            self.once(_Event2.default.DOM, function () {
-              self.element.innerHTML = v.toSourceString();
-            });
             return '';
           }
           var s = v.toString(true);
@@ -474,9 +489,6 @@ var VirtualDom = function (_Element) {
         } else {
           var s = Array.isArray(v) ? _util2.default.joinSourceArray(v) : _util2.default.stringify(v);
           if (k == 'dangerouslySetInnerHTML') {
-            self.once(_Event2.default.DOM, function () {
-              self.element.innerHTML = s;
-            });
             return '';
           }
           if (k == 'className') {
@@ -626,10 +638,11 @@ var VirtualDom = function (_Element) {
         } else if (Array.isArray(v)) {
           var ret;
           v.forEach(function (item, i) {
+            console.log(i, item);
             var cb = item[1];
-            var res = (0, _delegate2.default)(e, item[0], self);
+            var res = (0, _delegate2.default)(e, item[0], self);console.log(res);
             if (res[0]) {
-              if (cb instanceof _Cb2.default) {
+              if (cb instanceof _Cb2.default && _util2.default.isFunction(cb.cb)) {
                 if (i) {
                   cb.cb.call(cb.context, e, self, res[1], tvd);
                 } else {
@@ -938,6 +951,10 @@ var VirtualDom = function (_Element) {
           if (child instanceof VirtualDom) {
             child.__onData(k);
           }
+          // bindProperty #37
+          else {
+              child.__notifyBindProperty(k);
+            }
           option.start++;
           //前面的文本再加一次
           if (!option.first && option.prev == _type2.default.TEXT) {
@@ -1041,18 +1058,18 @@ var VirtualDom = function (_Element) {
     key: '__init',
     value: function __init(name, children) {
       var self = this;
-      self.__selfClose = SELF_CLOSE.hasOwnProperty(name);
+      self.__selfClose = _selfClose2.default.hasOwnProperty(name);
       childParent(children, self);
     }
     //@overwrite
 
   }, {
     key: '__reset',
-    value: function __reset(name) {
-      var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      var children = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    value: function __reset(uid, name) {
+      var props = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+      var children = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
 
-      _get(VirtualDom.prototype.__proto__ || Object.getPrototypeOf(VirtualDom.prototype), '__reset', this).call(this, name, props, children);
+      _get(VirtualDom.prototype.__proto__ || Object.getPrototypeOf(VirtualDom.prototype), '__reset', this).call(this, uid, name, props, children);
       this.__init(name, children);
       this.__hasDes = false;
       return this;
@@ -1090,7 +1107,7 @@ var VirtualDom = function (_Element) {
   }, {
     key: 'element',
     get: function get() {
-      return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.uid + '"]'));
+      return this.__element || (this.__element = document.querySelector(this.name + '[migi-uid="' + this.__uid + '"]'));
     }
   }, {
     key: 'style',

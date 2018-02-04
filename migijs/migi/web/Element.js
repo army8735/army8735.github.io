@@ -22,8 +22,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var uid = 0;
-
 function getDom(dom) {
   if (_util2.default.isString(dom)) {
     return document.querySelector(dom);
@@ -73,19 +71,19 @@ function spread(arr) {
 var Element = function (_Event) {
   _inherits(Element, _Event);
 
-  function Element(name, props, children) {
+  function Element(uid, name, props, children) {
     _classCallCheck(this, Element);
 
     var _this = _possibleConstructorReturn(this, (Element.__proto__ || Object.getPrototypeOf(Element)).call(this));
 
-    _this.__reset(name, props, children);
+    _this.__reset(uid, name, props, children);
     return _this;
   }
 
   _createClass(Element, [{
     key: '__reset',
-    value: function __reset(name, props, children) {
-      this.uid = uid++;
+    value: function __reset(uid, name, props, children) {
+      this.__uid = uid;
       this.__name = name;
       //构建工具中都是arr，手写可能出现hash情况
       if (Array.isArray(props)) {
@@ -126,6 +124,9 @@ var Element = function (_Event) {
       }
     }
   }, {
+    key: 'preString',
+    value: function preString() {}
+  }, {
     key: '__onDom',
     value: function __onDom() {
       this.__dom = true;
@@ -146,6 +147,30 @@ var Element = function (_Event) {
             top.ref[k] = [exist, this];
           } else {
             top.ref[k] = this;
+          }
+        }
+      }
+    }
+  }, {
+    key: '__delRef',
+    value: function __delRef() {
+      var k = this.props.ref;
+      if (!k) {
+        return;
+      }
+      var top = this.top;
+      if (top && top.ref) {
+        var ref = top.ref[k];
+        if (ref) {
+          if (ref === this) {
+            delete top.ref[k];
+          } else if (Array.isArray(ref)) {
+            for (var i = 0, len = ref.length; i < len; i++) {
+              if (ref[i] === this) {
+                ref.splice(i, 1);
+                break;
+              }
+            }
           }
         }
       }
@@ -230,11 +255,6 @@ var Element = function (_Event) {
     key: 'dom',
     get: function get() {
       return this.__dom;
-    }
-  }], [{
-    key: 'resetUid',
-    value: function resetUid() {
-      uid = 0;
     }
   }]);
 
