@@ -37,25 +37,25 @@ exports.default = {
   combo: function combo(klass, name, id, json) {
     var hasId = 0;
     var hasClass = 0;
-    //class可能有多个，任意个class的组合也要匹配
+    // class可能有多个，任意个class的组合也要匹配
     if (klass && klass.length) {
       var comboClass = comboArr(klass, klass.length);
       hasClass = 1;
     }
-    //id、class、name可能单个或组合出现，每种都要匹配
+    // id、class、name可能单个或组合出现，每种都要匹配
     var combo = [name];
     if (id) {
       hasId = 2;
     }
-    //各种*的情况标识
+    // 各种*的情况标识
     var hasStarClass = json.hasOwnProperty('_*.');
     var hasStarId = json.hasOwnProperty('_*#');
     var hasStarIdClass = json.hasOwnProperty('_*.#');
-    //只有当前有_*时说明有*才匹配
+    // 只有当前有_*时说明有*才匹配
     if (json.hasOwnProperty('_*')) {
       combo.push('*');
     }
-    //将各种可能的组合添加进入combo
+    // 将各种可能的组合添加进入combo
     if (hasClass) {
       comboClass.forEach(function (klass) {
         combo.push(klass);
@@ -145,7 +145,7 @@ exports.default = {
             return false;
           }
           break;
-        //除了nth外不支持
+        // 除了nth外不支持
         default:
           if (pseudo.indexOf('nth-child') == 0) {
             var idx = virtualDom.getIdx();
@@ -182,14 +182,14 @@ exports.default = {
     var isMatch = true;
     outer: for (var j = 0, len = attrs.length; j < len; j++) {
       var attr = attrs[j];
-      //[attr]形式，只要有属性即可
+      // [attr]形式，只要有属性即可
       if (attr.length == 1) {
         if (!virtualDom.__cache.hasOwnProperty(attr[0])) {
           isMatch = false;
           break;
         }
       }
-      //[attr=xxx]形式，需比较值
+      // [attr=xxx]形式，需比较值
       else {
           var p = virtualDom.__cache[attr[0]];
           if (p === void 0) {
@@ -234,7 +234,7 @@ exports.default = {
       return true;
     }
     var className = s.match(/\.[a-z\d_-]+/ig);
-    if (className) {
+    if (className && vd.__cache.class) {
       for (var j = className.length - 1; j >= 0; j--) {
         if (!new RegExp('\\b' + className[j].slice(1) + '\\b', 'i').test(vd.__cache.class)) {
           return true;
@@ -242,7 +242,7 @@ exports.default = {
       }
     }
     var id = /#[a-z\d_-]+/i.exec(s);
-    if (id && id[0].toUpperCase() != vd.__cache.id.toUpperCase()) {
+    if (id && vd.__cache.id && id[0].toUpperCase() != vd.__cache.id.toUpperCase()) {
       return true;
     }
   }

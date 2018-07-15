@@ -34,10 +34,9 @@ var Model = function (_Event) {
 
     _this.__uid = 'm' + uid++;
     _this.__name = _this.constructor.__migiName;
-    _this.__ref = []; //以ref为attr的vd快速访问引用
-    _this.__bridgeHash = {}; //桥接记录
-    _this.__bindHash = {}; //缩略语法中是否设置过默认值
-    _this.__ob = []; //被array们的__ob__引用
+    _this.__ref = []; // 以ref为attr的vd快速访问引用
+    _this.__bindHash = {}; // 缩略语法中是否设置过默认值
+    _this.__ob = []; // 被array们的__ob__引用
     return _this;
   }
 
@@ -46,7 +45,7 @@ var Model = function (_Event) {
     value: function __onData(k) {
       k = 'model.' + k;
       this.__ref.forEach(function (cp) {
-        //set触发数据变更时，若已DOM则打开开关
+        // set触发数据变更时，若已DOM则打开开关
         if (cp.dom) {
           cp.__canData = true;
         }
@@ -78,10 +77,10 @@ var Model = function (_Event) {
   return Model;
 }(_Event3.default);
 
-//完全一样的桥接数据流方法，复用
+// 完全一样的桥接数据流方法，复用
 
 
-['__data', '__record', 'bridge', 'bridgeTo', '__unRecord', 'unBridge', 'unBridgeTo', '__initBind', '__getBind', '__setBind', '__array'].forEach(function (k) {
+['__data', '__record', '__unRecord', '__initBind', '__getBind', '__setBind', '__array'].forEach(function (k) {
   Model.prototype[k] = _Component2.default.prototype[k];
 });
 

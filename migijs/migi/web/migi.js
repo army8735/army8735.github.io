@@ -12,10 +12,6 @@ var _Element = require('./Element');
 
 var _Element2 = _interopRequireDefault(_Element);
 
-var _EventBus = require('./EventBus');
-
-var _EventBus2 = _interopRequireDefault(_EventBus);
-
 var _Model = require('./Model');
 
 var _Model2 = _interopRequireDefault(_Model);
@@ -31,10 +27,6 @@ var _Component2 = _interopRequireDefault(_Component);
 var _VirtualDom = require('./VirtualDom');
 
 var _VirtualDom2 = _interopRequireDefault(_VirtualDom);
-
-var _NonVisualComponent = require('./NonVisualComponent');
-
-var _NonVisualComponent2 = _interopRequireDefault(_NonVisualComponent);
 
 var _CacheComponent = require('./CacheComponent');
 
@@ -88,6 +80,10 @@ var _FastClick = require('./FastClick');
 
 var _FastClick2 = _interopRequireDefault(_FastClick);
 
+var _dev = require('./dev');
+
+var _dev2 = _interopRequireDefault(_dev);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var migi = {
@@ -120,11 +116,9 @@ var migi = {
   Event: _Event2.default,
   Model: _Model2.default,
   CacheModel: _CacheModel2.default,
-  EventBus: _EventBus2.default,
-  eventBus: new _EventBus2.default(),
+  eventBus: new _Event2.default(),
   Element: _Element2.default,
   Component: _Component2.default,
-  NonVisualComponent: _NonVisualComponent2.default,
   CacheComponent: _CacheComponent2.default,
   VirtualDom: _VirtualDom2.default,
   Obj: _Obj2.default,
@@ -150,7 +144,8 @@ var migi = {
     var clone = Object.create(migi);
     clone.uid = 0;
     return clone;
-  }
+  },
+  dev: _dev2.default
 };
 
 if (typeof window != 'undefined') {

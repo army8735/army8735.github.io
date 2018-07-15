@@ -63,7 +63,17 @@ function elem(node, isBind, isCb, param) {
 }
 function selfClose(node, isBind, isCb, param) {
   var res = '';
-  var name = node.leaf(1).token().content();
+  var name;
+  var first = node.leaf(1);
+  if(first.isToken()) {
+    name = first.token().content();
+  }
+  else if(first.name() == Node.JSXMemberExpression) {
+    name = first.first().token().content();
+    for(var i = 1, len = first.size(); i < len; i++) {
+      name += first.leaf(i).token().content();
+    }
+  }
   var isCp;
   if(/^[A-Z]/.test(name)) {
     isCp = true;
@@ -126,12 +136,26 @@ function spread(node) {
 }
 function child(node, isBind, isCb, param) {
   if(isBind) {
-    var list = linkage(node.leaf(1), param);
+    var temp = linkage(node.leaf(1), param);
+    var list = temp.arr;
+    var single = temp.single;
     if(list.length == 1) {
-      return 'new migi.Obj("' + list[0] + '",this,function(){return(' + new Tree(isCb).parse(node).replace(/^(\s*)\{/, '$1').replace(/}(\s*)$/, '$1') + ')})';
+      return 'new migi.Obj("'
+        + list[0]
+        + '",this,function(){return('
+        + new Tree(isCb).parse(node).replace(/^(\s*)\{/, '$1').replace(/}(\s*)$/, '$1')
+        + ')}'
+        + (single ? ',true' : '')
+        + ')';
     }
     else if(list.length > 1) {
-      return 'new migi.Obj(' + JSON.stringify(list) + ',this,function(){return(' + new Tree(isCb).parse(node).replace(/^(\s*)\{/, '$1').replace(/}(\s*)$/, '$1') + ')})';
+      return 'new migi.Obj('
+        + JSON.stringify(list)
+        + ',this,function(){return('
+        + new Tree(isCb).parse(node).replace(/^(\s*)\{/, '$1').replace(/}(\s*)$/, '$1')
+        + ')}'
+        + (single ? ',true' : '')
+        + ')';
     }
     else {
       return new InnerTree(param).parse(node).replace(/^(\s*)\{/, '$1').replace(/}(\s*)$/, '$1');

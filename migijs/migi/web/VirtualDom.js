@@ -80,6 +80,10 @@ var _selfClose = require('./selfClose');
 
 var _selfClose2 = _interopRequireDefault(_selfClose);
 
+var _dev = require('./dev');
+
+var _dev2 = _interopRequireDefault(_dev);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -133,13 +137,13 @@ function __findAll(name, children, res, first) {
   return res;
 }
 function __findEq(name, child, res, first) {
-  //cp不递归
+  // cp不递归
   if (child instanceof _Component2.default) {
     if (child instanceof name) {
       res.push(child);
     }
   }
-  //vd递归
+  // vd递归
   else {
       if (child instanceof name) {
         res.push(child);
@@ -161,26 +165,26 @@ var VirtualDom = function (_Element) {
 
     _classCallCheck(this, VirtualDom);
 
-    //自闭合标签不能有children
+    // 自闭合标签不能有children
     if (_selfClose2.default.hasOwnProperty(name) && children.length) {
-      throw new Error('self-close tag can not has chilren: ' + name);
+      throw new Error('self-close tag can not has children: ' + name);
     }
 
     var _this = _possibleConstructorReturn(this, (VirtualDom.__proto__ || Object.getPrototypeOf(VirtualDom)).call(this, uid, name, props, children));
 
     var self = _this;
-    self.__names = null; //从Component根节点到自己的tagName列表，以便css计算
-    self.__classes = null; //同上，class列表
-    self.__ids = null; //同上，id列表
-    self.__inline = null; //昏村本身props的style属性
-    self.__hover = false; //是否处于鼠标hover状态
-    self.__active = false; //是否处于鼠标active状态
-    self.__listener = null; //添加的event的cb引用，remove时使用
+    self.__names = null; // 从Component根节点到自己的tagName列表，以便css计算
+    self.__classes = null; // 同上，class列表
+    self.__ids = null; // 同上，id列表
+    self.__inline = null; // 昏村本身props的style属性
+    self.__hover = false; // 是否处于鼠标hover状态
+    self.__active = false; // 是否处于鼠标active状态
+    self.__listener = null; // 添加的event的cb引用，remove时使用
     // self.__init(name, children);
     return _this;
   }
 
-  //@override
+  // @override
 
 
   _createClass(VirtualDom, [{
@@ -188,13 +192,13 @@ var VirtualDom = function (_Element) {
     value: function toString() {
       var self = this;
       var res = '<' + self.name;
-      //处理属性
+      // 处理属性
       for (var i = 0, len = self.__props.length; i < len; i++) {
         var item = self.__props[i];
         var s = self.__renderProp(item[0], item[1]);
         res += s;
       }
-      //使用jaw内联css需解析
+      // 使用jaw内联css需解析
       if (self.__style) {
         var s = self.__match(true);
         if (s) {
@@ -206,14 +210,14 @@ var VirtualDom = function (_Element) {
         }
       }
       res += ' migi-uid="' + self.__uid + '"';
-      //:input要侦听数据绑定
+      // :input要侦听数据绑定
       self.__checkListener();
-      //自闭合标签特殊处理
+      // 自闭合标签特殊处理
       if (self.__selfClose) {
         return res + '/>';
       }
       res += '>';
-      //有dangerouslySetInnerHTML直接返回
+      // 有dangerouslySetInnerHTML直接返回
       if (self.props.dangerouslySetInnerHTML) {
         var s = self.props.dangerouslySetInnerHTML;
         if (s instanceof _Obj2.default) {
@@ -225,40 +229,40 @@ var VirtualDom = function (_Element) {
         }
         res += s;
       }
-      //渲染children
+      // 渲染children
       else {
           res += self.__renderChildren();
         }
       res += '</' + self.name + '>';
       return res;
     }
-    //@override
+    // @override
 
   }, {
     key: 'preString',
     value: function preString() {
       var self = this;
-      //处理属性
+      // 处理属性
       for (var i = 0, len = self.__props.length; i < len; i++) {
         var item = self.__props[i];
         self.__renderProp(item[0], item[1]);
       }
-      //使用jaw内联css需解析
+      // 使用jaw内联css需解析
       if (self.__style) {
         self.__match(true);
       }
-      //:input要侦听数据绑定
+      // :input要侦听数据绑定
       self.__checkListener();
-      //渲染children
+      // 渲染children
       self.__renderChildren();
     }
 
-    //始终以缓存的props属性为准，哪怕更改了真实DOM的属性
+    // 始终以缓存的props属性为准，哪怕更改了真实DOM的属性
 
   }, {
     key: 'isFirst',
     value: function isFirst(children) {
-      //本身就是Component的唯一节点
+      // 本身就是Component的唯一节点
       if (this.parent instanceof _Component2.default) {
         return true;
       }
@@ -282,7 +286,7 @@ var VirtualDom = function (_Element) {
   }, {
     key: 'isLast',
     value: function isLast(children) {
-      //本身就是Component的唯一节点
+      // 本身就是Component的唯一节点
       if (this.parent instanceof _Component2.default) {
         return true;
       }
@@ -441,14 +445,26 @@ var VirtualDom = function (_Element) {
       return -1;
     }
   }, {
+    key: 'closest',
+    value: function closest(sel) {
+      var cur = this;
+      while (cur && cur != this.top) {
+        if (_matchUtil2.default.nci(sel, cur)) {
+          cur = cur.parent;
+          continue;
+        }
+        return cur;
+      }
+    }
+  }, {
     key: '__renderProp',
     value: function __renderProp(k, v) {
       var self = this;
       var res = '';
-      //onxxx侦听处理
+      // onxxx侦听处理
       if (/^on[a-zA-Z]/.test(k)) {
         self.once(_Event2.default.DOM, function (fake) {
-          //防止fake未真实添加DOM
+          // 防止fake未真实添加DOM
           if (fake) {
             return;
           }
@@ -456,9 +472,9 @@ var VirtualDom = function (_Element) {
           self.__addEvt(name, v);
         });
       }
-      //Obj类型绑定处理
+      // Obj类型绑定处理
       else if (v instanceof _Obj2.default) {
-          //特殊html不转义
+          // 特殊html不转义
           if (k == 'dangerouslySetInnerHTML') {
             return '';
           }
@@ -469,7 +485,7 @@ var VirtualDom = function (_Element) {
             k = 'for';
           }
           self.__cache[k] = s;
-          //特殊属性根据类型输出或是在DOM后设置prop
+          // 特殊属性根据类型输出或是在DOM后设置prop
           var special = _attr2.default.special(self.name, k);
           switch (special) {
             case _attr2.default.RENDER_EXIST:
@@ -497,7 +513,7 @@ var VirtualDom = function (_Element) {
             k = 'for';
           }
           self.__cache[k] = s;
-          //特殊属性根据类型输出或是在DOM后设置prop
+          // 特殊属性根据类型输出或是在DOM后设置prop
           var special = _attr2.default.special(self.name, k);
           switch (special) {
             case _attr2.default.RENDER_EXIST:
@@ -515,7 +531,7 @@ var VirtualDom = function (_Element) {
               break;
           }
         }
-      //使用jaw导入样式时不输出class和id，以migi-class和migi-id取代之
+      // 使用jaw导入样式时不输出class和id，以migi-class和migi-id取代之
       if (self.__style) {
         switch (k) {
           case 'class':
@@ -558,22 +574,22 @@ var VirtualDom = function (_Element) {
               }
               var type = self.__cache.type || '';
               switch (type.toLowerCase()) {
-                //一些无需联动
-                //case 'button':
-                //case 'hidden':
-                //case 'image':
-                //case 'file':
-                //case 'reset':
-                //case 'submit':
+                // 一些无需联动
+                // case 'button':
+                // case 'hidden':
+                // case 'image':
+                // case 'file':
+                // case 'reset':
+                // case 'submit':
                 //  break;
-                //只需侦听change
+                // 只需侦听change
                 case 'checkbox':
                 case 'radio':
                 case 'range':
                 case 'color':
                   self.__addListener('change', cb);
                   break;
-                //其它无需change，但input等
+                // 其它无需change，但input等
                 default:
                   self.__addListener(['input', 'paste', 'cut', 'change'], cb);
                   break;
@@ -602,8 +618,8 @@ var VirtualDom = function (_Element) {
           }
         }
       }
-      //textarea的value在标签的childNodes里，这里只处理单一child情况
-      //children有多个其中一个是text有歧义，忽视
+      // textarea的value在标签的childNodes里，这里只处理单一child情况
+      // children有多个其中一个是text有歧义，忽视
       else if (self.name == 'textarea') {
           if (self.children.length == 1) {
             var child = self.children[0];
@@ -669,21 +685,21 @@ var VirtualDom = function (_Element) {
           self.__addListener(name[i], cb);
         }
       } else {
-        //一般没有event，也就不生成对象防止diff比对
+        // 一般没有event，也就不生成对象防止diff比对
         self.__listener = self.__listener || [];
         if (name == 'tap') {
           name = 'click';
         }
         var elem = self.element;
-        //touch特殊对待
+        // touch特殊对待
         if (TOUCH.hasOwnProperty(name)) {
           (0, _touch2.default)(this, name, cb, self.__listener);
           return;
         }
-        //记录下来留待清除
+        // 记录下来留待清除
         self.__listener.push([name, cb]);
         elem.addEventListener(_eventCaseName2.default[name] || name, cb);
-        //onLoad可能因为缓存不发生
+        // onLoad可能因为缓存不发生
         if (name == 'load' && elem.complete) {
           var event = document.createEvent('Event');
           event.initEvent('load', true, true);
@@ -738,22 +754,22 @@ var VirtualDom = function (_Element) {
       return res;
     }
 
-    //@override
+    // @override
 
   }, {
     key: '__onDom',
     value: function __onDom(fake) {
       _get(VirtualDom.prototype.__proto__ || Object.getPrototypeOf(VirtualDom.prototype), '__onDom', this).call(this);
       var self = this;
-      //fake无需插入空白节点，直接递归通知
+      // fake无需插入空白节点，直接递归通知
       if (fake) {
         _Component2.default.fakeDom(self.children);
         return;
       }
-      //start标明真实DOM索引，因为相邻的文本会合并为一个text节点
+      // start标明真实DOM索引，因为相邻的文本会合并为一个text节点
       var option = { start: 0, first: true };
       self.__checkBlank(self.children, option);
-      //可能最后一个是空白text，或没有children，需特殊判断下插入
+      // 可能最后一个是空白text，或没有children，需特殊判断下插入
       if (option.empty || option.first) {
         self.__insertBlank(option.start);
       }
@@ -766,14 +782,14 @@ var VirtualDom = function (_Element) {
         for (var i = 0, len = item.length; i < len; i++) {
           self.__checkBlank(item[i], option);
         }
-      } else if (item instanceof _Element3.default && !(item instanceof migi.NonVisualComponent)) {
-        //前面的连续的空白节点需插入一个空TextNode
+      } else if (_util2.default.isDom(item)) {
+        // 前面的连续的空白节点需插入一个空TextNode
         if (option.empty) {
           self.__insertBlank(option.start);
         }
-        //递归通知DOM事件，增加start索引
+        // 递归通知DOM事件，增加start索引
         option.start++;
-        //前方文本节点需再增1次，因为文本节点自身不涉及start索引逻辑
+        // 前方文本节点需再增1次，因为文本节点自身不涉及start索引逻辑
         if (option.prev == _type2.default.TEXT) {
           option.start++;
         }
@@ -784,10 +800,7 @@ var VirtualDom = function (_Element) {
       } else if (item instanceof _Obj2.default) {
         self.__checkBlank(item.v, option);
       } else if (isEmptyText(item)) {
-        if (item instanceof migi.NonVisualComponent) {
-          item.emit(_Event2.default.DOM);
-        }
-        //前方如有兄弟文本节点，无需插入，否则先记录empty，等后面检查是否有非空text出现，再插入空白节点
+        // 前方如有兄弟文本节点，无需插入，否则先记录empty，等后面检查是否有非空text出现，再插入空白节点
         if (option.prev == _type2.default.TEXT) {
           return;
         }
@@ -795,7 +808,7 @@ var VirtualDom = function (_Element) {
         option.prev = _type2.default.TEXT;
         option.first = false;
       }
-      //一旦是个非空text，之前记录的空text将无效，因为相邻的text会合并为一个text节点
+      // 一旦是个非空text，之前记录的空text将无效，因为相邻的text会合并为一个text节点
       else {
           option.empty = false;
           option.prev = _type2.default.TEXT;
@@ -808,27 +821,27 @@ var VirtualDom = function (_Element) {
       var blank = document.createTextNode('');
       var elem = this.element;
       var cns = elem.childNodes;
-      //可能仅一个空文本节点，或最后一个空文本节点
+      // 可能仅一个空文本节点，或最后一个空文本节点
       var length = cns.length;
       if (!length || start >= length) {
         elem.appendChild(blank);
       }
-      //插入
+      // 插入
       else {
           elem.insertBefore(blank, cns[start]);
         }
     }
-    //@override
+    // @override
 
   }, {
     key: '__onData',
-    value: function __onData(k) {
+    value: function __onData(k, opt) {
       var self = this;
-      //尚未添加到dom时无效
+      // 尚未添加到dom时无效
       if (!self.dom) {
         return;
       }
-      //联动属性值
+      // 联动属性值
       for (var i = 0, len = self.__props.length; i < len; i++) {
         var item = self.__props[i];
         var key = item[0];
@@ -837,7 +850,7 @@ var VirtualDom = function (_Element) {
           var change = false;
           var vk = Array.isArray(k) ? 1 : 0;
           var ok = Array.isArray(item.k) ? 2 : 0;
-          switch (vk + ok) {
+          switch (vk | ok) {
             case 0:
               change = k == item.k;
               break;
@@ -868,46 +881,43 @@ var VirtualDom = function (_Element) {
           }
         }
       }
-      //利用索引更新，子节点可能为文本、Component、VirtualDom，以及数组
-      //其中只有文本节点需要自己更新，记录其索引，组件和VirtualDom递归通知更新
-      //由于渲染时相邻的文本变量和String文本同为一个文本节点，因此start为真实DOM的索引
-      //当文本节点时start不更新
-      //Obj类型的判断type和count，及为文本时是否为空
-      var ranges = [];
-      var option = { start: 0, record: [], first: true };
-      var history;
+      // 利用索引更新，子节点可能为文本、Component、VirtualDom，以及数组
+      // 其中只有文本节点需要自己更新，记录其索引，组件和VirtualDom递归通知更新
+      // 由于渲染时相邻的文本变量和String文本同为一个文本节点，因此start为真实DOM的索引，history和record为vd索引
+      // 当文本节点时start不更新
+      // Obj类型的判断type和count，及为文本时是否为空
+      var record = { start: 0, range: [], history: [], first: true };
       var children = self.children;
       for (var index = 0, len = children.length; index < len; index++) {
         var child = children[index];
-        //history记录着当前child索引，可能它是个数组，递归记录
-        history = [index];
-        self.__checkObj(k, child, ranges, option, history);
+        record.index = [index];
+        self.__checkObj(k, child, record, opt);
       }
-      if (ranges.length) {
-        //textarea特殊判断
-        if (self.name == 'textarea') {
-          self.__updateAttr('value', _range2.default.value(ranges[0], self.children));
+      if (record.range.length) {
+        // textarea特殊判断
+        if (self.__name == 'textarea') {
+          self.__updateAttr('value', _range2.default.value(record.range[0], self.children));
           return;
         }
-        for (var i = ranges.length - 1; i >= 0; i--) {
-          _range2.default.update(ranges[i], self.children, self.element);
+        for (var i = 0, len = record.range.length; i < len; i++) {
+          _range2.default.update(record.range[i], self.children, self.element);
         }
       }
     }
-    //option.first标明是否第一个，因为child为数组时会展开，当child不是第1个时其展开项都有prev
+    // record.first标明是否第一个，因为child为数组时会展开，当child不是第1个时其展开项都有prev
 
   }, {
     key: '__checkObj',
-    value: function __checkObj(k, child, ranges, option, history) {
+    value: function __checkObj(k, child, record, opt) {
       var self = this;
-      //当Component和VirtualDom则start++，且前面是非空文本节点时再++，因为有2个节点
-      //文本节点本身不会增加索引，因为可能有相邻的
+      // 当Component和VirtualDom则start++，且前面是非空文本节点时再++，因为有2个节点
+      // 文本节点本身不会增加索引，因为可能有相邻的
       if (child instanceof _Obj2.default) {
-        //可能Obj的关联是个列表，触发的变量name也是列表
+        // 可能Obj的关联是个列表，触发的变量name也是列表
         var change = false;
         var vk = Array.isArray(k) ? 1 : 0;
         var ok = Array.isArray(child.k) ? 2 : 0;
-        switch (vk + ok) {
+        switch (vk | ok) {
           case 0:
             change = k == child.k;
             break;
@@ -930,66 +940,71 @@ var VirtualDom = function (_Element) {
             }
             break;
         }
-        //当可能发生变化时才进行比对
+        // 当可能发生变化时才进行比对
         if (change) {
           var ov = child.v;
-          //对比是否真正发生变更
+          // 对比是否真正发生变更
           if (child.update(ov)) {
-            _domDiff2.default.diff(this.element, ov, child.v, ranges, option, history, this);
+            _domDiff2.default.diff(this, this.element, ov, child.v, record, _dev2.default.optimizeArrayDiff && child.single && opt);
           } else {
-            self.__checkObj(k, child.v, ranges, option, history);
+            self.__checkObj(k, child.v, record, opt);
           }
         } else {
-          self.__checkObj(k, child.v, ranges, option, history);
+          self.__checkObj(k, child.v, record, opt);
         }
       }
-      //递归通知，增加索引
-      else if (child instanceof _Element3.default) {
-          delete option.t2d;
-          delete option.d2t;
+      // 递归通知，增加索引
+      else if (_util2.default.isDom(child)) {
           if (child instanceof VirtualDom) {
-            child.__onData(k);
+            child.__onData(k, opt);
           }
           // bindProperty #37
           else {
               child.__notifyBindProperty(k);
             }
-          option.start++;
-          //前面的文本再加一次
-          if (!option.first && option.prev == _type2.default.TEXT) {
-            option.start++;
+          record.start++;
+          // 前面的文本再加一次索引
+          if (!record.first && record.prev == _type2.default.TEXT) {
+            record.start++;
           }
-          option.prev = _type2.default.DOM;
+          record.state = _type2.default.DOM_TO_DOM;
+          record.prev = _type2.default.DOM;
         } else if (Array.isArray(child)) {
           if (child.length) {
-            //数组类型记得递归记录history索引，结束后出栈
-            history.push(0);
+            // 数组类型记得递归记录history索引，结束后出栈
+            record.index.push(0);
             for (var i = 0, len = child.length; i < len; i++) {
               var item = child[i];
-              history[history.length - 1] = i;
-              //第1个同时作为children的第1个要特殊处理
-              self.__checkObj(k, item, ranges, option, history);
+              record.index[record.index.length - 1] = i;
+              // 第1个同时作为children的第1个要特殊处理
+              self.__checkObj(k, item, record, opt);
             }
-            history.pop();
+            record.index.pop();
           }
-          //注意空数组算text类型
+          // 注意空数组算text类型
           else {
-              _domDiff2.default.check(option, this.element, child, ranges, history);
-              _range2.default.record(history, option);
-              option.prev = _type2.default.TEXT;
+              _domDiff2.default.checkText(this.element, child, record);
+              if (record.first || record.prev == _type2.default.DOM) {
+                _domDiff2.default.recordRange(record);
+              }
+              record.state = _type2.default.TEXT_TO_TEXT;
+              record.prev = _type2.default.TEXT;
             }
         }
-        //else其它情况为文本节点或者undefined忽略
+        // 其它情况为文本节点或者undefined忽略
         else {
-            _domDiff2.default.check(option, this.element, child, ranges, history);
-            _range2.default.record(history, option);
-            option.prev = _type2.default.TEXT;
+            _domDiff2.default.checkText(this.element, child, record);
+            if (record.first || record.prev == _type2.default.DOM) {
+              _domDiff2.default.recordRange(record);
+            }
+            record.state = _type2.default.TEXT_TO_TEXT;
+            record.prev = _type2.default.TEXT;
           }
-      option.first = false;
+      record.first = false;
     }
-    //TODO: 一个神奇的现象，实体字符作为attr在初始化时作为String拼接和在setAttribute中表现不一致
-    //如&nbsp;会成为charCode 160的Non-breaking space，而非32的Normal space
-    //但是setAttribute会保留实体字符形式
+    // TODO: 一个神奇的现象，实体字符作为attr在初始化时作为String拼接和在setAttribute中表现不一致
+    // 如&nbsp;会成为charCode 160的Non-breaking space，而非32的Normal space
+    // 但是setAttribute会保留实体字符形式
 
   }, {
     key: '__updateAttr',
@@ -999,13 +1014,13 @@ var VirtualDom = function (_Element) {
           v = '';
         }
         this.element.innerHTML = _util2.default.stringify(v);
-        //清空后创建空字符节点
+        // 清空后创建空字符节点
         this.__insertBlank(0);
         return;
       }
       _attr2.default.update(this.name, this.element, k, v, this.__style);
       this.__cache[k] = v;
-      //使用了jaw内联解析css
+      // 使用了jaw内联解析css
       if (this.__style) {
         this.__updateStyle();
       }
@@ -1014,10 +1029,10 @@ var VirtualDom = function (_Element) {
     key: '__match',
     value: function __match(first) {
       this.__inline = this.__cache.style || '';
-      //预处理class和id，class分为数组形式，id判断#开头
+      // 预处理class和id，class分为数组形式，id判断#开头
       this.__initCI();
       var matches = (0, _match2.default)(this.__names, this.__classes, this.__ids, this.__style || { default: {} }, this, first);
-      //本身的inline最高优先级追加到末尾
+      // 本身的inline最高优先级追加到末尾
       return matches + this.__inline;
     }
   }, {
@@ -1031,7 +1046,7 @@ var VirtualDom = function (_Element) {
         this.__classes = [];
         this.__ids = [];
       }
-      //预处理class和id，class分为数组形式，id判断#开头
+      // 预处理class和id，class分为数组形式，id判断#开头
       this.__classes.push(_matchUtil2.default.splitClass(this.__cache['class']));
       this.__ids.push(_matchUtil2.default.preId(this.__cache.id));
     }
@@ -1042,7 +1057,7 @@ var VirtualDom = function (_Element) {
       if (this.element.getAttribute('style') != s) {
         this.element.setAttribute('style', s);
       }
-      //diff调用初始化nvd时自上而下，忽略children
+      // diff调用初始化nvd时自上而下，忽略children
       if (first) {
         return;
       }
@@ -1060,7 +1075,7 @@ var VirtualDom = function (_Element) {
       self.__selfClose = _selfClose2.default.hasOwnProperty(name);
       childParent(children, self);
     }
-    //@overwrite
+    // @overwrite
 
   }, {
     key: '__reset',
@@ -1131,7 +1146,7 @@ var VirtualDom = function (_Element) {
   return VirtualDom;
 }(_Element3.default);
 
-//静态文本节点，包括空、undefined、null、空数组
+// 静态文本节点，包括空、undefined、null、空数组
 
 
 function isEmptyText(item) {

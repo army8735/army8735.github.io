@@ -19,12 +19,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Obj = function () {
-  function Obj(k, context, cb) {
+  function Obj(k, context, cb, single) {
     _classCallCheck(this, Obj);
 
     this.k = k;
     this.context = context;
     this.cb = cb;
+    this.single = single;
     this.setV(cb.call(context));
   }
 
@@ -33,12 +34,12 @@ var Obj = function () {
     value: function setV(v) {
       this.v = _util2.default.clone(v);
     }
-    //prop为true时作为prop渲染转义，否则为innerHTML转义
+    // prop为true时作为prop渲染转义，否则为innerHTML转义
 
   }, {
     key: 'toString',
     value: function toString(prop) {
-      //array调用join包括转码
+      // array调用join包括转码
       if (Array.isArray(this.v)) {
         return _util2.default.joinArray(this.v, prop);
       }

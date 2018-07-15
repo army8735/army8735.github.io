@@ -44,9 +44,9 @@ function isOrigin(o) {
   return o === void 0 || o === null || util.isBoolean(o) || util.isNumber(o) || util.isString(o);
 }
 function _equal(a, b) {
-  //vd常量
+  // vd常量
   if (a instanceof _Element2.default || b instanceof _Element2.default) {
-    return a == b;
+    return a === b;
   }
   if (isOrigin(a) || isOrigin(b)) {
     return a === b;
@@ -131,6 +131,25 @@ function encodeHtml(s, prop) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
+function linear(arr, res) {
+  res = res || [];
+  if (Array.isArray(res)) {
+    res.forEach(function (item) {
+      res.push(item);
+    });
+  } else {
+    res.push(arr);
+  }
+  return res;
+}
+
+function arrFirst(arr) {
+  if (Array.isArray(arr)) {
+    return arrFirst(arr[0]);
+  }
+  return arr;
+}
+
 var util = {
   clone: function clone(obj) {
     return _clone(obj);
@@ -153,6 +172,12 @@ var util = {
   },
   joinSourceArray: function joinSourceArray(arr) {
     return _joinSourceArray(arr);
+  },
+
+  linear: linear,
+  arrFirst: arrFirst,
+  isDom: function isDom(obj) {
+    return obj instanceof _Element2.default;
   }
 };
 

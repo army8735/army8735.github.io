@@ -14,8 +14,8 @@ var NUM = 0;
 var STR = 1;
 var BOOL = 2;
 
-var RENDER_EXIST = 1;
-var RENDER_DOM = 2;
+var RENDER_EXIST = 1; // 只有存在时才渲染输出
+var RENDER_DOM = 2; // 需要在domready后设置
 
 var SPECIALS = {
   button: {
@@ -58,6 +58,18 @@ var SPECIALS = {
     disabled: RENDER_EXIST,
     readOnly: RENDER_EXIST,
     readonly: RENDER_EXIST
+  },
+  audio: {
+    autoplay: RENDER_EXIST,
+    controls: RENDER_EXIST,
+    loop: RENDER_EXIST,
+    muted: RENDER_EXIST
+  },
+  video: {
+    autoplay: RENDER_EXIST,
+    controls: RENDER_EXIST,
+    loop: RENDER_EXIST,
+    muted: RENDER_EXIST
   }
 };
 
@@ -105,6 +117,18 @@ var SETS = {
     readonly: BOOL,
     required: BOOL,
     value: STR
+  },
+  audio: {
+    autoplay: BOOL,
+    controls: BOOL,
+    loop: BOOL,
+    muted: BOOL
+  },
+  video: {
+    autoplay: BOOL,
+    controls: BOOL,
+    loop: BOOL,
+    muted: BOOL
   }
 };
 
@@ -128,7 +152,7 @@ exports.default = {
     }
   },
   update: function update(name, element, k, v, jaw) {
-    //特殊对待的prop，用js赋值
+    // 特殊对待的prop，用js赋值
     if (SETS.hasOwnProperty(name)) {
       var o = SETS[name];
       if (o.hasOwnProperty(k)) {
@@ -151,7 +175,7 @@ exports.default = {
         return;
       }
     }
-    //普通的setAttribute
+    // 普通的setAttribute
     switch (k) {
       case 'className':
         k = 'class';
@@ -160,7 +184,7 @@ exports.default = {
         k = 'for';
         break;
     }
-    //jaw导入style时改写migi-前缀
+    // jaw导入style时改写migi-前缀
     if (jaw) {
       switch (k) {
         case 'id':
