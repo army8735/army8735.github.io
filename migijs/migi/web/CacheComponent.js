@@ -37,7 +37,7 @@ var CacheComponent = function (_Component) {
     var _this = _possibleConstructorReturn(this, (_ref = CacheComponent.__proto__ || Object.getPrototypeOf(CacheComponent)).call.apply(_ref, [this].concat(data)));
 
     _this.__handler = {}; // 缓存data key的hash
-    _this.__ccb = false; // 缓存1ms再数据分发的是否在缓存时间内的状态标识
+    // this.__ccb = false; // 缓存1ms再数据分发的是否在缓存时间内的状态标识
     _this.__timeout;
     _this.__timecb;
     return _this;
@@ -72,7 +72,9 @@ var CacheComponent = function (_Component) {
           // 可能被清空
           if (keys.length) {
             self.__onData(keys);
-            self.emit(_Event2.default.DATA, keys.length > 1 ? keys : keys[0]);
+            self.emit(_Event2.default.DATA, keys, keys.map(function (key) {
+              return self[key];
+            }));
           }
         }, 0);
       }

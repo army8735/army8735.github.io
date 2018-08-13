@@ -36,13 +36,13 @@ var _Model = require('./Model');
 
 var _Model2 = _interopRequireDefault(_Model);
 
-var _FastClick = require('./FastClick');
-
-var _FastClick2 = _interopRequireDefault(_FastClick);
-
 var _array = require('./array');
 
 var _array2 = _interopRequireDefault(_array);
+
+var _fixEvent = require('./fixEvent');
+
+var _fixEvent2 = _interopRequireDefault(_fixEvent);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -69,9 +69,9 @@ var Component = function (_Element) {
     self.__name = self.constructor.__migiName;
     self.__virtualDom = null; // 根节点vd引用
     self.__ref = {}; // 以ref为attr的vd快速访问引用
-    self.__stop = null; // 停止冒泡的fn引用
-    self.__model = null; // 数据模型引用
-    self.__allowPropagation = true; // 默认是否允许冒泡
+    // self.__stop = null; // 停止冒泡的fn引用
+    // self.__model = null; // 数据模型引用
+    // self.__stopPropagation = false; // 默认允许冒泡
     // self.__canData = false; // 防止添加至DOM前触发无谓的数据更新
     self.__bindHash = {}; // 缩略语法中是否设置过默认值
     self.__ob = []; // 被array们的__ob__引用
@@ -209,14 +209,17 @@ var Component = function (_Element) {
       }
       // 无覆盖render时渲染标签的children；有时渲染render的children
       // 指定不允许冒泡，默认是全部冒泡
-      if (self.props.allowPropagation == 'true') {
+      if (self.props.stopPropagation === true || self.props.stopPropagation === 'true') {
+        // stop
+      } else if (self.props.stopPropagation === false || self.props.stopPropagation === 'false') {
         return;
-      } else if (self.props.allowPropagation != 'false' && self.allowPropagation) {
+      } else if (!self.stopPropagation) {
         return;
       }
       // 将所有组件DOM事件停止冒泡，形成shadow特性，但不能阻止捕获
       function stopPropagation(e) {
         e = e || window.event;
+        (0, _fixEvent2.default)(e);
         if (e.target != elem && e.srcElement != elem) {
           e.cancelBubble = true;
           e.stopPropagation && e.stopPropagation();
@@ -227,8 +230,6 @@ var Component = function (_Element) {
       STOP.forEach(function (name) {
         elem.addEventListener(name, stopPropagation);
       });
-      // FastClick处理移动点击点透
-      _FastClick2.default.attach(elem);
     }
   }, {
     key: '__data',
@@ -239,7 +240,7 @@ var Component = function (_Element) {
         self.__canData = true;
       }
       self.__onData(k, opt);
-      self.emit(_Event2.default.DATA, k);
+      self.emit(_Event2.default.DATA, k, self[k]);
     }
     // @overwrite
 
@@ -334,12 +335,12 @@ var Component = function (_Element) {
       }
     }
   }, {
-    key: 'allowPropagation',
+    key: 'stopPropagation',
     get: function get() {
-      return this.__allowPropagation;
+      return this.__stopPropagation;
     },
     set: function set(v) {
-      this.__allowPropagation = v;
+      this.__stopPropagation = v;
     }
   }, {
     key: 'element',

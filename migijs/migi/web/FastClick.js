@@ -322,6 +322,20 @@ FastClick.prototype.focus = function (targetElement) {
   if (deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time' && targetElement.type !== 'month' && targetElement.type !== 'number' && targetElement.type !== 'email' && targetElement.type !== 'range') {
     length = targetElement.value.length;
     targetElement.setSelectionRange(length, length);
+
+    // Calling focus() here fixes this:
+    // https://github.com/ftlabs/fastclick/issues/548
+    //
+    // No idea why this works, but calling focus() fixes at least this scenario:
+    // - iOS 11.3
+    // - Cordova with UIWebView
+    // - Open page with datetime input and text input
+    // - Tap datetime input, close the popup
+    // - Quickly tap text input
+    // -> Nothing happens (this is fixed by calling focus())
+    // - Tap text input for a longer time
+    // -> Text input is focused
+    targetElement.focus();
   } else {
     targetElement.focus();
   }
@@ -379,12 +393,18 @@ FastClick.prototype.getTargetElementFromEventTarget = function (eventTarget) {
  * @returns {boolean}
  */
 FastClick.prototype.onTouchStart = function (event) {
-  var targetElement, touch, selection;
+  var targetElement, touch, selection, touchStartTime;
 
   // Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
   if (event.targetTouches.length > 1) {
     return true;
   }
+
+  // iOS (at least 11.4 and 11.4 beta) can return smaller event.timeStamp values after resuming with
+  // Cordova using UIWebView (and possibly also with mobile Safari?), the timeStamp values can also
+  // be negative
+  // https://github.com/ftlabs/fastclick/issues/549
+  touchStartTime = new Date().getTime();
 
   targetElement = this.getTargetElementFromEventTarget(event.target);
   touch = event.targetTouches[0];
@@ -425,14 +445,14 @@ FastClick.prototype.onTouchStart = function (event) {
   }
 
   this.trackingClick = true;
-  this.trackingClickStart = event.timeStamp;
+  this.trackingClickStart = touchStartTime;
   this.targetElement = targetElement;
 
   this.touchStartX = touch.pageX;
   this.touchStartY = touch.pageY;
 
   // Prevent phantom clicks on fast double-tap (issue #36)
-  if (event.timeStamp - this.lastClickTime < this.tapDelay) {
+  if (touchStartTime - this.lastClickTime < this.tapDelay) {
     event.preventDefault();
   }
 
@@ -511,26 +531,33 @@ FastClick.prototype.onTouchEnd = function (event) {
       targetTagName,
       scrollParent,
       touch,
+      touchEndTime,
       targetElement = this.targetElement;
 
   if (!this.trackingClick) {
     return true;
   }
 
+  // iOS (at least 11.4 and 11.4 beta) can return smaller event.timeStamp values after resuming with
+  // Cordova using UIWebView (and possibly also with mobile Safari?), the timeStamp values can also
+  // be negative
+  // https://github.com/ftlabs/fastclick/issues/549
+  touchEndTime = new Date().getTime();
+
   // Prevent phantom clicks on fast double-tap (issue #36)
-  if (event.timeStamp - this.lastClickTime < this.tapDelay) {
+  if (touchEndTime - this.lastClickTime < this.tapDelay) {
     this.cancelNextClick = true;
     return true;
   }
 
-  if (event.timeStamp - this.trackingClickStart > this.tapTimeout) {
+  if (touchEndTime - this.trackingClickStart > this.tapTimeout) {
     return true;
   }
 
   // Reset to prevent wrong click cancel on input (issue #156).
   this.cancelNextClick = false;
 
-  this.lastClickTime = event.timeStamp;
+  this.lastClickTime = touchEndTime;
 
   trackingClickStart = this.trackingClickStart;
   this.trackingClick = false;
@@ -563,7 +590,7 @@ FastClick.prototype.onTouchEnd = function (event) {
 
     // Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
     // Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
-    if (event.timeStamp - trackingClickStart > 100 || deviceIsIOS && window.top !== window && targetTagName === 'input') {
+    if (touchEndTime - trackingClickStart > 100 || deviceIsIOS && window.top !== window && targetTagName === 'input') {
       this.targetElement = null;
       return false;
     }
@@ -748,6 +775,7 @@ FastClick.prototype.destroy = function () {
  */
 FastClick.notNeeded = function (layer) {
   var metaViewport;
+  var iOSVersion;
   var chromeVersion;
   var blackberryVersion;
   var firefoxVersion;
@@ -755,6 +783,19 @@ FastClick.notNeeded = function (layer) {
   // Devices that don't support touch don't need FastClick
   if (typeof window.ontouchstart === 'undefined') {
     return true;
+  }
+
+  // iOS 9.3+ doesn't need FastClick
+  if (deviceIsIOS) {
+    iOSVersion = /OS (\d+)_(\d+)/.exec(userAgent) || [0, 0, 0];
+    var major = +iOSVersion[1];
+    var minor = +iOSVersion[2];
+    if (major > 9 || major === 9 && minor > 2) {
+      metaViewport = document.querySelector('meta[name=viewport]');
+      if (metaViewport && metaViewport.content.indexOf('user-scalable=no') !== -1) {
+        return true;
+      }
+    }
   }
 
   // Chrome version - zero for other browsers
@@ -787,7 +828,7 @@ FastClick.notNeeded = function (layer) {
 
     // BlackBerry 10.3+ does not require Fastclick library.
     // https://github.com/ftlabs/fastclick/issues/251
-    if (blackberryVersion[1] >= 10 && blackberryVersion[2] >= 3) {
+    if (blackberryVersion && blackberryVersion[1] >= 10 && blackberryVersion[2] >= 3) {
       metaViewport = document.querySelector('meta[name=viewport]');
 
       if (metaViewport) {
