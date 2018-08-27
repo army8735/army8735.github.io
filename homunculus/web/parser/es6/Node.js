@@ -107,6 +107,11 @@ var Node = INode.extend(function(type, children) {
   EXPORTCAULSE: 'exportcaulse',
   EXPORTSPEC: 'exportspec',
   ANNOT: 'annot',
+  TEMPLATE: 'template',
+  ASYNCDECL: 'asyncdecl',
+  ASYNCARROWFN: 'asyncarrowfn',
+  ASYNCEXPR: 'asyncexpr',
+  ASYNCMETHOD: 'asyncmethod',
   getKey: function(s) {
     if(!s) {
       throw new Error('empty value');

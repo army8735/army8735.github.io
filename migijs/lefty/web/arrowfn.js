@@ -4,9 +4,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports.default = function (node, res, param) {
+exports.default = function (node, res, param, opt) {
   node.leaves().forEach(function (leaf) {
-    parse(leaf, res, param);
+    parse(leaf, res, param, opt);
   });
 };
 
@@ -23,19 +23,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var Token = _homunculus2.default.getClass('token', 'jsx');
 var Node = _homunculus2.default.getClass('node', 'jsx');
 
-function parse(node, res, param) {
+function parse(node, res, param, opt) {
   switch (node.name()) {
     case Node.EXPRSTMT:
-      var temp = (0, _linkage2.default)(node.first(), param);
-      temp.arr.forEach(function (item) {
+      (0, _linkage2.default)(node.first(), param, opt).arr.forEach(function (item) {
         res[item] = true;
       });
       break;
     case Node.VARSTMT:
       node.leaves().forEach(function (leaf, i) {
-        if (i % 2 == 1) {
+        if (i % 2 === 1) {
           var initlz = leaf.leaf(1);
-          var temp = (0, _linkage2.default)(initlz.leaf(1), param);
+          var temp = (0, _linkage2.default)(initlz.leaf(1), param, opt);
           temp.arr.forEach(function (item) {
             res[item] = true;
           });
@@ -44,34 +43,33 @@ function parse(node, res, param) {
       break;
     case Node.BLOCKSTMT:
       var block = node.first();
-      for (var i = 1, leaves = block.leaves(); i < leaves.length - 1; i++) {
-        parse(leaves[i], res, param);
+      for (var i = 1, _leaves = block.leaves(); i < _leaves.length - 1; i++) {
+        parse(_leaves[i], res, param, opt);
       }
       break;
     case Node.IFSTMT:
       var condition = node.leaf(2);
-      var temp = (0, _linkage2.default)(condition, param);
-      temp.arr.forEach(function (item) {
+      (0, _linkage2.default)(condition, param, opt).arr.forEach(function (item) {
         res[item] = true;
       });
-      parse(node.last(), res, param);
+      parse(node.last(), res, param, opt);
       break;
     case Node.ITERSTMT:
       var peek = node.first().token().content();
-      if (peek == 'for') {
+      if (peek === 'for') {
         var first = node.leaf(2);
         // for(;...
         if (first.isToken()) {} else {
-          if (first.name() == Node.LEXDECL) {
-            parse(first, res, param);
-          } else if (first.name() == Node.VARSTMT) {
-            parse(first, res, param);
+          if (first.name() === Node.LEXDECL) {
+            parse(first, res, param, opt);
+          } else if (first.name() === Node.VARSTMT) {
+            parse(first, res, param, opt);
           }
         }
         var second = node.leaf(3);
         // for(;;...
         if (second.isToken()) {} else {
-          var temp = (0, _linkage2.default)(second, param);
+          var temp = (0, _linkage2.default)(second, param, opt);
           temp.arr.forEach(function (item) {
             res[item] = true;
           });
@@ -80,82 +78,88 @@ function parse(node, res, param) {
         if (third.isToken()) {
           third = node.leaf(5);
           if (third.isToken()) {} else {
-            var temp = (0, _linkage2.default)(third, param);
-            temp.arr.forEach(function (item) {
+            var _temp = (0, _linkage2.default)(third, param, opt);
+            _temp.arr.forEach(function (item) {
               res[item] = true;
             });
           }
         } else {
-          var temp = (0, _linkage2.default)(third, param);
-          temp.arr.forEach(function (item) {
+          var _temp2 = (0, _linkage2.default)(third, param, opt);
+          _temp2.arr.forEach(function (item) {
             res[item] = true;
           });
         }
-      } else if (peek == 'do') {
+      } else if (peek === 'do') {
         var _blockstmt = node.leaf(1);
-        parse(_blockstmt, res, param);
-        var temp = (0, _linkage2.default)(node.leaf(4), param);
-        temp.arr.forEach(function (item) {
+        parse(_blockstmt, res, param, opt);
+        var _temp3 = (0, _linkage2.default)(node.leaf(4), param, opt);
+        _temp3.arr.forEach(function (item) {
           res[item] = true;
         });
-      } else if (peek == 'while') {
-        var temp = (0, _linkage2.default)(node.leaf(2), param);
-        temp.arr.forEach(function (item) {
+      } else if (peek === 'while') {
+        var _temp4 = (0, _linkage2.default)(node.leaf(2), param, opt);
+        _temp4.arr.forEach(function (item) {
           res[item] = true;
         });
         var stmt = node.last();
-        parse(stmt, res, param);
+        parse(stmt, res, param, opt);
       }
       break;
     case Node.LEXDECL:
       node.leaves().forEach(function (leaf, i) {
-        if (i % 2 == 1) {
+        if (i % 2 === 1) {
           var initlz = leaf.leaf(1);
-          var temp = (0, _linkage2.default)(initlz.leaf(1), param);
-          temp.arr.forEach(function (item) {
+          var _temp5 = (0, _linkage2.default)(initlz.leaf(1), param, opt);
+          _temp5.arr.forEach(function (item) {
             res[item] = true;
           });
         }
       });
       break;
     case Node.RETSTMT:
-      var expr = node.leaf(1);
-      var temp = (0, _linkage2.default)(expr, param);
-      temp.arr.forEach(function (item) {
-        res[item] = true;
-      });
+      // 第一层arrowFn的return语句不包含在linkage中，还有递归return的arrowFn也是
+      if (opt.arrowFn.length > 0) {
+        var allReturn = true;
+        for (var _i = 0, len = opt.arrowFn.length; _i < len; _i++) {
+          if (!opt.arrowFn[_i]) {
+            allReturn = false;
+            break;
+          }
+        }
+        if (!allReturn) {
+          (0, _linkage2.default)(node.leaf(1), param, opt).arr.forEach(function (item) {
+            res[item] = true;
+          });
+        }
+      }
       break;
     case Node.WITHSTMT:
-      var expr = node.leaf(2);
-      var temp = (0, _linkage2.default)(expr, param);
-      temp.arr.forEach(function (item) {
+      (0, _linkage2.default)(node.leaf(2), param, opt).arr.forEach(function (item) {
         res[item] = true;
       });
       var blockstmt = node.last();
-      parse(blockstmt, res, param);
+      parse(blockstmt, res, param, opt);
       break;
     case Node.SWCHSTMT:
-      var expr = node.leaf(2);
-      var temp = (0, _linkage2.default)(expr, param);
-      temp.arr.forEach(function (item) {
+      (0, _linkage2.default)(node.leaf(2), param, opt).arr.forEach(function (item) {
         res[item] = true;
       });
       var caseblock = node.last();
-      parse(caseblock, res, param);
+      parse(caseblock, res, param, opt);
       break;
     case Node.CASEBLOCK:
       var leaves = node.leaves();
-      for (var i = 1; i < leaves.length - 1; i++) {
-        var leaf = leaves[i];
-        if (leaf.name() == Node.CASECLAUSE) {
+      for (var _i2 = 1; _i2 < leaves.length - 1; _i2++) {
+        var leaf = leaves[_i2];
+        if (leaf.name() === Node.CASECLAUSE) {
           var expr = leaf.leaf(1);
-          var temp = (0, _linkage2.default)(expr, param);
-          temp.arr.forEach(function (item) {
+          var _temp6 = (0, _linkage2.default)(expr, param, opt);
+          _temp6.arr.forEach(function (item) {
             res[item] = true;
           });
-          parse(leaf.last(), res, param);
-        } else if (leaf.name() == Node.DFTCLAUSE) {
-          parse(leaf.last(), res, param);
+          parse(leaf.last(), res, param, opt);
+        } else if (leaf.name() === Node.DFTCLAUSE) {
+          parse(leaf.last(), res, param, opt);
         }
       }
       break;

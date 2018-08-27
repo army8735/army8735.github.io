@@ -8,10 +8,14 @@ var _Element = require('./Element');
 
 var _Element2 = _interopRequireDefault(_Element);
 
+var _Obj = require('./Obj');
+
+var _Obj2 = _interopRequireDefault(_Obj);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _clone(obj) {
-  if (obj instanceof _Element2.default) {
+  if (obj instanceof _Element2.default || obj instanceof _Obj2.default) {
     return obj;
   }
   if (isOrigin(obj)) {
@@ -45,7 +49,7 @@ function isOrigin(o) {
 }
 function _equal(a, b) {
   // vd常量
-  if (a instanceof _Element2.default || b instanceof _Element2.default) {
+  if (a instanceof _Element2.default || b instanceof _Element2.default || b instanceof _Obj2.default) {
     return a === b;
   }
   if (isOrigin(a) || isOrigin(b)) {
@@ -97,6 +101,8 @@ function _joinArray(arr, prop) {
       res += _joinArray(item);
     } else if (item instanceof _Element2.default) {
       res += prop ? encodeHtml(item.toString(), prop) : item.toString();
+    } else if (item instanceof _Obj2.default) {
+      res += item.toString(prop);
     } else {
       res += encodeHtml(stringify(item), prop);
     }
@@ -150,6 +156,21 @@ function arrFirst(arr) {
   return arr;
 }
 
+function getAllChildrenElement(vd) {
+  var res = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+
+  vd.__children.forEach(function (item) {
+    if (item instanceof migi.VirtualDom) {
+      getAllChildrenElement(item, res);
+      res.push(item);
+    } else if (item instanceof migi.Component) {
+      getAllChildrenElement(item.__virtualDom, res);
+      res.push(item.__virtualDom);
+    }
+  });
+  return res;
+}
+
 var util = {
   clone: function clone(obj) {
     return _clone(obj);
@@ -178,7 +199,8 @@ var util = {
   arrFirst: arrFirst,
   isDom: function isDom(obj) {
     return obj instanceof _Element2.default;
-  }
+  },
+  getAllChildrenElement: getAllChildrenElement
 };
 
 exports.default = util;});

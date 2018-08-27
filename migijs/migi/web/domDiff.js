@@ -52,6 +52,10 @@ var _delegate = require('./delegate');
 
 var _delegate2 = _interopRequireDefault(_delegate);
 
+var _Obj = require('./Obj');
+
+var _Obj2 = _interopRequireDefault(_Obj);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function replaceWith(elem, cns, index, vd, isText) {
@@ -213,6 +217,10 @@ function del(elem, vd, record, temp, last) {
     }
     temp.prev = _type2.default.DOM;
     // 缓存对象池
+    // 遍历孩子vd回收
+    _util2.default.getAllChildrenElement(vd).forEach(function (item) {
+      _cachePool2.default.add(item.__destroy());
+    });
     _cachePool2.default.add(vd.__destroy());
   } else {
     if (temp.prev) {
@@ -428,6 +436,12 @@ function diff(parent, elem, ov, nv, record, opt) {
 }
 
 function diffChild(parent, elem, ovd, nvd, record) {
+  if (ovd instanceof _Obj2.default) {
+    ovd = ovd.v;
+  }
+  if (nvd instanceof _Obj2.default) {
+    nvd = nvd.v;
+  }
   // 新老值是否是数组处理方式不同
   var oa = Array.isArray(ovd);
   var na = Array.isArray(nvd);
@@ -571,6 +585,10 @@ function diffChild(parent, elem, ovd, nvd, record) {
                     break;
                 }
               }
+              // 遍历孩子vd回收
+              _util2.default.getAllChildrenElement(ovd).forEach(function (item) {
+                _cachePool2.default.add(item.__destroy());
+              });
               // 缓存对象池
               _cachePool2.default.add(ovd.__destroy());
               record.state = _type2.default.DOM_TO_TEXT;
@@ -655,6 +673,10 @@ function diffChild(parent, elem, ovd, nvd, record) {
                   nvd.style = parent.style;
                   nvd.emit(_Event2.default.DOM);
                   _hash2.default.set(nvd);
+                  // 遍历孩子vd回收
+                  _util2.default.getAllChildrenElement(ocp ? ovd.__virtualDom : ovd).forEach(function (item) {
+                    _cachePool2.default.add(item.__destroy());
+                  });
                   // 缓存对象池
                   _cachePool2.default.add(ovd.__destroy());
                   break;
@@ -680,6 +702,12 @@ function checkText(elem, vd, record) {
 }
 
 function diffArray(parent, elem, ovd, nvd, record, opt) {
+  if (ovd instanceof _Obj2.default) {
+    ovd = ovd.v;
+  }
+  if (nvd instanceof _Obj2.default) {
+    nvd = nvd.v;
+  }
   var ol = ovd.length;
   var nl = nvd.length;
   var os = ol ? 1 : 0;
@@ -821,6 +849,9 @@ function diffArray(parent, elem, ovd, nvd, record, opt) {
 }
 
 function scan(elem, vd, record) {
+  if (vd instanceof _Obj2.default) {
+    vd = vd.v;
+  }
   if (Array.isArray(vd)) {
     record.index.push(0);
     for (var i = 0, len = vd.length; i < len; i++) {

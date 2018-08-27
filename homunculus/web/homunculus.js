@@ -1,6 +1,7 @@
 define(function(require, exports, module) {var Lexer = require('./lexer/Lexer');
 var CssLexer = require('./lexer/CssLexer');
 var HtmlLexer = require('./lexer/HtmlLexer');
+var EcmascriptLexer = require('./lexer/EcmascriptLexer');
 var JSXLexer = require('./lexer/JSXLexer');
 
 var EcmascriptRule = require('./lexer/rule/EcmascriptRule');
@@ -47,7 +48,7 @@ exports.getClass = function (type, lan) {
         case 'ecmascript':
         case 'as':
         case 'actionscript':
-          return Lexer;
+          return EcmascriptLexer;
         case 'css':
           return CssLexer;
         case 'html':
@@ -92,6 +93,10 @@ exports.getClass = function (type, lan) {
         case 'ecmascript':
           return JsNode;
         case 'es6':
+        case 'es7':
+        case 'es8':
+        case 'es2015':
+        case 'es2016':
           return Es6Node;
         case 'css':
           return CssNode;
@@ -111,6 +116,11 @@ exports.getClass = function (type, lan) {
         case 'es':
         case 'es5':
         case 'ecmascript':
+        case 'es6':
+        case 'es7':
+        case 'es8':
+        case 'es2015':
+        case 'es2016':
           return JsContext;
         default:
           throw new Error('Unsupport Language Context: ' + lan);
@@ -135,6 +145,10 @@ exports.getClass = function (type, lan) {
         case 'es':
         case 'es5':
         case 'es6':
+        case 'es7':
+        case 'es8':
+        case 'es2015':
+        case 'es2016':
         case 'ecmascript':
           return EcmascriptRule;
         case 'css':
@@ -163,9 +177,13 @@ exports.getLexer = function (lan) {
     case 'es5':
     case 'ecmascript':
     case 'es6':
+    case 'es7':
+    case 'es8':
+    case 'es2015':
+    case 'es2016':
     case 'as':
     case 'actionscript':
-      return new Lexer(new EcmascriptRule());
+      return new EcmascriptLexer(new EcmascriptRule());
     case 'css':
       return new CssLexer(new CssRule());
     case "java":
@@ -195,6 +213,10 @@ exports.getParser = function (lan) {
     case 'ecmascript':
       return new JsParser(exports.getLexer(lan));
     case 'es6':
+    case 'es7':
+    case 'es8':
+    case 'es2015':
+    case 'es2016':
       return new Es6Parser(exports.getLexer(lan));
     case 'css':
       return new CssParser(exports.getLexer(lan));
@@ -216,6 +238,11 @@ exports.getContext = function (lan) {
     case 'es':
     case 'es5':
     case 'ecmascript':
+    case 'es6':
+    case 'es7':
+    case 'es8':
+    case 'es2015':
+    case 'es2016':
       return new JsContext();
     default:
       throw new Error('Unsupport Language Context: ' + lan);

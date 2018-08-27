@@ -1,6 +1,6 @@
 define(function(require, exports, module) {var IParser = require('../Parser');
 var character = require('../../util/character');
-var Lexer = require('../../lexer/Lexer');
+var Lexer = require('../../lexer/EcmascriptLexer');
 var Rule = require('../../lexer/rule/EcmascriptRule');
 var Token = require('../../lexer/Token');
 var Node = require('./Node');
@@ -257,7 +257,7 @@ var Parser = IParser.extend(function(lexer) {
     return node;
   },
   stmtlitem: function(yYield, isConstructor) {
-    if(['function', 'class', 'let', 'const'].indexOf(this.look.content()) > -1) {
+    if(['function', 'class', 'let', 'const', 'async'].indexOf(this.look.content()) > -1) {
       return this.decl(yYield);
     }
     else {
@@ -285,6 +285,8 @@ var Parser = IParser.extend(function(lexer) {
           }
         }
         return this.fndecl();
+      case 'async':
+        return this.asyncdecl();
       case 'class':
         return this.classdecl();
       default:
@@ -1090,6 +1092,100 @@ var Parser = IParser.extend(function(lexer) {
     }
     return node;
   },
+  asyncdecl: function() {
+    var node = new Node(Node.ASYNCDECL);
+    //LL2判断是否是async arrow fn
+    for(var i = this.index + 1; i < this.length; i++) {
+      var next = this.tokens[i];
+      if(!S[next.type()] && next.content() != character.ENTER && next.content() != character.LINE) {
+        if(next.content() == '(' || next.content() != 'function') {
+          return this.asyncarrowfn();
+        }
+        else {
+          break;
+        }
+      }
+    }
+    node.add(
+      this.match('async', true),
+      this.match('function'),
+      this.bindid('async function statement requires a name'),
+      this.match('(', 'missing ( before formal parameters'),
+      this.fmparams(),
+      this.match(')', 'missing ) after formal parameters'),
+      this.match('{'),
+      this.fnbody(),
+      this.match('}', 'missing } after function body')
+    );
+    return node;
+  },
+  asyncexpr: function() {
+    var node = new Node(Node.ASYNCEXPR);
+    node.add(
+      this.match('async', true),
+      this.match('function')
+    );
+    if(this.look && this.look.content() == '(') {
+      node.add(
+        this.match('(', 'missing ( before formal parameters'),
+        this.fmparams(),
+        this.match(')', 'missing ) after formal parameters'),
+        this.match('{'),
+        this.fnbody(),
+        this.match('}', 'missing } after function body')
+      );
+    }
+    else {
+      node.add(
+        this.bindid(),
+        this.match('{'),
+        this.fnbody(),
+        this.match('}', 'missing } after function body')
+      );
+    }
+    return node;
+  },
+  asyncarrowfn: function(noIn, noOf, yYield) {
+    var node = new Node(Node.ASYNCARROWFN);
+    node.add(this.match('async', true));
+    if(this.look && this.look.content() == '(') {
+      node.add(this.match());
+      if(this.look && this.look.content() != ')') {
+        node.add(this.bindid());
+      }
+      node.add(
+        this.match(')'),
+        this.match('=>')
+      );
+      if(this.look && this.look.content() == '{') {
+        node.add(
+          this.match(),
+          this.fnbody(),
+          this.match('}')
+        )
+      }
+      else {
+        node.add(this.assignexpr());
+      }
+    }
+    else {
+      node.add(
+        this.bindid('', noIn, noOf),
+        this.match('=>')
+      );
+      if(this.look && this.look.content() == '{') {
+        node.add(
+          this.match(),
+          this.fnbody(),
+          this.match('}')
+        )
+      }
+      else {
+        node.add(this.assignexpr());
+      }
+    }
+    return node;
+  },
   classdecl: function() {
     var node = new Node(Node.CLASSDECL);
     node.add(
@@ -1178,9 +1274,26 @@ var Parser = IParser.extend(function(lexer) {
         }
       }
     }
+    else if(this.look.content() == 'async') {
+      node.add(this.asyncmethod(noIn, noOf));
+    }
     else {
       node.add(this.method(noIn, noOf));
     }
+    return node;
+  },
+  asyncmethod: function(noIn, noOf) {
+    var node = new Node(Node.ASYNCMETHOD);
+    node.add(
+      this.match('async', true),
+      this.proptname(),
+      this.match('('),
+      this.fmparams(),
+      this.match(')'),
+      this.match('{'),
+      this.fnbody(),
+      this.match('}')
+    );
     return node;
   },
   annot: function() {
@@ -1224,6 +1337,9 @@ var Parser = IParser.extend(function(lexer) {
     else if(this.look.content() == '*') {
       return this.genmethod(noIn, noOf);
     }
+    else if(this.look.content() == 'async') {
+      return this.asyncmethod(noIn, noOf);
+    }
     else {
       var isConstructor = this.look.type() == Token.ID && this.look.content() == 'constructor';
       node.add(
@@ -1242,6 +1358,20 @@ var Parser = IParser.extend(function(lexer) {
     var node = new Node(Node.GENMETHOD);
     node.add(
       this.match('*'),
+      this.proptname(noIn, noOf),
+      this.match('('),
+      this.fmparams(),
+      this.match(')'),
+      this.match('{'),
+      this.fnbody(),
+      this.match('}')
+    );
+    return node;
+  },
+  asyncmethod: function(noIn, noOf) {
+    var node = new Node(Node.ASYNCMETHOD);
+    node.add(
+      this.match('async', true),
       this.proptname(noIn, noOf),
       this.match('('),
       this.fmparams(),
@@ -1305,6 +1435,19 @@ var Parser = IParser.extend(function(lexer) {
       }
       return this.yieldexpr(noIn, noOf, yYield);
     }
+    //LL2判断async arrow fn提前
+    if(this.look.content() == 'async') {
+      for(var i = this.index; i < this.length; i++) {
+        var next = this.tokens[i];
+        if(!S[next.type()]) {
+          if(next.content() == '(' || next.type() == Token.ID) {
+            node.add(this.asyncarrowfn(noIn, noOf, yYield));
+            return node;
+          }
+          break;
+        }
+      }
+    }
     var cndt = this.cndtexpr(noIn, noOf, yYield, isConstructor);
     if(this.look
       && this.look.content() == '=>'
@@ -1336,7 +1479,8 @@ var Parser = IParser.extend(function(lexer) {
         '&=': true,
         '^=': true,
         '|=': true,
-        '=': true
+        '=': true,
+        '**': true,
       }.hasOwnProperty(this.look.content())
       && !NOASSIGN.hasOwnProperty(cndt.name())) {
       node.add(cndt, this.match(), this.assignexpr(noIn, noOf, yYield, isConstructor));
@@ -1636,6 +1780,7 @@ var Parser = IParser.extend(function(lexer) {
       case '-':
       case '~':
       case '!':
+      case 'await':
         node.add(
           this.match(),
           this.unaryexpr(noIn, noOf, yYield, isConstructor)
@@ -1905,6 +2050,8 @@ var Parser = IParser.extend(function(lexer) {
       case Token.TEMPLATE:
         node.add(this.match());
       break;
+      case Token.TEMPLATE_HEAD:
+        return this.template(noIn, noOf, yYield);
       default:
         switch(this.look.content()) {
           //LL2是否为*区分fnexpr和genexpr
@@ -1922,6 +2069,8 @@ var Parser = IParser.extend(function(lexer) {
               }
             }
           break;
+          case 'async':
+            return this.asyncexpr();
           case 'class':
             node.add(this.classexpr(noIn, noOf));
           break;
@@ -1956,6 +2105,19 @@ var Parser = IParser.extend(function(lexer) {
             this.error();
         }
     }
+    return node;
+  },
+  template: function(noIn, noOf, yYield) {
+    var node = new Node(Node.TEMPLATE);
+    node.add(this.match());
+    while(this.look && this.look.type() != Token.TEMPLATE_TAIL) {
+      node.add(this.expr(noIn, noOf, yYield));
+      if(this.look && this.look.type() == Token.TEMPLATE_TAIL) {
+        break;
+      }
+      node.add(this.match(Token.TEMPLATE_MIDDLE));
+    }
+    node.add(this.match());
     return node;
   },
   arrinit: function(noIn, noOf) {
