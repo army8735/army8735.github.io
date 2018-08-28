@@ -49,7 +49,7 @@ function isOrigin(o) {
 }
 function _equal(a, b) {
   // vd常量
-  if (a instanceof _Element2.default || b instanceof _Element2.default || b instanceof _Obj2.default) {
+  if (a instanceof _Element2.default || b instanceof _Element2.default) {
     return a === b;
   }
   if (isOrigin(a) || isOrigin(b)) {
@@ -117,7 +117,7 @@ function _joinSourceArray(arr) {
     if (Array.isArray(item)) {
       res += _joinSourceArray(item);
     } else {
-      res += item.toString();
+      res += stringify(item);
     }
   }
   return res;

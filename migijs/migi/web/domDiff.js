@@ -626,6 +626,9 @@ function diffChild(parent, elem, ovd, nvd, record) {
             // DOM变DOM
             case 3:
               switch (record.state) {
+                // case type.DOM_TO_DOM:
+                // case type.TEXT_TO_DOM:
+                //   break;
                 case _type2.default.DOM_TO_TEXT:
                 case _type2.default.TEXT_TO_TEXT:
                   record.start++;
