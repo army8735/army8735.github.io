@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>karas</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <style>
+    ol span{
+      font-size:12px;
+      line-height:18px;
+      text-shadow:1px 1px 2px rgba(0,0,0, 0.1);
+    }
+    ol a{
+      color:#39F;
+      text-shadow:1px 1px 2px rgba(0,0,0, 0.1);
+      text-decoration:none;
+    }
+    ol a:hover{
+      color:#F30;
+    }
+  </style>
+</head>
+<body>
+<ol>
+  <li>
+    <a href="hello.html" title="hello">Hello World!</a>
+    <span>基本的render方法接收2个参数：图表语言和渲染对象</span>
+  </li>
+  <li>
+    <a href="csx.html" title="csx">csx</a>
+    <span>csx取名借鉴自jsx，Canvas-Svg-Xml，根据根节点的不同，自动切换为canvas或svg类型，两者功能完全等价</span>
+  </li>
+  <li>
+    <a href="svg.html" title="svg">svg</a>
+    <span>上面是canvas，这是一个svg的例子</span>
+  </li>
+  <li>
+    <a href="dpr.html" title="dpr">高清方案</a>
+    <span>在高清屏（手机和mac pro）中，canvas会模糊或者1px边框实现问题，请自行调整meta元素的scale缩放（默认为1），或者为canvas设置外部样式，使其宽高为属性的0.5倍（对应dpr为2的倒数）</span>
+  </li>
+  <li>
+    <a href="tag.html" title="tag">tag</a>
+    <span>目前只有2种标签：div和span，分别对应block和inline元素</span>
+  </li>
+  <li>
+    <a href="inline.html" title="inline">inline</a>
+    <span>实现一个简易布局，它是css的一个（非真）子集，因为图表实际场景非常简单，部分css功能被简化，比如inline被实现成为了inline-block</span>
+  </li>
+  <li>
+    <a href="flex.html" title="flex">flex</a>
+    <span>flex基本被支持，极端情况下会和标准表现稍稍不一致，但很难遇到此场景且很容器看出表现并适配</span>
+  </li>
+</ol>
+<p><a href="https://github.com/karasjs/karas" target="_blank" title="github">github source</a></p>
+</body>
+</html>

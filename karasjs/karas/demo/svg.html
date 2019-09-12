@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>svg</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div id="example"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  karas.render(
+    <svg width="360" height="360">
+      <div>Hello world!</div>
+    </svg>,
+    '#example'
+  );
+</script>
+<script src="sea.js"></script>
+<script src="../index.js"></script>
+<script>
+  seajs.config({
+    alias: {
+      'homunculus': seajs.resolve('../../../homunculus/index.js', seajs.data.cwd),
+      'yurine': seajs.resolve('../../yurine/init.js', seajs.data.cwd),
+      'jaw': seajs.resolve('../../../migijs/jaw/init.js', seajs.data.cwd)
+    },
+    map: [function(url) {
+      return url.replace('demo/lexer/', '../../homunculus/web/lexer/');
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc', '../init', 'yurine'], function(jssc, karas, yurine) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    yurine.init();
+    karas.init();
+  });
+</script>
+</body>
+</html>
