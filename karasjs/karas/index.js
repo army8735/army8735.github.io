@@ -558,7 +558,7 @@
       deg = 315;
     } // 数字角度，没有的话取默认角度
     else {
-        let match = /([\d.]+)deg/.exec(v[0]);
+        let match = /(-?[\d.]+)deg/.exec(v[0]);
 
         if (match) {
           deg = parseFloat(match[1]);
@@ -966,7 +966,14 @@
     let gradient = /\b(\w+)-gradient\((.+)\)/.exec(s);
 
     if (gradient) {
-      let v = gradient[2].match(/(#[0-9a-f]{3,6})|(rgba?\(.+?\))/ig);
+      let deg = /(-?[\d.]+deg)|(to\s+[toprighbml]+)|circle|ellipse|at|closest|farthest|((closest|farthest)-(side|corner))/.exec(gradient[2]);
+      let v = gradient[2].match(/((#[0-9a-f]{3,6})|(rgba?\(.+?\)))(\s+-?[\d.]+(px|%))?/ig);
+
+      if (deg) {
+        let i = gradient[2].indexOf(',');
+        v.unshift(gradient[2].slice(0, i));
+      }
+
       return {
         k: gradient[1],
         v
@@ -1889,11 +1896,18 @@
 
 
       if (force) {
-        children.forEach(child => {
-          if (child instanceof Xom && !child.isGeom()) {
-            child.__emitEvent(e, force);
-          }
-        });
+        if (!this.isGeom()) {
+          children.forEach(child => {
+            if (child instanceof Xom) {
+              child.__emitEvent(e, force);
+            }
+          });
+        }
+
+        if (type === 'touchmove' || type === 'touchend') {
+          e.target = this.root.__touchstartTarget;
+        }
+
         cb && cb(e);
         return;
       }
@@ -1934,11 +1948,6 @@
           h: outerHeight,
           matrixEvent
         });
-
-        if (!e.target) {
-          e.target = this;
-        }
-
         cb && cb(e);
       }
     }
@@ -1975,7 +1984,11 @@
         }
 
         if (!e.target) {
-          e.target = this;
+          e.target = this; // 缓存target给move用
+
+          if (e.event.type === 'touchstart') {
+            this.root.__touchstartTarget = this;
+          }
         }
 
         return true;
@@ -3019,7 +3032,7 @@
       return 0;
     }
 
-    getPreRender() {
+    __preRender(renderMode) {
       let {
         rx: x,
         ry: y,
@@ -3029,6 +3042,8 @@
         mtw,
         plw,
         ptw,
+        prw,
+        pbw,
         style
       } = this;
       let {
@@ -3044,30 +3059,46 @@
       let originY = y + borderTopWidth.value + mtw + ptw;
       let cx = originX + width * 0.5;
       let cy = originY + height * 0.5;
-      let slg;
+      let iw = width + plw + prw;
+      let ih = height + ptw + pbw;
 
       if (strokeWidth > 0 && stroke.indexOf('linear-gradient') > -1) {
         let go = gradient.parseGradient(stroke);
 
         if (go) {
-          slg = gradient.getLinear(go.v, cx, cy, width, height);
+          let lg = gradient.getLinear(go.v, cx, cy, iw, ih);
+
+          if (renderMode === mode.CANVAS) {
+            stroke = this.getCanvasLg(lg);
+          } else if (renderMode === mode.SVG) {
+            stroke = `url(#${this.getSvgLg(lg)})`;
+          }
         }
       }
-
-      let flg;
-      let frg;
 
       if (fill.indexOf('linear-gradient') > -1) {
         let go = gradient.parseGradient(fill);
 
         if (go) {
-          flg = gradient.getLinear(go.v, cx, cy, width, height);
+          let lg = gradient.getLinear(go.v, cx, cy, iw, ih);
+
+          if (renderMode === mode.CANVAS) {
+            fill = this.getCanvasLg(lg);
+          } else if (renderMode === mode.SVG) {
+            fill = `url(#${this.getSvgLg(lg)})`;
+          }
         }
       } else if (fill.indexOf('radial-gradient') > -1) {
         let go = gradient.parseGradient(fill);
 
         if (go) {
-          frg = gradient.getRadial(go.v, cx, cy, originX, originY, originY + width, originY + height);
+          let rg = gradient.getRadial(go.v, cx, cy, originX, originY, originY + iw, originY + ih);
+
+          if (renderMode === mode.CANVAS) {
+            fill = this.getCanvasRg(rg);
+          } else if (renderMode === mode.SVG) {
+            fill = `url(#${this.getSvgRg(rg)})`;
+          }
         }
       }
 
@@ -3082,10 +3113,7 @@
         stroke,
         strokeWidth,
         strokeDasharray,
-        fill,
-        slg,
-        flg,
-        frg
+        fill
       };
     }
 
@@ -3097,6 +3125,8 @@
           type: 'geom'
         };
       }
+
+      return this.__preRender(renderMode);
     }
 
     addGeom(tagName, props) {
@@ -4770,7 +4800,7 @@
 
       res += `></${this.tagName}>`;
       return res;
-    } // 类似touchend/touchcancel这种无需判断是否发生于元素上，直接强制响应
+    } // 类似touchend/touchcancel/touchmove这种无需判断是否发生于元素上，直接强制响应
 
 
     __cb(e, force) {
@@ -4961,7 +4991,19 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
+      let {
+        display,
+        originX,
+        originY,
+        stroke,
+        strokeWidth,
+        strokeDasharray
+      } = super.render(renderMode);
+
+      if (display === 'none') {
+        return;
+      }
+
       let {
         width,
         height,
@@ -4972,20 +5014,6 @@
       } = this;
 
       if (begin.length < 2 || end.length < 2) {
-        return;
-      }
-
-      let {
-        originX,
-        originY,
-        display,
-        stroke,
-        strokeWidth,
-        strokeDasharray,
-        slg
-      } = this.getPreRender();
-
-      if (display === 'none') {
         return;
       }
 
@@ -5010,7 +5038,7 @@
       }
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
@@ -5030,11 +5058,6 @@
 
         ctx.closePath();
       } else if (renderMode === mode.SVG) {
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
         let d;
 
         if (curve === 2) {
@@ -5082,7 +5105,19 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
+      let {
+        originX,
+        originY,
+        display,
+        stroke,
+        strokeWidth,
+        strokeDasharray
+      } = super.render(renderMode);
+
+      if (display === 'none') {
+        return;
+      }
+
       let {
         width,
         height,
@@ -5099,20 +5134,6 @@
         if (!Array.isArray(points[i]) || points[i].length < 2) {
           return;
         }
-      }
-
-      let {
-        originX,
-        originY,
-        display,
-        stroke,
-        strokeWidth,
-        strokeDasharray,
-        slg
-      } = this.getPreRender();
-
-      if (display === 'none') {
-        return;
       }
 
       let pts = this.__pts = [];
@@ -5136,7 +5157,7 @@
       }
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
@@ -5158,11 +5179,6 @@
         for (let i = 0, len = pts.length; i < len; i++) {
           let point = pts[i];
           points += `${point[0]},${point[1]} `;
-        }
-
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
         }
 
         this.addGeom('polyline', [['points', points], ['fill', 'none'], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
@@ -5191,7 +5207,20 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
+      let {
+        originX,
+        originY,
+        display,
+        fill,
+        stroke,
+        strokeWidth,
+        strokeDasharray
+      } = super.render(renderMode);
+
+      if (display === 'none') {
+        return;
+      }
+
       let {
         width,
         height,
@@ -5209,40 +5238,15 @@
         }
       }
 
-      let {
-        originX,
-        originY,
-        display,
-        fill,
-        stroke,
-        strokeWidth,
-        strokeDasharray,
-        slg,
-        flg,
-        frg
-      } = this.getPreRender();
-
-      if (display === 'none') {
-        return;
-      }
-
       points.forEach(item => {
         item[0] = originX + item[0] * width;
         item[1] = originY + item[1] * height;
       });
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
-
-        if (flg) {
-          ctx.fillStyle = this.getCanvasLg(flg);
-        } else if (frg) {
-          ctx.fillStyle = this.getCanvasRg(frg);
-        } else {
-          ctx.fillStyle = fill;
-        }
-
+        ctx.fillStyle = fill;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
         ctx.moveTo(points[0][0], points[0][1]);
@@ -5266,19 +5270,6 @@
         for (let i = 0, len = points.length; i < len; i++) {
           let point = points[i];
           pts += `${point[0]},${point[1]} `;
-        }
-
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
-        if (flg) {
-          let uuid = this.getSvgLg(flg);
-          fill = `url(#${uuid})`;
-        } else if (frg) {
-          let uuid = this.getSvgRg(frg);
-          fill = `url(#${uuid})`;
         }
 
         this.addGeom('polygon', [['points', pts], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
@@ -5350,28 +5341,6 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
-      let {
-        rx: x,
-        ry: y,
-        width,
-        height,
-        mlw,
-        mtw,
-        plw,
-        ptw,
-        style,
-        ctx,
-        begin,
-        end,
-        r,
-        virtualDom
-      } = this;
-
-      if (begin === end) {
-        return;
-      }
-
       let {
         cx,
         cy,
@@ -5379,13 +5348,23 @@
         fill,
         stroke,
         strokeWidth,
-        strokeDasharray,
-        slg,
-        flg,
-        frg
-      } = this.getPreRender();
+        strokeDasharray
+      } = super.render(renderMode);
 
       if (display === 'none') {
+        return;
+      }
+
+      let {
+        width,
+        height,
+        ctx,
+        begin,
+        end,
+        r
+      } = this;
+
+      if (begin === end) {
         return;
       }
 
@@ -5395,17 +5374,9 @@
       [x2, y2] = getCoordsByDegree(cx, cy, r, end);
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
-
-        if (flg) {
-          ctx.fillStyle = this.getCanvasLg(flg);
-        } else if (frg) {
-          ctx.fillStyle = this.getCanvasRg(frg);
-        } else {
-          ctx.fillStyle = fill;
-        }
-
+        ctx.fillStyle = fill;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
         ctx.arc(cx, cy, r, begin * Math.PI / 180 - OFFSET, end * Math.PI / 180 - OFFSET);
@@ -5430,19 +5401,6 @@
         ctx.closePath();
       } else if (renderMode === mode.SVG) {
         let large = end - begin > 180 ? 1 : 0;
-
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
-        if (flg) {
-          let uuid = this.getSvgLg(flg);
-          fill = `url(#${uuid})`;
-        } else if (frg) {
-          let uuid = this.getSvgRg(frg);
-          fill = `url(#${uuid})`;
-        }
 
         if (this.edge) {
           this.addGeom('path', [['d', `M${cx} ${cy} L${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} z`], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
@@ -5477,14 +5435,6 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
-      let {
-        rx: x,
-        ry: y,
-        width,
-        height,
-        ctx
-      } = this;
       let {
         originX,
         originY,
@@ -5492,28 +5442,23 @@
         fill,
         stroke,
         strokeWidth,
-        strokeDasharray,
-        slg,
-        flg,
-        frg
-      } = this.getPreRender();
+        strokeDasharray
+      } = super.render(renderMode);
 
       if (display === 'none') {
         return;
       }
 
+      let {
+        width,
+        height,
+        ctx
+      } = this;
+
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
-
-        if (flg) {
-          ctx.fillStyle = this.getCanvasLg(flg);
-        } else if (frg) {
-          ctx.fillStyle = this.getCanvasRg(frg);
-        } else {
-          ctx.fillStyle = fill;
-        }
-
+        ctx.fillStyle = fill;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
         ctx.moveTo(originX, originY);
@@ -5529,20 +5474,7 @@
 
         ctx.closePath();
       } else if (renderMode === mode.SVG) {
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
-        if (flg) {
-          let uuid = this.getSvgLg(flg);
-          fill = `url(#${uuid})`;
-        } else if (frg) {
-          let uuid = this.getSvgRg(frg);
-          fill = `url(#${uuid})`;
-        }
-
-        this.addGeom('rect', [['x', x], ['y', y], ['width', width], ['height', height], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
+        this.addGeom('rect', [['x', originX], ['y', originY], ['width', width], ['height', height], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
       }
     }
 
@@ -5564,13 +5496,6 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
-      let {
-        width,
-        height,
-        ctx,
-        r
-      } = this;
       let {
         cx,
         cy,
@@ -5578,30 +5503,25 @@
         fill,
         stroke,
         strokeWidth,
-        strokeDasharray,
-        slg,
-        flg,
-        frg
-      } = this.getPreRender();
+        strokeDasharray
+      } = super.render(renderMode);
 
       if (display === 'none') {
         return;
       }
 
+      let {
+        width,
+        height,
+        ctx,
+        r
+      } = this;
       r *= Math.min(width, height) * 0.5;
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
-
-        if (flg) {
-          ctx.fillStyle = this.getCanvasLg(flg);
-        } else if (frg) {
-          ctx.fillStyle = this.getCanvasRg(frg);
-        } else {
-          ctx.fillStyle = fill;
-        }
-
+        ctx.fillStyle = fill;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, 2 * Math.PI);
@@ -5613,19 +5533,6 @@
 
         ctx.closePath();
       } else if (renderMode === mode.SVG) {
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
-        if (flg) {
-          let uuid = this.getSvgLg(flg);
-          fill = `url(#${uuid})`;
-        } else if (frg) {
-          let uuid = this.getSvgRg(frg);
-          fill = `url(#${uuid})`;
-        }
-
         this.addGeom('circle', [['cx', cx], ['cy', cy], ['r', r], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
       }
     }
@@ -5662,14 +5569,6 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
-      let {
-        width,
-        height,
-        ctx,
-        xr,
-        yr
-      } = this;
       let {
         cx,
         cy,
@@ -5677,31 +5576,27 @@
         fill,
         stroke,
         strokeWidth,
-        strokeDasharray,
-        slg,
-        flg,
-        frg
-      } = this.getPreRender();
+        strokeDasharray
+      } = super.render(renderMode);
 
       if (display === 'none') {
         return;
       }
 
+      let {
+        width,
+        height,
+        ctx,
+        xr,
+        yr
+      } = this;
       xr *= width * 0.5;
       yr *= height * 0.5;
 
       if (renderMode === mode.CANVAS) {
-        ctx.strokeStyle = slg ? this.getCanvasLg(slg) : stroke;
+        ctx.strokeStyle = stroke;
         ctx.lineWidth = strokeWidth;
-
-        if (flg) {
-          ctx.fillStyle = this.getCanvasLg(flg);
-        } else if (frg) {
-          ctx.fillStyle = this.getCanvasRg(frg);
-        } else {
-          ctx.fillStyle = fill;
-        }
-
+        ctx.fillStyle = fill;
         ctx.setLineDash(strokeDasharray);
         ctx.beginPath();
         ctx.ellipse && ctx.ellipse(cx, cy, xr, yr, 0, 0, 2 * Math.PI);
@@ -5713,19 +5608,6 @@
 
         ctx.closePath();
       } else if (renderMode === mode.SVG) {
-        if (slg) {
-          let uuid = this.getSvgLg(slg);
-          stroke = `url(#${uuid})`;
-        }
-
-        if (flg) {
-          let uuid = this.getSvgLg(flg);
-          fill = `url(#${uuid})`;
-        } else if (frg) {
-          let uuid = this.getSvgRg(frg);
-          fill = `url(#${uuid})`;
-        }
-
         this.addGeom('ellipse', [['cx', cx], ['cy', cy], ['rx', xr], ['ry', yr], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
       }
     }
