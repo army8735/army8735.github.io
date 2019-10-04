@@ -58,6 +58,86 @@ window._data = [
   {
     "price": 344.41,
     "date": "2019-09-16 15:20:00"
+  },
+  {
+    "price": 344.41,
+    "date": "2019-09-16 15:19:00"
+  },
+  {
+    "price": 344.4,
+    "date": "2019-09-16 15:18:00"
+  },
+  {
+    "price": 344.41,
+    "date": "2019-09-16 15:17:00"
+  },
+  {
+    "price": 344.4,
+    "date": "2019-09-16 15:16:00"
+  },
+  {
+    "price": 344.4,
+    "date": "2019-09-16 15:15:00"
+  },
+  {
+    "price": 344.42,
+    "date": "2019-09-16 15:14:00"
+  },
+  {
+    "price": 344.4,
+    "date": "2019-09-16 15:13:00"
+  },
+  {
+    "price": 344.51,
+    "date": "2019-09-16 15:12:00"
+  },
+  {
+    "price": 344.51,
+    "date": "2019-09-16 15:11:00"
+  },
+  {
+    "price": 344.6,
+    "date": "2019-09-16 15:10:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:09:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:08:00"
+  },
+  {
+    "price": 344.55,
+    "date": "2019-09-16 15:07:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:06:00"
+  },
+  {
+    "price": 344.55,
+    "date": "2019-09-16 15:05:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:04:00"
+  },
+  {
+    "price": 344.42,
+    "date": "2019-09-16 15:03:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:02:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:01:00"
+  },
+  {
+    "price": 344.5,
+    "date": "2019-09-16 15:00:00"
   }
 ];
 </script>
@@ -71,7 +151,7 @@ window._data = [
   let points = data.map((item, i) => {
     return [i / (length - 1), (item.price - 344) / 2];
   });
-  function render(showPoint, left) {
+  function render(showPoint, left, top) {
     karas.render(
       <canvas width="360" height="360">
         <div style={{display:'flex',height:320}}>
@@ -82,12 +162,15 @@ window._data = [
           </div>
           <div style={{flex:1,position:'relative',borderBottom:'1px solid #CCC'}}>
             <div style={{position:'relative',height:'100%'}}>
-              <$polyline style={{height:'100%'}} points={points} origin="BOTTOM_LEFT" onClick={e=>cb(e)}/>
-              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%'}} start={[0,0]} end={[0,1]}/>
+              <$polyline style={{height:'100%',stroke:'#C96'}} points={points} origin="BOTTOM_LEFT"
+                         onTouchStart={e=>start(e)} onTouchMove={e=>start(e)} onTouchEnd={()=>end()} onTouchCancel={()=>end()}
+                         onMouseMove={e=>start(e)}/>
+              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}
+                     start={[0,0]} end={[0,1]}/>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginTop:10,color:'#AAA'}}>
-              <span>15:20</span>
-              <span>15:25</span>
+              <span>15:00</span>
+              <span>15:15</span>
               <span>15:30</span>
             </div>
           </div>
@@ -105,12 +188,15 @@ window._data = [
           </div>
           <div style={{flex:1,position:'relative',borderBottom:'1px solid #CCC'}}>
             <div style={{position:'relative',height:'100%'}}>
-              <$polyline style={{height:'100%'}} points={points} origin="BOTTOM_LEFT" onClick={e=>cb(e)}/>
-              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%'}} start={[0,0]} end={[0,1]}/>
+              <$polyline style={{height:'100%',stroke:'#C96'}} points={points} origin="BOTTOM_LEFT"
+                         onTouchStart={e=>start(e)} onTouchMove={e=>start(e)} onTouchEnd={()=>end()} onTouchCancel={()=>end()}
+                         onMouseMove={e=>start(e)}/>
+              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}
+                     start={[0,0]} end={[0,1]}/>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginTop:10,color:'#AAA'}}>
-              <span>15:20</span>
-              <span>15:25</span>
+              <span>15:00</span>
+              <span>15:15</span>
               <span>15:30</span>
             </div>
           </div>
@@ -120,8 +206,20 @@ window._data = [
     );
   }
   render();
-  function cb(e) {
-    render(true, e.x - e.target.rx);
+  function start(e) {
+    let polyline = e.target;
+    // 使用rx代替x，x表示布局坐标，rx包含了relative偏移量
+    let { rx, width, height } = polyline;
+    let per = width / length;
+    let i = Math.floor((e.x - rx) / per);
+    let point = points[i];
+    // origin设置为左下角BOTTOM_LEFT，所以y坐标要被1减
+    let top = (1 - point[1]) * height;
+    let left = e.x - rx;
+    render(true, left, top);
+  }
+  function end() {
+    render();
   }
 </script>
 <script src="sea.js"></script>

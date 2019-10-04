@@ -19,18 +19,16 @@
     }
 
     render(renderMode) {
-      super.render(renderMode);
+      // 基类render中已经帮我们计算好许多必需的属性
+      let { originX, originY, display, stroke, strokeWidth, strokeDasharray } = super.render(renderMode);
+      if(display === 'none') {
+        return;
+      }
       let { width, height, ctx } = this;
       // x,y被分为几格
       let nx = this.props.nx || 0;
       let ny = this.props.ny || 0;
       if(nx < 2 && ny < 2) {
-        return;
-      }
-      let {
-        originX, originY, display,
-        stroke, strokeWidth, strokeDasharray } = this.getPreRender();
-      if(display === 'none') {
         return;
       }
       let endX = originX + width;
@@ -63,6 +61,7 @@
       }
       else if(renderMode === karas.mode.SVG) {
         lx.forEach(item => {
+          // 基类也为添加基本svg图形封装好了方法
           this.addGeom('line', [
             ['x1', originX],
             ['y1', item],
