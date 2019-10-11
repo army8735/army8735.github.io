@@ -8,8 +8,8 @@
 </head>
 <body>
 <div class="pre">这里以常见的图表为例，展示了如何编写一个折线图，体现出代码量少、css规范、零学习成本、易维护的特点。
-  图表中除了折线部分是几何图形外，其它均可表现为普通的dom+css，零成本对前端开发人员极为友好。
-  即便是几何图形标签，也很贴合dom和svg标准，只有几个简单的属性配置。</div>
+图表中除了折线部分是几何图形外，其它均可表现为普通的dom+css，零成本对前端开发人员极为友好。
+即便是几何图形标签，也很贴合dom和svg标准，只有几个简单的属性配置。</div>
 <div id="example"></div>
 <div id="example2"></div>
 <pre><code class="brush:csx"></code></pre>
@@ -165,8 +165,7 @@ window._data = [
               <$polyline style={{height:'100%',stroke:'#C96'}} points={points} origin="BOTTOM_LEFT"
                          onTouchStart={e=>start(e)} onTouchMove={e=>start(e)} onTouchEnd={()=>end()} onTouchCancel={()=>end()}
                          onMouseMove={e=>start(e)}/>
-              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}
-                     start={[0,0]} end={[0,1]}/>
+              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}/>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginTop:10,color:'#AAA'}}>
               <span>15:00</span>
@@ -191,8 +190,7 @@ window._data = [
               <$polyline style={{height:'100%',stroke:'#C96'}} points={points} origin="BOTTOM_LEFT"
                          onTouchStart={e=>start(e)} onTouchMove={e=>start(e)} onTouchEnd={()=>end()} onTouchCancel={()=>end()}
                          onMouseMove={e=>start(e)}/>
-              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}
-                     start={[0,0]} end={[0,1]}/>
+              <$line style={{position:'absolute',display:showPoint ? 'block':'none',left,top:0,height:'100%',stroke:'#F30'}}/>
             </div>
             <div style={{display:'flex',justifyContent:'space-between',marginTop:10,color:'#AAA'}}>
               <span>15:00</span>
