@@ -252,6 +252,7 @@
 
       this.__baseLine = 0;
       this.__virtualDom = {};
+      this.__host = null;
     }
 
     _createClass(Node, [{
@@ -347,14 +348,12 @@
     }, {
       key: "host",
       get: function get() {
-        var parent = this.parent;
+        if (this.__host) {
+          return this.__host;
+        }
 
-        while (parent) {
-          if (/A-Z/.test(parent.tagName.charAt(0))) {
-            return parent.host;
-          }
-
-          parent = parent.parent;
+        if (this.parent) {
+          return this.parent.host;
         }
       }
     }, {
@@ -1821,138 +1820,61 @@
     calPoints: calPoints
   };
 
-  var Event =
-  /*#__PURE__*/
-  function () {
-    function Event() {
-      _classCallCheck(this, Event);
-
-      this.__eHash = {};
+  function quickSort(arr, begin, end, compare) {
+    if (begin >= end) {
+      return;
     }
 
-    _createClass(Event, [{
-      key: "on",
-      value: function on(id, handle) {
-        var self = this;
+    var i = begin,
+        j = end,
+        p = i,
+        v = arr[p],
+        seq = true;
 
-        if (Array.isArray(id)) {
-          for (var i = 0, len = id.length; i < len; i++) {
-            self.on(id[i], handle);
-          }
-        } else if (handle) {
-          if (!self.__eHash.hasOwnProperty(id)) {
-            self.__eHash[id] = [];
-          } // 遍历防止此handle被侦听过了
-
-
-          for (var _i = 0, item = self.__eHash[id], _len = item.length; _i < _len; _i++) {
-            if (item[_i] === handle) {
-              return self;
-            }
-          }
-
-          self.__eHash[id].push(handle);
-        }
-
-        return self;
-      }
-    }, {
-      key: "once",
-      value: function once(id, handle) {
-        var self = this;
-
-        function cb() {
-          for (var _len2 = arguments.length, data = new Array(_len2), _key = 0; _key < _len2; _key++) {
-            data[_key] = arguments[_key];
-          }
-
-          handle.apply(self, data);
-          self.off(id, cb);
-        }
-
-        if (Array.isArray(id)) {
-          for (var i = 0, len = id.length; i < len; i++) {
-            self.once(id[i], handle);
-          }
-        } else if (handle) {
-          self.on(id, cb);
-        }
-
-        return this;
-      }
-    }, {
-      key: "off",
-      value: function off(id, handle) {
-        var self = this;
-
-        if (Array.isArray(id)) {
-          for (var i = 0, len = id.length; i < len; i++) {
-            self.off(id[i], handle);
-          }
-        } else if (self.__eHash.hasOwnProperty(id)) {
-          if (handle) {
-            for (var _i2 = 0, item = self.__eHash[id], _len3 = item.length; _i2 < _len3; _i2++) {
-              if (item[_i2] === handle) {
-                item.splice(_i2, 1);
-                break;
-              }
-            }
-          } // 未定义为全部清除
-          else {
-              delete self.__eHash[id];
-            }
-        }
-
-        return this;
-      }
-    }, {
-      key: "emit",
-      value: function emit(id) {
-        var self = this;
-
-        for (var _len4 = arguments.length, data = new Array(_len4 > 1 ? _len4 - 1 : 0), _key2 = 1; _key2 < _len4; _key2++) {
-          data[_key2 - 1] = arguments[_key2];
-        }
-
-        if (Array.isArray(id)) {
-          for (var i = 0, len = id.length; i < len; i++) {
-            self.emit(id[i], data);
-          }
-        } else {
-          if (self.__eHash.hasOwnProperty(id)) {
-            var list = self.__eHash[id];
-
-            if (list.length) {
-              list = list.slice();
-
-              for (var _i3 = 0, _len5 = list.length; _i3 < _len5; _i3++) {
-                list[_i3].apply(self, data);
-              }
-            }
+    while (i < j) {
+      if (seq) {
+        for (; i < j; j--) {
+          if (compare.call(arr, v, arr[j])) {
+            swap(arr, p, j);
+            p = j;
+            seq = !seq;
+            i++;
+            break;
           }
         }
-
-        return this;
-      }
-    }], [{
-      key: "mix",
-      value: function mix() {
-        for (var i = arguments.length - 1; i >= 0; i--) {
-          var o = i < 0 || arguments.length <= i ? undefined : arguments[i];
-          var event = new Event();
-          o.__eHash = {};
-          var fns = ['on', 'once', 'off', 'emit'];
-
-          for (var j = fns.length - 1; j >= 0; j--) {
-            var fn = fns[j];
-            o[fn] = event[fn];
+      } else {
+        for (; i < j; i++) {
+          if (compare.call(arr, arr[i], v)) {
+            swap(arr, p, i);
+            p = i;
+            seq = !seq;
+            j--;
+            break;
           }
         }
       }
-    }]);
+    }
 
-    return Event;
-  }();
+    quickSort(arr, begin, p - 1, compare);
+    quickSort(arr, p + 1, end, compare);
+  }
+
+  function swap(arr, a, b) {
+    var temp = arr[a];
+    arr[a] = arr[b];
+    arr[b] = temp;
+  }
+
+  function sort (arr, compare) {
+    if (!Array.isArray(arr) || arr.length < 2) {
+      return arr;
+    }
+
+    compare = compare || function () {};
+
+    quickSort(arr, 0, arr.length - 1, compare);
+    return arr;
+  }
 
   var font = {
     arial: {
@@ -2322,7 +2244,8 @@
     ['marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius', 'top', 'right', 'bottom', 'left', 'width', 'height', 'flexBasis'].forEach(function (k) {
       var v = style[k];
       calUnit(style, k, v);
-    }); // 计算lineHeight为px值，最小范围
+    });
+    style.fontSize = parseInt(style.fontSize) || 0; // 计算lineHeight为px值，最小范围
 
     var lineHeight = style.lineHeight;
 
@@ -2702,6 +2625,381 @@
     return Text;
   }(Node);
 
+  function splitClass(s) {
+    s = (s || '').trim();
+
+    if (s) {
+      return s.split(/\s+/);
+    }
+  }
+
+  function parse(dom, top, json) {
+    if (!json) {
+      return;
+    }
+
+    var list = [];
+    matchSel(dom, top, json, list);
+    sort(list, function (a, b) {
+      var pa = a[2];
+      var pb = b[2]; // 先比较优先级
+
+      for (var i = 0; i < 3; i++) {
+        if (pa[i] !== pb[i]) {
+          return pa[i] > pb[i];
+        }
+      } // 优先级相等比较出现顺序
+
+
+      return a[0] > b[0];
+    });
+    var res = {};
+
+    for (var i = list.length - 1; i >= 0; i--) {
+      var item = list[i];
+
+      var _item$ = _slicedToArray(item[1], 2),
+          k = _item$[0],
+          v = _item$[1];
+
+      if (!res.hasOwnProperty(k)) {
+        res[k] = v;
+      }
+    }
+
+    return res;
+  } // 从底部往上匹配，即.a .b这样的选择器是.b->.a逆序对比
+
+
+  function matchSel(dom, top, json, res) {
+    var _this = this;
+
+    var selList = combo(dom, json);
+    selList.forEach(function (sel) {
+      if (json.hasOwnProperty(sel)) {
+        var item = json[sel]; // 还未到根节点需继续向上，注意可以递归向上，多层级时需递归所有父层级组合
+
+        var parent = dom.parent;
+
+        while (parent) {
+          matchSel(parent, top, item, res);
+          parent = parent.parent;
+        } // 将当前层次的值存入
+
+
+        if (item.hasOwnProperty('_v')) {
+          dealStyle(res, item);
+        } // 父子选择器
+
+
+        if (item.hasOwnProperty('_>')) {
+          var parentStyle = item['_>'];
+          matchSel(dom.parent, _this, parentStyle, res);
+        } // 相邻兄弟选择器
+
+
+        if (item.hasOwnProperty('_+')) {
+          var sibling = item['_+'];
+          var prev = dom.prev;
+
+          if (prev && !(prev instanceof Text)) {
+            var prevSelList = combo(prev, sibling);
+            var hash = arr2hash$1(prevSelList);
+            Object.keys(sibling).forEach(function (k) {
+              var item2 = sibling[k]; // 有值且兄弟选择器命中时存入结果
+
+              if (item2.hasOwnProperty('_v') && hash.hasOwnProperty(k)) {
+                dealStyle(res, item2);
+              }
+            });
+          }
+        } // 兄弟选择器，不一定相邻，一直往前找
+
+
+        if (item.hasOwnProperty('_~')) {
+          (function () {
+            var sibling = item['_~'];
+            var prev = dom.prev;
+
+            var _loop = function _loop() {
+              if (prev instanceof Text) {
+                prev = prev.prev;
+                return "continue";
+              }
+
+              var prevSelList = combo(prev, sibling);
+              var hash = arr2hash$1(prevSelList);
+              Object.keys(sibling).forEach(function (k) {
+                var item2 = sibling[k]; // 有值且兄弟选择器命中时存入结果
+
+                if (item2.hasOwnProperty('_v') && hash.hasOwnProperty(k)) {
+                  dealStyle(res, item2);
+                }
+              });
+              prev = prev.prev;
+            };
+
+            while (prev) {
+              var _ret = _loop();
+
+              if (_ret === "continue") continue;
+            }
+          })();
+        }
+      }
+    });
+  } // 组合出dom的所有sel可能
+
+
+  function combo(dom, json) {
+    var klass = dom["class"],
+        tagName = dom.tagName,
+        id = dom.id;
+    klass = klass.slice();
+    sort(klass, function (a, b) {
+      return a > b;
+    });
+    var ks = [];
+
+    if (klass.length) {
+      comboClass(klass, ks, klass.length, 0);
+    } // 各种*的情况标识，只有存在时才放入sel组合，可以减少循环次数
+
+
+    var hasStarClass = json.hasOwnProperty('_*.');
+    var hasStarId = json.hasOwnProperty('_*#');
+    var hasStarIdClass = json.hasOwnProperty('_*.#');
+    var res = [tagName]; // 只有当前有_*时说明有*才匹配
+
+    if (json.hasOwnProperty('_*')) {
+      res.push('*');
+    }
+
+    if (id) {
+      id = '#' + id;
+      res.push(id);
+      res.push(tagName + id);
+
+      if (hasStarId) {
+        res.push('*' + id);
+      }
+    }
+
+    ks.forEach(function (klass) {
+      res.push(klass);
+      res.push(tagName + klass);
+
+      if (hasStarClass) {
+        res.push('*' + klass);
+      }
+
+      if (id) {
+        res.push(klass + id);
+        res.push(tagName + klass + id);
+
+        if (hasStarIdClass) {
+          res.push('*' + klass + id);
+        }
+      }
+    });
+    return res;
+  } // 组合出klass里多个的可能，如.b.a和.c.b.a，注意有排序，可以使得相等比较更容易
+
+
+  function comboClass(arr, res, len, i) {
+    if (len - i > 1) {
+      comboClass(arr, res, len, i + 1);
+
+      for (var j = 0, len2 = res.length; j < len2; j++) {
+        res.push(res[j] + '.' + arr[i]);
+      }
+    }
+
+    res.push('.' + arr[i]);
+  }
+
+  function dealStyle(res, item) {
+    item._v.forEach(function (style) {
+      style[2] = item._p;
+      res.push(style);
+    });
+  }
+
+  function arr2hash$1(arr) {
+    var hash = {};
+    arr.forEach(function (item) {
+      hash[item] = true;
+    });
+    return hash;
+  }
+
+  function mergeCss(a, b) {
+    if (!b) {
+      return a;
+    }
+
+    if (!a) {
+      return b;
+    }
+
+    for (var i in b) {
+      if (b.hasOwnProperty(i)) {
+        var o = b[i];
+        var flag = {
+          _v: true,
+          _p: true
+        }.hasOwnProperty(i);
+
+        if (!flag && _typeof(o) === 'object' && a.hasOwnProperty(i)) {
+          a[i] = mergeCss(a[i], o);
+        } else {
+          a[i] = o;
+        }
+      }
+    }
+
+    return a;
+  }
+
+  var match = {
+    parse: parse,
+    splitClass: splitClass,
+    mergeCss: mergeCss
+  };
+
+  var Event =
+  /*#__PURE__*/
+  function () {
+    function Event() {
+      _classCallCheck(this, Event);
+
+      this.__eHash = {};
+    }
+
+    _createClass(Event, [{
+      key: "on",
+      value: function on(id, handle) {
+        var self = this;
+
+        if (Array.isArray(id)) {
+          for (var i = 0, len = id.length; i < len; i++) {
+            self.on(id[i], handle);
+          }
+        } else if (handle) {
+          if (!self.__eHash.hasOwnProperty(id)) {
+            self.__eHash[id] = [];
+          } // 遍历防止此handle被侦听过了
+
+
+          for (var _i = 0, item = self.__eHash[id], _len = item.length; _i < _len; _i++) {
+            if (item[_i] === handle) {
+              return self;
+            }
+          }
+
+          self.__eHash[id].push(handle);
+        }
+
+        return self;
+      }
+    }, {
+      key: "once",
+      value: function once(id, handle) {
+        var self = this;
+
+        function cb() {
+          for (var _len2 = arguments.length, data = new Array(_len2), _key = 0; _key < _len2; _key++) {
+            data[_key] = arguments[_key];
+          }
+
+          handle.apply(self, data);
+          self.off(id, cb);
+        }
+
+        if (Array.isArray(id)) {
+          for (var i = 0, len = id.length; i < len; i++) {
+            self.once(id[i], handle);
+          }
+        } else if (handle) {
+          self.on(id, cb);
+        }
+
+        return this;
+      }
+    }, {
+      key: "off",
+      value: function off(id, handle) {
+        var self = this;
+
+        if (Array.isArray(id)) {
+          for (var i = 0, len = id.length; i < len; i++) {
+            self.off(id[i], handle);
+          }
+        } else if (self.__eHash.hasOwnProperty(id)) {
+          if (handle) {
+            for (var _i2 = 0, item = self.__eHash[id], _len3 = item.length; _i2 < _len3; _i2++) {
+              if (item[_i2] === handle) {
+                item.splice(_i2, 1);
+                break;
+              }
+            }
+          } // 未定义为全部清除
+          else {
+              delete self.__eHash[id];
+            }
+        }
+
+        return this;
+      }
+    }, {
+      key: "emit",
+      value: function emit(id) {
+        var self = this;
+
+        for (var _len4 = arguments.length, data = new Array(_len4 > 1 ? _len4 - 1 : 0), _key2 = 1; _key2 < _len4; _key2++) {
+          data[_key2 - 1] = arguments[_key2];
+        }
+
+        if (Array.isArray(id)) {
+          for (var i = 0, len = id.length; i < len; i++) {
+            self.emit(id[i], data);
+          }
+        } else {
+          if (self.__eHash.hasOwnProperty(id)) {
+            var list = self.__eHash[id];
+
+            if (list.length) {
+              list = list.slice();
+
+              for (var _i3 = 0, _len5 = list.length; _i3 < _len5; _i3++) {
+                list[_i3].apply(self, data);
+              }
+            }
+          }
+        }
+
+        return this;
+      }
+    }], [{
+      key: "mix",
+      value: function mix() {
+        for (var i = arguments.length - 1; i >= 0; i--) {
+          var o = i < 0 || arguments.length <= i ? undefined : arguments[i];
+          var event = new Event();
+          o.__eHash = {};
+          var fns = ['on', 'once', 'off', 'emit'];
+
+          for (var j = fns.length - 1; j >= 0; j--) {
+            var fn = fns[j];
+            o[fn] = event[fn];
+          }
+        }
+      }
+    }]);
+
+    return Event;
+  }();
+
   var Component =
   /*#__PURE__*/
   function (_Event) {
@@ -2715,7 +3013,9 @@
       _this = _possibleConstructorReturn(this, _getPrototypeOf(Component).call(this));
 
       if (!util.isString(tagName)) {
-        throw new Error('Component must have a tagName');
+        children = props;
+        props = tagName;
+        tagName = /(?:function|class)\s+([\w$]+)/.exec(_this.constructor.toString())[1];
       }
 
       _this.__tagName = tagName;
@@ -2732,7 +3032,8 @@
       _this.__children = children || [];
       _this.__shadowRoot = null;
       _this.__parent = null;
-      _this.state = {};
+      _this.__ref = {};
+      _this.__state = {};
       return _this;
     }
 
@@ -2747,9 +3048,14 @@
               this.state[i] = n[i];
             }
           }
-        }
+        } // 构造函数中调用还未render
+
 
         var o = this.shadowRoot;
+
+        if (!o) {
+          return;
+        }
 
         this.__traverse(o.ctx, o.defs, this.root.renderMode);
 
@@ -2788,8 +3094,22 @@
 
         sr.__ctx = ctx;
         sr.__defs = defs;
+        sr.__host = this;
 
-        sr.__traverse(ctx, defs, renderMode);
+        if (!sr.isGeom()) {
+          sr.__traverse(ctx, defs, renderMode);
+        }
+      }
+    }, {
+      key: "__traverseCss",
+      value: function __traverseCss() {
+        var sr = this.__shadowRoot; // shadowDom可以设置props.css，同时host的会覆盖它
+
+        if (!(sr instanceof Text)) {
+          var m = match.mergeCss(sr.props.css, this.props.css);
+
+          sr.__traverseCss(sr, m);
+        }
       } // 组件传入的样式需覆盖shadowRoot的
 
     }, {
@@ -2802,15 +3122,15 @@
         if (sr instanceof Text) {
           css.normalize(sr.style);
         } else {
-          sr.__init();
-        }
+          var style = this.props.style || {};
 
-        var style = this.props.style || {};
-
-        for (var i in style) {
-          if (style.hasOwnProperty(i)) {
-            sr.style[i] = style[i];
+          for (var i in style) {
+            if (style.hasOwnProperty(i)) {
+              sr.style[i] = style[i];
+            }
           }
+
+          sr.__init();
         }
 
         if (!(sr instanceof Text)) {
@@ -2893,6 +3213,24 @@
       get: function get() {
         return this.__parent;
       }
+    }, {
+      key: "ref",
+      get: function get() {
+        return this.__ref;
+      }
+    }, {
+      key: "state",
+      get: function get() {
+        return this.__state;
+      },
+      set: function set(v) {
+        this.__state = v;
+      }
+    }, {
+      key: "css",
+      get: function get() {
+        return this.__css;
+      }
     }]);
 
     return Component;
@@ -2963,11 +3301,20 @@
 
       _this.__props.forEach(function (item) {
         var k = item[0];
+        var v = item[1];
 
         if (/^on[a-zA-Z]/.test(k)) {
           k = k.slice(2).toLowerCase();
           var arr = _this.__listener[k] = _this.__listener[k] || [];
-          arr.push(item[1]);
+          arr.push(v);
+        } else if (k === 'id' && v) {
+          _this.__id = v;
+        } else if (['class', 'className'].indexOf(k) > -1 && v) {
+          v = match.splitClass(v);
+
+          if (v) {
+            _this.__class = v;
+          }
         }
       }); // margin和padding的宽度
 
@@ -2983,9 +3330,30 @@
       _this.__matrix = null;
       _this.__matrixEvent = null;
       return _this;
-    }
+    } // 设置了css时，解析匹配
+
 
     _createClass(Xom, [{
+      key: "__traverseCss",
+      value: function __traverseCss(top, css) {
+        if (!this.isGeom()) {
+          this.children.forEach(function (item) {
+            if (item instanceof Xom || item instanceof Component) {
+              item.__traverseCss(top, css);
+            }
+          });
+        } // inline拥有最高优先级
+
+
+        var style = match.parse(this, top, css) || {};
+
+        for (var i in style) {
+          if (style.hasOwnProperty(i) && !this.__style.hasOwnProperty(i)) {
+            this.__style[i] = style[i];
+          }
+        }
+      }
+    }, {
       key: "__layout",
       value: function __layout(data) {
         var w = data.w;
@@ -3659,6 +4027,16 @@
       get: function get() {
         return this.__matrixEvent;
       }
+    }, {
+      key: "id",
+      get: function get() {
+        return this.__id;
+      }
+    }, {
+      key: "class",
+      get: function get() {
+        return this.__class || [];
+      }
     }]);
 
     return Xom;
@@ -4089,10 +4467,20 @@
           item.__ctx = ctx;
           item.__defs = defs;
 
+          if (prev) {
+            prev.__next = item;
+            item.__prev = prev;
+          }
+
           item.__parent = _this2;
-          item.__prev = prev;
+          prev = item;
         });
         this.__children = list;
+        var ref = this.props.ref;
+
+        if (ref && this.host) {
+          this.host.ref[ref] = this;
+        }
       }
     }, {
       key: "__traverseChildren",
@@ -5059,13 +5447,7 @@
         x += mlw + borderLeftWidth.value;
         y += mtw + borderTopWidth.value;
         var pw = width + plw + prw;
-        var ph = height + ptw + pbw; // 递归进行，遇到absolute/relative的设置新容器
-
-        children.forEach(function (item) {
-          if (item instanceof Dom || item instanceof Component) {
-            item.__layoutAbs(['absolute', 'relative'].indexOf(item.style.position) > -1 ? item : container);
-          }
-        }); // 对absolute的元素进行相对容器布局
+        var ph = height + ptw + pbw; // 对absolute的元素进行相对容器布局
 
         absChildren.forEach(function (item) {
           var style = item.style,
@@ -5142,6 +5524,18 @@
             w: w2,
             h: h2
           });
+        }); // 递归进行，遇到absolute/relative的设置新容器
+
+        children.forEach(function (item) {
+          if (item instanceof Dom) {
+            item.__layoutAbs(['absolute', 'relative'].indexOf(item.style.position) > -1 ? item : container);
+          } else if (item instanceof Component) {
+            var sr = item.shadowRoot;
+
+            if (sr instanceof Dom) {
+              sr.__layoutAbs(sr);
+            }
+          }
         });
       }
     }, {
@@ -5824,6 +6218,8 @@
 
         this.__traverse(this.__ctx, this.__defs, this.__renderMode);
 
+        this.__traverseCss(this, this.props.css);
+
         this.__init();
 
         this.refresh();
@@ -6134,7 +6530,7 @@
           }
         }
 
-        var pts = this.__pts = [];
+        var pts = [];
 
         if (origin === 'TOP_LEFT') {
           points.forEach(function (item) {
@@ -6249,9 +6645,9 @@
           }
         }
 
+        var pts = [];
         points.forEach(function (item) {
-          item[0] = originX + item[0] * width;
-          item[1] = originY + item[1] * height;
+          pts.push([originX + item[0] * width, originY + item[1] * height]);
         });
 
         if (renderMode === mode.CANVAS) {
@@ -6260,14 +6656,14 @@
           ctx.fillStyle = fill;
           ctx.setLineDash(strokeDasharray);
           ctx.beginPath();
-          ctx.moveTo(points[0][0], points[0][1]);
+          ctx.moveTo(pts[0][0], pts[0][1]);
 
-          for (var _i = 1, _len = points.length; _i < _len; _i++) {
-            var point = points[_i];
+          for (var _i = 1, _len = pts.length; _i < _len; _i++) {
+            var point = pts[_i];
             ctx.lineTo(point[0], point[1]);
           }
 
-          ctx.lineTo(points[0][0], points[0][1]);
+          ctx.lineTo(pts[0][0], pts[0][1]);
           ctx.fill();
 
           if (strokeWidth > 0) {
@@ -6276,14 +6672,14 @@
 
           ctx.closePath();
         } else if (renderMode === mode.SVG) {
-          var pts = '';
+          var s = '';
 
-          for (var _i2 = 0, _len2 = points.length; _i2 < _len2; _i2++) {
-            var _point = points[_i2];
-            pts += "".concat(_point[0], ",").concat(_point[1], " ");
+          for (var _i2 = 0, _len2 = pts.length; _i2 < _len2; _i2++) {
+            var _point = pts[_i2];
+            s += "".concat(_point[0], ",").concat(_point[1], " ");
           }
 
-          this.addGeom('polygon', [['points', pts], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
+          this.addGeom('polygon', [['points', s], ['fill', fill], ['stroke', stroke], ['stroke-width', strokeWidth], ['stroke-dasharray', strokeDasharray]]);
         }
       }
     }, {
@@ -6408,6 +6804,7 @@
         x2 = _getCoordsByDegree4[0];
         y2 = _getCoordsByDegree4[1];
 
+        // console.log(cx, cy, x1, y1, x2, y2)
         if (renderMode === mode.CANVAS) {
           ctx.strokeStyle = stroke;
           ctx.lineWidth = strokeWidth;
@@ -6735,7 +7132,8 @@
     Geom: Geom,
     mode: mode,
     Component: Component,
-    Event: Event
+    Event: Event,
+    sort: sort
   };
 
   if (typeof window != 'undefined') {
