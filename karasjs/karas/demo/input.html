@@ -70,8 +70,21 @@
   }
   input.onclick = function() {
     exec(ta.value);
+    location.hash = encodeURIComponent(ta.value);
   };
-  exec(ta.value);
+  function hashChange(first) {
+    var s = location.hash.replace(/^#/, '');
+    if(s) {
+      s = decodeURIComponent(s);
+      ta.value = s;
+      exec(s);
+    }
+    else if(first) {
+      exec(ta.value);
+    }
+  }
+  hashChange(true);
+  window.onhashchange = hashChange;
 </script>
 </body>
 </html>
