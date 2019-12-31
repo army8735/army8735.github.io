@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>tag</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    canvas, svg {
+      width:50px;
+      height:50px;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<div id="test2"></div>
+<div id="test3"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  let o = karas.render(
+    <svg width="50" height="50">
+      <div ref="d" style={{position:'absolute',left:'10%',top:'10%',width:'80%',height:'80%',transformOrigin:'center 100%'}}>
+        <$circle
+          style={{position:'absolute',width:'100%',height:'100%',strokeWidth:0,fill:'#f55718'}}/>
+        <$polygon
+          ref="p"
+          points={[
+            [0.4673, 0.76],
+            [0.4673, 0.64],
+            [0.3266, 0.64],
+            [0.3266, 0.5666],
+            [0.4673, 0.5666],
+            [0.4673, 0.5],
+            [0.3266, 0.5],
+            [0.3266, 0.4266],
+            [0.4266, 0.4266],
+            [0.3333, 0.3133],
+            [0.38, 0.2726],
+            [0.5, 0.42],
+            [0.62, 0.2726],
+            [0.6667, 0.3133],
+            [0.5734, 0.4266],
+            [0.6734, 0.4266],
+            [0.6734, 0.5],
+            [0.5327, 0.5],
+            [0.5327, 0.5666],
+            [0.6734, 0.5666],
+            [0.6734, 0.64],
+            [0.5327, 0.64],
+            [0.5327, 0.76],
+          ]}
+          style={{position:'absolute',width:'100%',height:'100%',strokeWidth:0,fill:'#fff'}}/>
+      </div>
+    </svg>,
+    '#test'
+  );
+  o.ref.d.animate([
+    {
+      transform: 'scaleY(1) scaleX(1)',
+      offset: 0,
+    },
+    {
+      transform: 'scaleY(0.94) scaleX(1)',
+      offset: 0.02,
+    },
+    {
+      transform: 'translateY(-5%) scaleY(0.94) scaleX(1)',
+      offset: 0.05,
+    },
+    {
+      transform: 'translateY(-7%) scaleY(0.965) scaleX(1) skewY(0deg)',
+      offset: 0.1,
+    },
+    {
+      transform: 'translateY(-7.3%) scaleY(0.985) scaleX(0.75) skewY(1deg)',
+      offset: 0.12,
+    },
+    {
+      transform: 'translateY(-7.6%) scaleY(0.985) scaleX(0.4) skewY(2.2deg)',
+      offset: 0.14,
+    },
+    {
+      transform: 'translateY(-7.6%) scaleY(0.985) scaleX(0.05) skewY(4deg)',
+      offset: 0.16,
+    },
+    {
+      transform: 'translateY(-7.6%) scaleY(1) scaleX(0.985) skewY(0deg)',
+      offset: 0.2,
+    },
+    {
+      transform: 'translateY(-7.6%) scaleY(0.985) scaleX(0.05) skewY(-4deg)',
+      offset: 0.24,
+    },
+    {
+      transform: 'translateY(-7.4%) scaleY(0.985) scaleX(0.4) skewY(-2.2deg)',
+      offset: 0.26,
+    },
+    {
+      transform: 'translateY(-7%) scaleY(0.985) scaleX(0.75) skewY(-1deg)',
+      offset: 0.28,
+    },
+    {
+      transform: 'translateY(-6%) scaleY(0.985) scaleX(1) skewY(0deg)',
+      offset: 0.3,
+    },
+    {
+      transform: 'translateY(-3%) scaleY(0.985) scaleX(1)',
+      offset: 0.35,
+    },
+    {
+      transform: 'scaleY(0.94) scaleX(1)',
+      offset: 0.38,
+    },
+    {
+      transform: 'scaleY(1) scaleX(1)',
+      offset: 0.4,
+    },
+    {
+      transform: 'scaleY(1) scaleX(1)',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o.ref.p.animate([
+    {
+      visibility: 'visible',
+      offset: 0,
+    },
+    {
+      transform: 'translateX(0)',
+      visibility: 'visible',
+      offset: 0.1,
+    },
+    {
+      transform: 'translateX(-4%)',
+      visibility: 'visible',
+      offset: 0.13,
+    },
+    {
+      transform: 'translateX(-7%)',
+      visibility: 'hidden',
+      offset: 0.16,
+    },
+    {
+      transform: 'translateX(7%)',
+      visibility: 'visible',
+      offset: 0.24,
+    },
+    {
+      transform: 'translateX(4%)',
+      visibility: 'visible',
+      offset: 0.26,
+    },
+    {
+      transform: 'translateX(0)',
+      visibility: 'visible',
+      offset: 0.3,
+    },
+    {
+      visibility: 'visible',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+
+  let o2 = karas.render(
+    <svg width="50" height="50">
+      <$rect
+        ref="b"
+        rx="0.1"
+        ry="0.1"
+        style={{position:'absolute',left:'18%',top:'15%',width:'64%',height:'70%',fill:'#f5a918',strokeWidth:0,transformOrigin:'center bottom'}}/>
+      <div
+        ref="f"
+        style={{position:'absolute',left:'18%',top:'15%',width:'64%',height:'70%',transformOrigin:'center bottom'}}>
+        <$rect
+          rx="0.1"
+          ry="0.1"
+          style={{position:'absolute',left:'0',top:'0',width:'100%',height:'100%',fill:'#f5a918',strokeWidth:0}}/>
+        <$rect
+          ref="l1"
+          rx="0.1"
+          ry="0.1"
+          style={{position:'absolute',left:'20%',top:'20%',width:'60%',height:'12%',fill:'#fff',strokeWidth:0,transformOrigin:'left center'}}/>
+        <$rect
+          ref="l2"
+          rx="0.1"
+          ry="0.1"
+          style={{position:'absolute',left:'20%',top:'42%',width:'60%',height:'12%',fill:'#fff',strokeWidth:0,transformOrigin:'left center'}}/>
+        <$rect
+          ref="l3"
+          rx="0.2"
+          ry="0.2"
+          style={{position:'absolute',left:'20%',top:'64%',width:'30%',height:'12%',fill:'#fff',strokeWidth:0,transformOrigin:'left center'}}/>
+      </div>
+    </svg>,
+    '#test2'
+  );
+  o2.ref.b.animate([
+    {
+      transform: 'scaleX(1) skewY(0)',
+      offset: 0,
+    },
+    {
+      transform: 'translateX(-0.5%) translateY(-1%) scaleX(0.9) skewY(-0.1deg)',
+      offset: 0.04,
+    },
+    {
+      transform: 'translateX(-1.5%) translateY(-3%)  scaleX(0.7) skewY(-0.3deg)',
+      offset: 0.08,
+    },
+    {
+      transform: 'translateX(-3%) translateY(-6%)  scaleX(0.4) skewY(-0.6deg)',
+      offset: 0.12,
+    },
+    {
+      transform: 'translateX(-5%) translateY(-10%)  scaleX(0.05) skewY(-1deg)',
+      offset: 0.159,
+    },
+    {
+      transform: 'translateX(-5%) translateY(-10%)  scaleX(0.05) skewY(1deg)',
+      offset: 0.161,
+    },
+    {
+      transform: 'translateX(-3%) translateY(-6%)  scaleX(0.4) skewY(0.6deg)',
+      offset: 0.2,
+    },
+    {
+      transform: 'translateX(-1.5%) translateY(-3%)  scaleX(0.7) skewY(0.3deg)',
+      offset: 0.24,
+    },
+    {
+      transform: 'translateX(-0.5%) translateY(-1%) scaleX(0.9) skewY(0.1deg)',
+      offset: 0.28,
+    },
+    {
+      transform: 'scaleX(1) skewY(0)',
+      offset: 0.32,
+    },
+    {
+      transform: 'scaleX(1) skewY(0)',
+      offset: 1,
+    },
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o2.ref.f.animate([
+    {
+      transform: 'rotate(0) scaleX(1)',
+      offset: 0,
+    },
+    {
+      transform: 'translateX(5%) translateY(-1%) rotate(3deg) scaleX(1)',
+      offset: 0.04,
+    },
+    {
+      transform: 'translateX(20%) translateY(-3%) rotate(10deg) scaleX(0.7) skewY(10deg)',
+      offset: 0.08,
+    },
+    {
+      transform: 'translateX(40%) translateY(-6%) rotate(5deg) scaleX(0.1) skewY(20deg)',
+      offset: 0.129,
+    },
+    {
+      transform: 'translateX(55%) translateY(-12%) rotate(-10deg) scaleX(0.1) skewY(-20deg)',
+      offset: 0.131,
+    },
+    {
+      transform: 'translateX(30%) translateY(-8%) rotate(-8deg) scaleX(0.7) skewY(-12deg)',
+      offset: 0.18,
+    },
+    {
+      transform: 'translateX(5%) translateY(-5%) rotate(-5deg) scaleX(1) skewY(-5deg)',
+      offset: 0.24,
+    },
+    {
+      transform: 'translateX(-3%) translateY(-3%) rotate(-2deg) scaleX(1) skewY(-2deg)',
+      offset: 0.28,
+    },
+    {
+      transform: 'rotate(0) scaleX(1)',
+      offset: 0.32,
+    },
+    {
+      transform: 'rotate(0) scaleX(1)',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o2.ref.l1.animate([
+    {
+      visibility: 'visible',
+      offset: 0,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.129,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.131,
+    },
+    {
+      visibility: 'visible',
+      transform: 'scaleX(0)',
+      offset: 0.4,
+    },
+    {
+      transform: 'scaleX(0.4)',
+      offset: 0.42,
+    },
+    {
+      transform: 'scaleX(0.7)',
+      offset: 0.44,
+    },
+    {
+      transform: 'scaleX(0.9)',
+      offset: 0.46,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 0.48,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o2.ref.l2.animate([
+    {
+      visibility: 'visible',
+      offset: 0,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.129,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.131,
+    },
+    {
+      visibility: 'visible',
+      transform: 'scaleX(0)',
+      offset: 0.42,
+    },
+    {
+      transform: 'scaleX(0.4)',
+      offset: 0.44,
+    },
+    {
+      transform: 'scaleX(0.7)',
+      offset: 0.46,
+    },
+    {
+      transform: 'scaleX(0.9)',
+      offset: 0.48,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 0.5,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o2.ref.l3.animate([
+    {
+      visibility: 'visible',
+      offset: 0,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.129,
+    },
+    {
+      visibility: 'hidden',
+      offset: 0.131,
+    },
+    {
+      visibility: 'visible',
+      transform: 'scaleX(0)',
+      offset: 0.44,
+    },
+    {
+      transform: 'scaleX(0.4)',
+      offset: 0.46,
+    },
+    {
+      transform: 'scaleX(0.7)',
+      offset: 0.48,
+    },
+    {
+      transform: 'scaleX(0.9)',
+      offset: 0.5,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 0.52,
+    },
+    {
+      transform: 'scaleX(1)',
+      offset: 1,
+    }
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+
+  let o3 = karas.render(
+    <svg width="50" height="50">
+      <div
+        ref="t"
+        style={{position:'absolute',left:'5%',top:'5%',width:'90%',height:'90%',transformOrigin:'center 90%'}}>
+        <$polygon
+          ref="b"
+          points={[
+            [0.12, 0.56],
+            [0.48, 0.86],
+            [0.67, 0.83],
+            [0.62, 0.1],
+            [0.56, 0.12],
+            [0.55, 0.4],
+            [0.32, 0.42],
+            [0.28, 0.46],
+            [0.46, 0.66],
+            [0.22, 0.54]
+          ]}
+          controls={[
+            [0.2, 0.78, 0.4, 0.84],
+            [0.58, 0.84],
+            [0.95, 0.65, 0.95, 0.28],
+            [0.6, 0.09, 0.57, 0.1],
+            [0.54, 0.2, 0.62, 0.3],
+            [0.5, 0.45, 0.4, 0.4],
+            [0.28, 0.44],
+            [0.27, 0.52, 0.47, 0.47],
+            [0.45, 0.76, 0.24, 0.64],
+            [0.22, 0.47, 0.1, 0.47]
+          ]}
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',strokeWidth:0,fill:'#F60'}}/>
+        <$polygon
+          ref="a"
+          points={[
+            [0.63, 0.52],
+            [0.75, 0.65],
+            [0.7, 0.65],
+            [0.67, 0.83],
+            [0.48, 0.86],
+            [0.56, 0.65],
+            [0.51, 0.65]
+          ]}
+          controls={[
+            null,
+            null,
+            [0.7, 0.75, 0.69, 0.8],
+            [0.66, 0.84, 0.55, 0.87],
+            [0.56, 0.8, 0.56, 0.68],
+          ]}
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',strokeWidth:0,fill:'#FFF'}}/>
+        <$circle
+          ref="c"
+          style={{position:'absolute',top:'18%',left:'40%',width:'28%',height:'28%',strokeWidth:'10%',stroke:'#FFF',fill:'#F60'}}/>
+      </div>
+    </svg>,
+    '#test3'
+  );
+  o3.ref.t.animate([
+    {
+      transform: 'translateY(0) rotate(0) scaleX(1)',
+      easing: 'easeOut',
+    },
+    {
+      transform: 'translateY(-15%) rotate(-13deg) scaleX(0.98)',
+      offset: 0.3,
+      easing: 'easeIn',
+    },
+    {
+      transform: 'translateY(0) rotate(0) scaleX(1)',
+      offset: 0.5,
+      easing: 'easeInOut',
+    },
+    {
+      transform: 'translateY(0) rotate(8deg) scaleX(1)',
+      offset: 0.55,
+      easing: 'easeInOut',
+    },
+    {
+      transform: 'translateY(0) rotate(-5deg) scaleX(1)',
+      offset: 0.63,
+      easing: 'easeInOut',
+    },
+    {
+      transform: 'translateY(0) rotate(1.5deg) scaleX(1)',
+      offset: 0.7,
+    },
+    {
+      transform: 'translateY(0) rotate(0) scaleX(1)',
+      offset: 0.72,
+    },
+    {}
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o3.ref.b.animate([
+    {
+    },
+    {
+      points: [
+        [0.12, 0.56],
+        [0.48, 0.86],
+        [0.67, 0.83],
+        [0.62, 0.1],
+        [0.56, 0.12],
+        [0.55, 0.4],
+        [0.32, 0.42],
+        [0.28, 0.46],
+        [0.46, 0.66],
+        [0.22, 0.54]
+      ],
+      controls: [
+        [0.2, 0.78, 0.4, 0.84],
+        [0.58, 0.84],
+        [0.95, 0.65, 0.95, 0.28],
+        [0.6, 0.09, 0.57, 0.1],
+        [0.54, 0.2, 0.62, 0.3],
+        [0.5, 0.45, 0.4, 0.4],
+        [0.28, 0.44],
+        [0.27, 0.52, 0.47, 0.47],
+        [0.45, 0.76, 0.24, 0.64],
+        [0.22, 0.47, 0.1, 0.47]
+      ],
+      offset: 0.05,
+      easing: 'easeInOut',
+    },
+    {
+      points: [
+        [0.1, 0.56],
+        [0.46, 0.86],
+        [0.65, 0.83],
+        [0.61, 0.1],
+        [0.55, 0.12],
+        [0.54, 0.4],
+        [0.32, 0.42],
+        [0.27, 0.46],
+        [0.45, 0.66],
+        [0.23, 0.54]
+      ],
+      controls: [
+        [0.18, 0.78, 0.38, 0.85],
+        [0.58, 0.84],
+        [0.9, 0.65, 0.9, 0.28],
+        [0.6, 0.09, 0.57, 0.1],
+        [0.54, 0.2, 0.62, 0.3],
+        [0.5, 0.45, 0.4, 0.4],
+        [0.27, 0.44],
+        [0.25, 0.52, 0.45, 0.47],
+        [0.46, 0.76, 0.25, 0.64],
+        [0.22, 0.47, 0.1, 0.47]
+      ],
+      offset: 0.3,
+    },
+    {
+      points: [
+        [0.1, 0.56],
+        [0.46, 0.86],
+        [0.65, 0.83],
+        [0.61, 0.1],
+        [0.55, 0.12],
+        [0.54, 0.4],
+        [0.32, 0.42],
+        [0.27, 0.46],
+        [0.45, 0.66],
+        [0.23, 0.54]
+      ],
+      controls: [
+        [0.18, 0.78, 0.38, 0.85],
+        [0.58, 0.84],
+        [0.9, 0.65, 0.9, 0.28],
+        [0.6, 0.09, 0.57, 0.1],
+        [0.54, 0.2, 0.62, 0.3],
+        [0.5, 0.45, 0.4, 0.4],
+        [0.27, 0.44],
+        [0.25, 0.52, 0.45, 0.47],
+        [0.46, 0.76, 0.25, 0.64],
+        [0.22, 0.47, 0.1, 0.47]
+      ],
+      offset: 0.4,
+      easing: 'easeInOut',
+    },
+    {
+      points: [
+        [0.12, 0.56],
+        [0.48, 0.86],
+        [0.67, 0.83],
+        [0.62, 0.1],
+        [0.56, 0.12],
+        [0.55, 0.4],
+        [0.32, 0.42],
+        [0.28, 0.46],
+        [0.46, 0.66],
+        [0.22, 0.54]
+      ],
+      controls: [
+        [0.2, 0.78, 0.4, 0.84],
+        [0.58, 0.84],
+        [0.96, 0.65, 0.96, 0.28],
+        [0.6, 0.09, 0.57, 0.1],
+        [0.54, 0.2, 0.62, 0.3],
+        [0.5, 0.45, 0.4, 0.4],
+        [0.28, 0.44],
+        [0.27, 0.52, 0.47, 0.47],
+        [0.45, 0.76, 0.24, 0.64],
+        [0.22, 0.47, 0.1, 0.47]
+      ],
+      offset: 0.53,
+    },
+    {}
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+  o3.ref.a.animate([
+    {
+    },
+    {
+      transform: 'translateX(0) skewY(0) scaleX(1)',
+      offset: 0.05,
+    },
+    {
+      transform: 'translateX(1%) skewY(-3deg) scaleX(0.96) rotate(-3deg)',
+      offset: 0.3,
+    },
+    {
+      transform: 'translateX(1%) skewY(-3deg) scaleX(0.96) rotate(-3deg)',
+      offset: 0.4,
+    },
+    {
+      transform: 'translateX(0) skewY(0) scaleX(1)',
+      offset: 0.6,
+    },
+    {}
+  ], {
+    duration: 5000,
+    iterations: Infinity,
+  });
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script>
+  seajs.config({
+    alias: {
+    },
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
