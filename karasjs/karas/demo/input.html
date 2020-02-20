@@ -54,7 +54,7 @@
         width: 360,
         height: 360,
       },
-      children: [
+      children: Array.isArray(json) ? json : [
         json,
       ],
     }, '#example');
@@ -64,7 +64,7 @@
         width: 360,
         height: 360,
       },
-      children: [
+      children: Array.isArray(json) ? json : [
         json,
       ],
     }, '#example2');
