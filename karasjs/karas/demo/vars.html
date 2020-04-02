@@ -16,7 +16,8 @@
 试着修改下方的数字1（播放速度倍数），体验下播放速度的变化。</div>
 <div>
 <textarea id="ta" autocomplete="off">{
-  "playbackRate": 1
+  "playbackRate": 1,
+  "top": 100
 }</textarea>
   <input id="btn" type="button" value="ok"/>
 </div>
@@ -61,7 +62,10 @@
           "easing": "easeOut"
         },
         {
-          "top": 100
+          "top": 100,
+          "var-top": {
+            "id": "top"
+          }
         }
       ],
       "options": {
