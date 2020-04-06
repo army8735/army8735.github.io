@@ -122,22 +122,22 @@
             self.setState({
               top: Math.max(top - 10, 0),
             });
-          break;
+            break;
           case 65:
             self.setState({
               left: Math.max(left - 10, 0),
             });
-          break;
+            break;
           case 83:
             self.setState({
               top: Math.min(top + 10, 310),
             });
-          break;
+            break;
           case 68:
             self.setState({
               left: Math.min(left + 10, 310),
             });
-          break;
+            break;
         }
       });
     }
@@ -155,20 +155,6 @@
           height: '100%',
           fill: '#999',
         }} points={plane}/>
-        {
-          [1, 2, 3].map(function() {
-            return <$rect style={{
-              position: 'absolute',
-              left: 24,
-              top: 0,
-              width: 3,
-              height: 10,
-              strokeWidth: 0,
-              fill: '#F60',
-              opacity: 0,
-            }}/>;
-          })
-        }
       </div>;
     }
   }
@@ -176,13 +162,26 @@
   var root = karas.render(
     <svg width="360" height="360">
       <Plane/>
+      {
+        [1, 2, 3].map(function() {
+          return <$rect style={{
+            position: 'absolute',
+            left: 174,
+            top: 300,
+            width: 3,
+            height: 10,
+            strokeWidth: 0,
+            fill: '#F60',
+            opacity: 0,
+          }}/>;
+        })
+      }
     </svg>,
     '#example2'
   );
-  var p = root.children[0];
-  var bullets = p.shadowRoot.children.slice(1);
+  var bullets = root.children.slice(1);
   bullets.forEach(function(item, i) {
-    item.animate([
+    let a = item.animate([
       {
         translateY: 0,
         opacity: 0,
@@ -193,12 +192,16 @@
         offset: 0.1,
       },
       {
-        translateY: -300,
+        translateY: -360,
       }
     ], {
       duration: 1500,
-      iterations: Infinity,
       delay: i * 500,
+      iterations: Infinity,
+    });
+    a.on('end', function() {
+      item.props.style.left = root.children[0].computedStyle.left + 24;
+      root.setRefreshLevel(1);
     });
   });
 </script>
