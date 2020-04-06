@@ -201,6 +201,7 @@
     });
     a.on('end', function() {
       item.props.style.left = root.children[0].computedStyle.left + 24;
+      item.props.style.top = root.children[0].computedStyle.top;
       root.setRefreshLevel(1);
     });
   });
