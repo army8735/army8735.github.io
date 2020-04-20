@@ -7,7 +7,7 @@
   <link href="style.css" media="all" rel="stylesheet"/>
 </head>
 <body>
-<div class="pre">试着用WASD控制飞机上下左右移动。</div>
+<div class="pre">富交互+动画，拥有RIA小游戏实现的能力基础，试着用WASD控制飞机上下左右移动。</div>
 <div>
 </div>
 <!--<div id="example"></div>-->
@@ -122,22 +122,22 @@
             self.setState({
               top: Math.max(top - 10, 0),
             });
-            break;
+          break;
           case 65:
             self.setState({
               left: Math.max(left - 10, 0),
             });
-            break;
+          break;
           case 83:
             self.setState({
               top: Math.min(top + 10, 310),
             });
-            break;
+          break;
           case 68:
             self.setState({
               left: Math.min(left + 10, 310),
             });
-            break;
+          break;
         }
       });
     }

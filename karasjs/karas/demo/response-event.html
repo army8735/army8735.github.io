@@ -22,7 +22,7 @@
         return false;
       }
       // 判断是否点在圆内才响应
-      let { x, y, width, height, ctx } = this;
+      let { x, y, width, height } = this;
       let cx = x + width * 0.5;
       let cy = y + height * 0.5;
       let r = Math.min(width, height) * 0.5;
@@ -61,14 +61,14 @@
 
   karas.render(
     <canvas width="360" height="360">
-      <div style={{marginBottom:30,width:100,height:100,background:'#F00',transform:'translate(20)skewX(-10deg)rotate(20deg)'}} onClick={() => {alert('click')}}>点原本矩形是没用的，必须点matrix后的红色部分</div>
+      <div style={{marginBottom:30,width:100,height:100,background:'#F00',transform:'translate(20px)skewX(-10deg)rotate(20deg)'}} onClick={() => {alert('click')}}>点原本矩形是没用的，必须点matrix后的红色部分</div>
       <$iCircle style={{width:100,height:100,border:'1px solid #CCC'}} onClick={()=>{alert('圆内')}}/>
     </canvas>,
     '#example'
   );
   karas.render(
     <svg width="360" height="360">
-      <div style={{marginBottom:30,width:100,height:100,background:'#F00',transform:'translate(20)skewX(-10deg)rotate(20deg)'}} onClick={() => {alert('click')}}>点原本矩形是没用的，必须点matrix后的红色部分</div>
+      <div style={{marginBottom:30,width:100,height:100,background:'#F00',transform:'translate(20px)skewX(-10deg)rotate(20deg)'}} onClick={() => {alert('click')}}>点原本矩形是没用的，必须点matrix后的红色部分</div>
       <$iCircle style={{width:100,height:100,border:'1px solid #CCC'}} onClick={()=>{alert('圆内')}}/>
     </svg>,
     '#example2'

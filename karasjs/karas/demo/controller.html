@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
-  <title>dynamic</title>
+  <title>controller</title>
   <link href="style.css" media="all" rel="stylesheet"/>
   <style>
     #example, #example2, canvas, svg {
@@ -13,11 +13,13 @@
   </style>
 </head>
 <body>
-<div class="pre">在一些展示或动画场景，希望能够通过配置的方式实现，这样能够灵活控制内容。动态加载能力实现了这一需求。</div>
+<div class="pre">Root下有个animateController对象，作为总动画控制器，控制所有想被总控的动画。
+parse()模式下的animate声明都会进入总控，render()模式下animate()的第3个参数可选进入总控。
+Root被parse()出时，动画是默认播放的，第3个参数options中可以声明autoPlay为false取消；render()则相反，默认不播放，需显示调用play()。</div>
 <div id="example"></div>
 <div id="example2"></div>
 <pre><code class="brush:csx"></code></pre>
-<script type="text/jsx">
+<script>
   let data = [
     {
       tagName: 'div',
@@ -107,6 +109,7 @@
         {
           tagName: '$circle',
           props: {
+            ref: 'c',
             style: {
               position: 'absolute',
               left: '5%',
@@ -121,6 +124,7 @@
         {
           tagName: '$polygon',
           props: {
+            ref: 'p',
             points: [
               [ 0.4673, 0.76 ],
               [ 0.4673, 0.64 ],
@@ -206,22 +210,31 @@
       ],
     },
   ];
-  karas.parse({
+</script>
+<script type="text/jsx">
+  let o = karas.parse({
     tagName: 'canvas',
     props: {
       width: 100,
       height: 100,
     },
     children: data,
-  }, '#example');
-  karas.parse({
+  }, '#example', {
+    // autoPlay
+  });
+  let o2 = karas.parse({
     tagName: 'svg',
     props: {
       width: 100,
       height: 100,
     },
     children: data,
-  }, '#example2');
+  }, '#example2', {
+    // autoPlay
+  });
+  o.animateController.playbackRate = 2;
+  // 可以控制o.animateController.pause();
+  o2.animateController.iterations = 1;
 </script>
 <script src="sea.js"></script>
 <script src="homunculus.js"></script>
