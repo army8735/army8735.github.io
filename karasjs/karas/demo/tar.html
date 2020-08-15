@@ -55,25 +55,32 @@
     </svg>,
     '#example2'
   );
+  let s = o.ref.s;
+  let s2 = o2.ref.s;
   let t = o.ref.t;
   let t2 = o2.ref.t;
-  let res = karas.math.tar.transform([0, 0, 80, 10, 30, 50], [10, 20, 100, 0, 100, 100]);
-  let style = {
-    transform: `matrix(${res.join(',')})`,
-  };
-  let n = true;
+  let res = karas.math.tar.transform([50, 10, 80, 20, 30, 50], [10, 20, 100, 5, 90, 80]);
+  let flag = true;
   setInterval(function() {
-    if(n) {
-      t.style.transform = karas.css.normalize(style).transform;
-      t2.style.transform = karas.css.normalize(style).transform;
+    if(flag) {
+      s.updateStyle({
+        transform: `matrix(${res.join(',')})`,
+      });
+      s2.updateStyle({
+        transform: `matrix(${res.join(',')})`,
+      });
     }
     else {
-      t.style.transform = null;
-      t2.style.transform = null;
+      s.updateStyle({
+        transform: null,
+      });
+      s2.updateStyle({
+        transform: null,
+      });
     }
     o.refresh();
     o2.refresh();
-    n = !n;
+    flag = !flag;
   }, 1000);
 </script>
 <script src="homunculus.js"></script>
