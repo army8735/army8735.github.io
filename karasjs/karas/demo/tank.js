@@ -167,11 +167,23 @@
     "0": {
       "brick": [[7, 4], [7, 5], [7, 6], [7, 7], [7, 8], [7, 9], [7, 10], [7, 11], [8, 4], [8, 5], [8, 6], [8, 7], [8, 8], [8, 9], [8, 10], [8, 11], [11, 4], [12, 4], [12, 5], [11, 5], [11, 6], [12, 6], [12, 7], [11, 7], [11, 8], [12, 8], [12, 9], [11, 9], [11, 10], [12, 10], [11, 11], [12, 11], [9, 14], [9, 15], [10, 15], [10, 14], [11, 14], [11, 15], [12, 15], [12, 14], [7, 18], [8, 18], [7, 19], [8, 19], [7, 20], [8, 20], [7, 21], [8, 21], [7, 22], [8, 22], [7, 23], [8, 23], [7, 24], [8, 24], [7, 25], [8, 25], [11, 18], [12, 18], [12, 19], [12, 20], [12, 21], [12, 22], [11, 22], [11, 20], [11, 19], [11, 21], [11, 23], [12, 23], [12, 24], [11, 24], [11, 25], [12, 25], [15, 9], [16, 9], [16, 8], [15, 8], [15, 7], [16, 7], [16, 6], [15, 6], [15, 5], [15, 4], [16, 4], [16, 5], [19, 9], [20, 9], [20, 8], [19, 8], [19, 7], [20, 7], [20, 6], [19, 6], [19, 5], [19, 4], [20, 4], [20, 5], [15, 12], [15, 13], [16, 13], [16, 12], [19, 12], [19, 13], [20, 13], [20, 12], [15, 17], [15, 16], [16, 16], [16, 17], [15, 18], [16, 18], [15, 19], [16, 19], [15, 20], [16, 20], [15, 21], [16, 21], [15, 22], [16, 22], [19, 16], [20, 16], [20, 17], [19, 17], [19, 18], [20, 18], [20, 19], [19, 19], [19, 20], [20, 20], [20, 21], [19, 21], [19, 22], [20, 22], [17, 17], [18, 17], [18, 18], [17, 18], [23, 4], [24, 4], [23, 5], [24, 5], [24, 6], [23, 6], [23, 8], [23, 7], [24, 7], [24, 8], [23, 9], [24, 9], [23, 10], [24, 10], [23, 11], [24, 11], [27, 4], [28, 4], [28, 5], [27, 5], [27, 6], [28, 6], [28, 7], [27, 7], [27, 8], [28, 8], [28, 9], [27, 10], [27, 9], [28, 10], [27, 11], [28, 11], [23, 14], [23, 15], [24, 14], [24, 15], [26, 14], [26, 15], [25, 15], [25, 14], [23, 18], [24, 18], [23, 19], [24, 19], [23, 20], [24, 20], [23, 21], [24, 21], [23, 22], [24, 22], [23, 23], [24, 23], [23, 24], [24, 24], [23, 25], [24, 25], [27, 18], [28, 18], [27, 19], [28, 19], [27, 20], [28, 20], [27, 21], [28, 21], [27, 22], [28, 22], [27, 23], [28, 23], [27, 25], [28, 25], [28, 24], [27, 24], [29, 14], [30, 14], [6, 14], [5, 14], [16, 25], [17, 25], [18, 25], [19, 25], [16, 26], [16, 27], [19, 26], [19, 27]],
       "iron": [[30, 15], [29, 15], [6, 15], [5, 15], [17, 7], [18, 7], [18, 8], [17, 8]],
+      "grass": [],
       "home": [[17, 26]],
       "player": [[13, 26, 2, 1], [21, 26, 2, 1]],
-      "enemy": [[5, 2, 0, 0], [17, 2, 1, 0], [29, 2, 2, 0], [5, 2, 3, 0], [17, 2, 4, 0], [29, 2, 5, 0], [5, 2, 0, 0], [17, 2, 1, 0], [29, 2, 2, 0], [5, 2, 3, 0], [17, 2, 4, 0], [29, 2, 5, 0]],
+      "enemy": [[5, 2, 0], [17, 2, 0], [29, 2, 1], [5, 2, 2], [17, 2, 2], [29, 3, 5], [5, 2, 1], [17, 2, 2], [29, 2, 3], [5, 2, 3], [17, 2, 4], [29, 2, 4], [5, 2, 0], [17, 2, 2], [29, 2, 1], [5, 2, 2], [17, 2, 3], [29, 2, 4], [5, 2, 4], [17, 2, 5], [29, 2, 5]],
       "box": [5, 2, 31, 28]
     },
+    "1": {
+      "brick": [[7, 4], [7, 5], [7, 6], [7, 7], [8, 4], [8, 5], [8, 6], [8, 7], [11, 8], [12, 8], [12, 9], [11, 9], [11, 10], [12, 10], [11, 11], [12, 11], [9, 14], [9, 15], [10, 15], [10, 14], [11, 14], [11, 15], [12, 15], [12, 14], [7, 18], [8, 18], [7, 19], [8, 19], [7, 20], [8, 20], [7, 21], [8, 21], [7, 22], [8, 22], [7, 23], [8, 23], [7, 24], [8, 24], [7, 25], [8, 25], [12, 20], [12, 21], [12, 22], [11, 22], [11, 20], [11, 21], [11, 23], [12, 23], [19, 7], [20, 7], [20, 6], [19, 6], [19, 5], [19, 4], [20, 4], [20, 5], [15, 12], [15, 13], [16, 13], [16, 12], [15, 17], [15, 16], [16, 16], [16, 17], [15, 18], [16, 18], [15, 19], [16, 19], [15, 20], [16, 20], [15, 21], [16, 21], [15, 22], [16, 22], [19, 16], [20, 16], [20, 17], [19, 17], [19, 18], [20, 18], [20, 19], [19, 19], [19, 20], [20, 20], [20, 21], [19, 21], [19, 22], [20, 22], [23, 4], [24, 4], [23, 5], [24, 5], [24, 6], [23, 6], [23, 7], [24, 7], [23, 10], [24, 10], [23, 11], [24, 11], [27, 4], [28, 4], [28, 5], [27, 5], [27, 6], [28, 6], [28, 7], [27, 7], [27, 10], [28, 10], [27, 11], [28, 11], [23, 20], [24, 20], [23, 21], [24, 21], [23, 24], [24, 24], [23, 25], [24, 25], [27, 18], [28, 18], [27, 19], [28, 19], [27, 20], [28, 20], [27, 21], [28, 21], [27, 25], [28, 25], [28, 24], [27, 24], [16, 25], [17, 25], [18, 25], [19, 25], [16, 26], [16, 27], [19, 26], [19, 27], [7, 15], [8, 15], [8, 14], [7, 14], [7, 26], [8, 26], [7, 27], [8, 27], [11, 26], [12, 26], [12, 27], [11, 27], [15, 23], [16, 23], [17, 23], [18, 23], [19, 23], [20, 23], [18, 22], [17, 22], [17, 21], [17, 20], [18, 20], [18, 21], [23, 26], [23, 27], [24, 27], [24, 26], [25, 27], [26, 27], [27, 27], [28, 27], [28, 26], [27, 26], [26, 26], [25, 26], [24, 17], [23, 17], [23, 16], [24, 16], [17, 7], [18, 7], [18, 6], [17, 6], [27, 16], [27, 17], [28, 17], [28, 16], [28, 14], [28, 15], [27, 15], [27, 14]],
+      "iron": [[11, 2], [12, 2], [12, 3], [11, 3], [12, 5], [11, 4], [11, 5], [12, 4], [6, 18], [5, 18], [5, 19], [6, 19], [11, 16], [11, 17], [12, 17], [12, 16], [12, 18], [11, 18], [11, 19], [12, 19], [26, 21], [25, 21], [25, 20], [26, 20], [19, 14], [19, 15], [20, 15], [20, 14], [21, 12], [21, 13], [22, 13], [22, 12], [17, 11], [17, 10], [18, 10], [18, 11], [19, 2], [19, 3], [20, 3], [20, 2], [25, 6], [26, 6], [26, 7], [25, 7], [29, 10], [30, 10], [30, 11], [29, 11], [24, 8], [23, 8], [23, 9], [24, 9]],
+      "home": [[17, 26]],
+      "grass": [[6, 13], [5, 13], [5, 12], [6, 12], [5, 11], [6, 11], [5, 10], [6, 10], [7, 13], [8, 13], [8, 12], [7, 12], [18, 14], [17, 14], [17, 15], [18, 15], [16, 14], [15, 14], [15, 15], [16, 15], [14, 14], [13, 15], [14, 15], [13, 14], [13, 16], [14, 16], [14, 17], [13, 17], [25, 12], [26, 12], [26, 13], [25, 13], [25, 14], [26, 14], [26, 15], [25, 15]],
+      "enemy": [[5, 2, 0], [17, 2, 0], [29, 2, 1], [5, 2, 2], [17, 2, 3], [29, 3, 4], [5, 2, 5], [17, 2, 2], [29, 2, 1], [5, 2, 1], [17, 2, 2], [29, 2, 0], [5, 2, 3], [17, 2, 1], [29, 2, 2], [5, 2, 3], [17, 2, 3], [29, 2, 4], [5, 2, 4], [17, 2, 5], [29, 2, 5]],
+      "player": [[13, 26, 2, 1], [21, 26, 2, 1]],
+      "box": [5, 2, 31, 28]
+    },
+    num: 0,
+    total: 2,
     current: null
   };
 
@@ -195,9 +207,13 @@
   eventBus.HIT_US = 'HIT_US';
   eventBus.HIT_US_BY_US = 'HIT_US_BY_US';
   eventBus.ADD_ENEMY = 'ADD_ENEMY';
+  eventBus.ADDED_ENEMY = 'ADDED_ENEMY';
   eventBus.ENEMY_FIRE = 'ENEMY_FIRE';
   eventBus.SHOOT = 'SHOOT';
   eventBus.PLAY_REBONE = 'PLAY_REBONE';
+  eventBus.PLAYER_NO_LIFE = 'PLAYER_NO_LIFE';
+  eventBus.MOVE = 'MOVE';
+  eventBus.STOP = 'STOP';
   eventBus.BOOM = 'BOOM';
   eventBus.OCCUR = 'OCCUR';
   eventBus.GET = 'GET';
@@ -341,16 +357,31 @@
     }
 
     _createClass(StageNum, [{
+      key: "componentDidMount",
+      value: function componentDidMount() {
+        var _this2 = this;
+
+        eventBus.on([eventBus.BEFORE_GAME, eventBus.GAME_NEXT], function () {
+          data.current = karas$1.util.clone(data[data.num % data.total]);
+
+          if (eventBus.playerNum === 1) {
+            data.current.player.splice(1);
+          }
+
+          _this2.show(data.num);
+        });
+      }
+    }, {
       key: "show",
       value: function show(num) {
-        var _this2 = this;
+        var _this3 = this;
 
         // 设置数字
         this.setState({
-          num: num
+          num: num + 1
         }, function () {
           // 上下遮盖屏幕动画
-          _this2.ref.top.animate([{
+          _this3.ref.top.animate([{
             translateY: '-100%'
           }, {
             translateY: 0
@@ -359,7 +390,7 @@
             fill: 'forwards'
           });
 
-          var a = _this2.ref.bottom.animate([{
+          var a = _this3.ref.bottom.animate([{
             translateY: '100%'
           }, {
             translateY: 0
@@ -370,7 +401,7 @@
 
 
           a.on('finish', function () {
-            _this2.ref.text.updateStyle({
+            _this3.ref.text.updateStyle({
               visibility: 'visible'
             }, function () {
               eventBus.gameState = eventBus.WILL_GAME;
@@ -378,12 +409,12 @@
 
               setTimeout(function () {
                 // 隐藏主tank菜单和局数，显示游戏主场景
-                _this2.ref.text.updateStyle({
+                _this3.ref.text.updateStyle({
                   visibility: 'hidden'
                 }); // 打开遮盖
 
 
-                _this2.ref.top.animate([{
+                _this3.ref.top.animate([{
                   translateY: 0
                 }, {
                   translateY: '-100%'
@@ -392,7 +423,7 @@
                   fill: 'forwards'
                 });
 
-                var a = _this2.ref.bottom.animate([{
+                var a = _this3.ref.bottom.animate([{
                   translateY: 0
                 }, {
                   translateY: '100%'
@@ -485,7 +516,7 @@
       value: function componentDidMount() {
         var _this2 = this;
 
-        eventBus.on(eventBus.HIT_HOME, function () {
+        eventBus.on([eventBus.HIT_HOME, eventBus.PLAYER_NO_LIFE], function () {
           eventBus.gameState = eventBus.GAME_OVER;
           eventBus.emit(eventBus.GAME_OVER);
 
@@ -917,6 +948,7 @@
           _this2.show('player', i);
         });
         eventBus.on([eventBus.GAME_OVER, eventBus.GAME_NEXT], function () {
+          eventBus.activeEnemyNum = 0;
           clearInterval(_this2.interval);
         });
       }
@@ -1297,7 +1329,7 @@
               eventBus.emit(eventBus.BOOM, _item[5] + 16, _item[6] + 16);
               var life = _item[2]--;
 
-              if (life < 0) {
+              if (life <= 0) {
                 player.updateStyle({
                   visibility: 'hidden'
                 });
@@ -1345,6 +1377,15 @@
               });
             }
           });
+          var n = 0;
+          data.current.player.forEach(function (item) {
+            n += item[2];
+          });
+
+          if (n < 0) {
+            eventBus.gameState = eventBus.GAME_OVER;
+            eventBus.emit(eventBus.PLAYER_NO_LIFE);
+          }
         });
         eventBus.on(eventBus.HIT_US_BY_US, function (id, x, y, us) {
           us.forEach(function (item) {
@@ -1459,6 +1500,7 @@
           return;
         }
 
+        eventBus.emit(eventBus.MOVE);
         this['playerLastD' + index] = direction;
         var cb = this['ma' + index];
         karas$1.animate.frame.offFrame(cb); // 检查是否被挡住
@@ -1589,6 +1631,7 @@
     }, {
       key: "stop",
       value: function stop(index) {
+        eventBus.emit(eventBus.STOP);
         var player = this.ref['player' + index];
         var tank = this.ref['tank' + index];
         var item = this.state.list[index];
@@ -1925,6 +1968,11 @@
         var _this2 = this;
 
         // 开始游戏
+        eventBus.on(eventBus.WILL_GAME, function () {
+          _this2.setState({
+            list: []
+          });
+        });
         eventBus.on(eventBus.GAMEING, function () {
           _this2.setState({
             show: true
@@ -1964,8 +2012,8 @@
 
                 var fire = --item[8];
 
-                if (fire === 0) {
-                  item[8] = ENEMY_FIRE_COUNT + Math.floor(Math.random() * ENEMY_FIRE_COUNT);
+                if (fire <= 0) {
+                  item[8] = 10 + Math.floor(Math.random() * ENEMY_FIRE_COUNT);
                   eventBus.emit(eventBus.ENEMY_FIRE, i, [px, py], direction);
                 } // 检测移动，积累count到一定后没有一定随机更换方向
 
@@ -2051,6 +2099,7 @@
           _this2.setState({
             list: list
           }, function () {
+            eventBus.emit(eventBus.ADDED_ENEMY);
             var tank = _this2.ref['tank' + id]; // 红闪
 
             if (item[9]) {
@@ -2073,12 +2122,12 @@
             });
           });
         });
-        eventBus.on(eventBus.HIT_ENEMY, function (id, x, y, data) {
+        eventBus.on(eventBus.HIT_ENEMY, function (id, x, y, d) {
           for (var list = _this2.state.list, i = 0, len = list.length; i < len; i++) {
             var item = list[i];
 
-            for (var j = 0, len2 = data.length; j < len2; j++) {
-              if (item === data[j]) {
+            for (var j = 0, len2 = d.length; j < len2; j++) {
+              if (item === d[j]) {
                 var tank = _this2.ref['tank' + i]; // 红先消失
 
                 if (item[9]) {
@@ -2099,13 +2148,29 @@
                   });
                 } // 其它挂
                 else {
-                  item[3] = 2;
+                  (function () {
+                    item[3] = 2;
 
-                  _this2.setState({
-                    list: list
-                  });
+                    _this2.setState({
+                      list: list
+                    });
 
-                  eventBus.emit(eventBus.BOOM, item[5] + 16, item[6] + 16);
+                    eventBus.emit(eventBus.BOOM, item[5] + 16, item[6] + 16);
+                    var n = 0;
+                    data.current.enemy.forEach(function (item) {
+                      if (item[3] !== 2) {
+                        n++;
+                      }
+                    });
+
+                    if (!n) {
+                      setTimeout(function () {
+                        data.num++;
+                        data.num %= data.total;
+                        eventBus.emit(eventBus.GAME_NEXT);
+                      }, 2000);
+                    }
+                  })();
                 }
               }
             }
@@ -2133,7 +2198,7 @@
             });
           }
         });
-        eventBus.on(eventBus.BEFORE_MENU, function () {
+        eventBus.on([eventBus.BEFORE_MENU, eventBus.WILL_GAME], function () {
           karas$1.animate.frame.offFrame(_this2.cb);
         });
       }
@@ -2174,7 +2239,7 @@
           } // 新出生的tank
 
 
-          if (state === 0) {
+          if (!state) {
             item[3] = 1; // 变老tank
 
             item[4] = direction;
@@ -2390,7 +2455,7 @@
 
       var item = list[i]; // 防止自己没命了
 
-      if (item[2] === 0) {
+      if (item[2] < 0) {
         continue;
       }
 
@@ -3022,6 +3087,7 @@
           var y = Math.floor(Math.random() * (data.current.box[3] - data.current.box[1]) * 8) + data.current.box[1] * 8;
           var hash = _this2.state.hash;
           var type = list[i];
+          type = 'life';
           var o = hash[type] = {
             x: x,
             y: y
@@ -3126,6 +3192,176 @@
     return Item;
   }(karas$1.Component);
 
+  var Status = /*#__PURE__*/function (_karas$Component) {
+    _inherits(Status, _karas$Component);
+
+    var _super = _createSuper(Status);
+
+    function Status() {
+      var _this;
+
+      _classCallCheck(this, Status);
+
+      _this = _super.call(this);
+      _this.state = {
+        show: false,
+        life: 0,
+        list: []
+      };
+      return _this;
+    }
+
+    _createClass(Status, [{
+      key: "componentDidMount",
+      value: function componentDidMount() {
+        var _this2 = this;
+
+        eventBus.on([eventBus.WILL_GAME], function () {
+          _this2.setState({
+            show: true,
+            life: data.current.player[0][2],
+            list: data.current.enemy || []
+          });
+        });
+        eventBus.on(eventBus.LIFE, function () {
+          _this2.setState({
+            life: _this2.state.life + 1
+          });
+        });
+        eventBus.on(eventBus.HIT_US, function () {
+          _this2.setState({
+            life: _this2.state.life - 1
+          });
+        });
+        eventBus.on(eventBus.ADDED_ENEMY, function () {
+          _this2.setState({
+            list: data.current.enemy || []
+          });
+        });
+        eventBus.on(eventBus.BEFORE_MENU, function () {
+          _this2.setState({
+            show: false,
+            life: 0,
+            list: []
+          });
+        });
+      }
+    }, {
+      key: "render",
+      value: function render() {
+        return karas$1.createElement("div", {
+          style: {
+            position: 'absolute',
+            left: 20,
+            right: 20,
+            bottom: 20,
+            display: this.state.show ? 'block' : 'none'
+          }
+        }, karas$1.createElement("div", {
+          ref: "life",
+          style: {
+            display: 'flex',
+            alignItems: 'center'
+          }
+        }, karas$1.createElement("span", {
+          style: {
+            width: 32,
+            height: 32,
+            background: 'url(tank.png) no-repeat -748px -170px'
+          }
+        }), karas$1.createElement("strong", {
+          style: {
+            color: '#000'
+          }
+        }, this.state.life || 0)), karas$1.createElement("div", {
+          ref: "list"
+        }, this.state.list.map(function (item) {
+          if (item[3]) {
+            return null;
+          }
+
+          return karas$1.createElement("span", {
+            style: {
+              width: 32,
+              height: 32,
+              background: 'url(tank.png) no-repeat -340 -204'
+            }
+          });
+        })));
+      }
+    }]);
+
+    return Status;
+  }(karas$1.Component);
+
+  var Grass = /*#__PURE__*/function (_karas$Component) {
+    _inherits(Grass, _karas$Component);
+
+    var _super = _createSuper(Grass);
+
+    function Grass(props) {
+      var _this;
+
+      _classCallCheck(this, Grass);
+
+      _this = _super.call(this, props);
+      _this.state = {
+        show: false,
+        list: []
+      };
+      return _this;
+    }
+
+    _createClass(Grass, [{
+      key: "componentDidMount",
+      value: function componentDidMount() {
+        var _this2 = this;
+
+        // 开始游戏
+        eventBus.on(eventBus.WILL_GAME, function () {
+          _this2.setState({
+            show: true,
+            list: data.current.grass
+          });
+        });
+      }
+    }, {
+      key: "render",
+      value: function render() {
+        return karas$1.createElement("div", {
+          style: {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            visibility: this.state.show ? 'visible' : 'hidden'
+          }
+        }, this.state.list.map(function (item) {
+          var _item = _slicedToArray(item, 2),
+            x = _item[0],
+            y = _item[1];
+
+          var left = x * 16;
+          var top = y * 16;
+          return karas$1.createElement("span", {
+            ref: x + ',' + y,
+            style: {
+              position: 'absolute',
+              left: left,
+              top: top,
+              width: 16,
+              height: 16,
+              background: 'url(tank.png) no-repeat -136 -238'
+            }
+          });
+        }));
+      }
+    }]);
+
+    return Grass;
+  }(karas$1.Component);
+
   var AudioController = /*#__PURE__*/function () {
     function AudioController() {
       _classCallCheck(this, AudioController);
@@ -3149,6 +3385,20 @@
           src: 'sound/start.mp3',
           format: 'mp3',
           loop: false,
+          preload: true,
+          volume: 0.5
+        });
+        this.move = new Howl({
+          src: 'sound/move.mp3',
+          format: 'mp3',
+          loop: true,
+          preload: true,
+          volume: 0.5
+        });
+        this.move2 = new Howl({
+          src: 'sound/move.mp3',
+          format: 'mp3',
+          loop: true,
           preload: true,
           volume: 0.5
         });
@@ -3228,6 +3478,20 @@
           loop: false,
           preload: true,
           volume: 0.5
+        });
+        eventBus.on(eventBus.MOVE, function () {
+          _this.move.play();
+
+          setTimeout(function () {
+            _this.move2.play();
+          }, 300);
+        });
+        eventBus.on(eventBus.STOP, function () {
+          _this.move.stop();
+
+          setTimeout(function () {
+            _this.move2.stop();
+          }, 300);
         });
         eventBus.on(eventBus.OCCUR, function () {
           _this.occur.play();
@@ -3333,6 +3597,8 @@
     ref: "player"
   }), karas.createElement(Enemy, {
     ref: "enemy"
+  }), karas.createElement(Grass, {
+    ref: "grass"
   }), karas.createElement(Fade, {
     ref: "fade"
   }), karas.createElement(Item, {
@@ -3343,6 +3609,8 @@
     ref: "boom"
   }), karas.createElement(Hit, {
     ref: "hit"
+  }), karas.createElement(Status, {
+    ref: "status"
   }), karas.createElement(Menu, {
     ref: "menu"
   }), karas.createElement(StageNum, {
@@ -3366,12 +3634,6 @@
       else if (e.keyCode === 74) {
         eventBus.gameState = eventBus.BEFORE_GAME;
         eventBus.emit(eventBus.BEFORE_GAME);
-        root.ref.stageNum.show(1);
-        data.current = karas.util.clone(data[0]);
-
-        if (eventBus.playerNum === 1) {
-          data.current.player.splice(1);
-        }
       }
     } // 游戏控制
     else if (eventBus.gameState === eventBus.GAMEING) {
@@ -3470,8 +3732,7 @@
       root.ref.menu.fastShow();
     } else if (eventBus.gameState === eventBus.MENUING) {
       eventBus.gameState = eventBus.BEFORE_GAME;
-      root.ref.stageNum.show(1);
-      data.current = karas.util.clone(data[0]);
+      eventBus.emit(eventBus.BEFORE_GAME);
     } else if (eventBus.gameState === eventBus.GAMEING) {
       var position = root.ref.player.getPosition(0);
       var direction = root.ref.player.getDirection(0);
