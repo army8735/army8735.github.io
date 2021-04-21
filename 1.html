@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>q</title>
+  <style>
+    canvas{
+      width:360px;
+      height:360px;
+      box-shadow:0 0 5px #000;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="360" height="360"></canvas>
+<script>
+  function initShaders(gl, vshader, fshader) {
+    let program = createProgram(gl, vshader, fshader);
+    if(!program) {
+      throw new Error('Failed to create program');
+    }
+
+    gl.useProgram(program);
+    gl.program = program;
+    return true;
+  }
+  function createProgram(gl, vshader, fshader) {
+    // Create shader object
+    let vertexShader = loadShader(gl, gl.VERTEX_SHADER, vshader);
+    let fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fshader);
+    if(!vertexShader || !fragmentShader) {
+      return null;
+    }
+
+    // Create a program object
+    let program = gl.createProgram();
+    if(!program) {
+      return null;
+    }
+
+    // Attach the shader objects
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    // Link the program object
+    gl.linkProgram(program);
+
+    // Check the result of linking
+    let linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if(!linked) {
+      let error = gl.getProgramInfoLog(program);
+      gl.deleteProgram(program);
+      gl.deleteShader(fragmentShader);
+      gl.deleteShader(vertexShader);
+      throw new Error('Failed to link program: ' + error);
+    }
+    return program;
+  }
+  function loadShader(gl, type, source) {
+    // Create shader object
+    let shader = gl.createShader(type);
+    if(shader == null) {
+      throw new Error('unable to create shader');
+    }
+
+    // Set the shader program
+    gl.shaderSource(shader, source);
+
+    // Compile the shader
+    gl.compileShader(shader);
+
+    // Check the result of compilation
+    let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if(!compiled) {
+      let error = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error('Failed to compile shader: ' + error);
+    }
+
+    return shader;
+  }
+</script>
+<script type="text" id="vert">
+  #version 100
+
+  attribute vec4 a_position;
+
+  attribute vec2 a_texCoords;
+  varying vec2 v_texCoords;
+
+  attribute float a_index;
+  varying float v_index;
+
+  void main() {
+    gl_Position = a_position;
+    v_texCoords = a_texCoords;
+    v_index = a_index;
+  }
+</script>
+<script type="text" id="frag">
+  #version 100
+
+  #ifdef GL_ES
+  precision mediump float;
+  #endif
+
+  varying vec2 v_texCoords;
+  varying float v_index;
+
+  uniform sampler2D u_texture0;
+  uniform sampler2D u_texture1;
+
+  void main() {
+    int index = int(v_index);
+
+    if(index == 0) {
+      gl_FragColor = texture2D(u_texture0, v_texCoords);
+    }
+    else if(index == 1) {
+      gl_FragColor = texture2D(u_texture1, v_texCoords);
+    }
+  }
+</script>
+<script>
+  let vert = document.querySelector('#vert').innerText;
+  let frag = document.querySelector('#frag').innerText;
+  let canvas = document.querySelector('#canvas');
+  let gl = canvas.getContext('webgl');
+  initShaders(gl, vert, frag);
+  let width = 100, height = 100;
+
+  let img = document.createElement('img');
+  img.onload = function() {
+    // 绘制图片纹理
+    let texture = gl.createTexture();
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    let n = 1;
+    gl.activeTexture(gl['TEXTURE' + n]);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    let u_texture = gl.getUniformLocation(gl.program, 'u_texture' + n);
+    gl.uniform1i(u_texture, n);
+    // 顶点buffer
+    let pointBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pointBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -0.5, 0.5,
+      -0.5, -0.5,
+      0.5, 0.5,
+      0.5, -0.5,
+    ]), gl.STATIC_DRAW);
+    let a_position = gl.getAttribLocation(gl.program, 'a_position');
+    gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_position);
+    // 纹理buffer
+    let texBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 1.0,
+      1.0, 0.0,
+    ]), gl.STATIC_DRAW);
+    let a_texCoords = gl.getAttribLocation(gl.program, 'a_texCoords');
+    gl.vertexAttribPointer(a_texCoords, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_texCoords);
+    // 索引buffer
+    let indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([n, n, n, n]), gl.STATIC_DRAW);
+    let a_index = gl.getAttribLocation(gl.program, 'a_index');
+    gl.vertexAttribPointer(a_index, 1, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_index);
+    // 绘制矩形
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+  img.src = 'logo.png';
+  document.body.appendChild(img);
+</script>
+</body>
+</html>
