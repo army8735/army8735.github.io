@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>temp</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+
+  class Component extends karas.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        list: [],
+      };
+    }
+
+    componentDidMount() {
+      let uuid = 0;
+      let count = 0;
+      karas.animate.frame.onFrame(diff => {
+        count += diff;
+        if(count >= 1000) {
+          count -= 1000;
+          let list = this.state.list;
+          let id = uuid++;
+          let x = Math.random() * (this.width - 50);
+          let y = 0;
+          let item = {
+            id,
+            x,
+            y,
+          };
+          list.push(item);
+          this.setState({
+            list,
+          }, () => {
+            let dom = this.ref[id];
+            let animate = dom.animate([
+              {},
+              {
+                translateY: 400,
+              }
+            ], {
+              duration: 4000,
+              fill: 'forwards',
+            });
+            animate.on('finish', () => {
+              let i = list.indexOf(item);
+              if(i > -1) {
+                list.splice(i, 1);
+              }
+            });
+          });
+        }
+      });
+    }
+
+    collect(item) {
+      let list = this.state.list;
+      let dom = this.ref[item.id];
+      dom.clearAnimate();
+      let { translateY } = dom.getComputedStyle('translateY');
+      dom.animate([
+        {},
+        {
+          translateX: -item.x,
+        }
+      ], {
+        duration: 1000,
+        easing: 'ease-in-out',
+        fill: 'forwards',
+      });
+      let a = dom.animate([
+        {},
+        {
+          translateY: translateY - 50,
+        },
+        {
+          translateY: this.height - 50,
+          display: 'none',
+        },
+      ], {
+        duration: 1000,
+        easing: 'ease-in-out',
+        fill: 'forwards',
+      });
+      a.on('finish', () => {
+        let i = list.indexOf(item);
+        if(i > -1) {
+          list.splice(i, 1);
+        }
+      });
+    }
+
+    render() {
+      return <div>
+        {
+          this.state.list.map(item => {
+            return <div ref={item.id}
+                        key={item.id}
+                        onClick={() => this.collect(item)}
+                        style={{
+                          position: 'absolute',
+                          width: 50,
+                          height: 50,
+                          background: '#F00',
+                          left: item.x,
+                          top: item.y,
+                        }}>点击{item.id}</div>;
+          })
+        }
+      </div>;
+    }
+  }
+
+  karas.render(
+    <canvas width="360" height="360">
+      <Component style={{
+        width: '100%',
+        height: '100%',
+      }}/>
+      <div style={{
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: '30%',
+        display: 'flex',
+        justifyContent: 'space-around',
+      }}>
+        <span onClick={() => karas.animate.frame.pause()}
+              style={{background:'#ccc'}}>暂停</span>
+        <span onClick={() => karas.animate.frame.resume()}
+              style={{background:'#ccc'}}>恢复</span>
+      </div>
+    </canvas>,
+    '#test'
+  );
+
+
+  document.addEventListener('visibilitychange', function() {
+    if(document.visibilityState === 'hidden') {
+      karas.animate.frame.pause();
+    }
+    else {
+      karas.animate.frame.resume();
+    }
+  });
+</script>
+<script src="https://gw.alipayobjects.com/os/lib/homunculus/1.6.5/homunculus.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/yurine/0.4.1/index.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/karas/0.59.11/index.js"></script>
+<script>
+  var head = document.head || document.getElementsByTagName('head')[0];
+  var jsx = document.querySelectorAll('script');
+  for(var i = 0, len = jsx.length; i < len; i++) {
+    var node = jsx[i];
+    if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+      node.setAttribute('yurine', 1);
+      var code = node.textContent || node.text;
+      if(!code) {
+        continue;
+      }
+      code = yurine.parse(code);
+      var script = document.createElement('script');
+      script.async = true;
+      script.text = code;
+      head.appendChild(script);
+    }
+  }
+</script>
+</body>
+</html>
