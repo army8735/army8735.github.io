@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>geom</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  // points
+  let r1 = karas.math.geom.d2r(60);
+  let r2 = karas.math.geom.d2r(50);
+  let r3 = karas.math.geom.d2r(40);
+  let r4 = karas.math.geom.d2r(70);
+  // red
+  let d1 = karas.math.geom.h(r1) * 0.5;
+  let c1 = Math.sqrt(d1 * d1 + 0.5 * 0.5);
+  let r5 = r1 - Math.atan(d1 / 0.5);
+  // green1
+  let d2 = karas.math.geom.h(karas.math.geom.d2r(80)) * 0.5;
+  let c2 = Math.sqrt(d2 * d2 + 0.5 * 0.5);
+  let r6 = Math.atan(d2 / 0.5); // 25.9°
+  let r7 = r1 + r6;
+  let r8 = r2 - r6;
+  // green2
+  let r9 = karas.math.geom.d2r(40);
+  let r10 = r9 - r6;
+  // blue1
+  let d3 = karas.math.geom.h(r4) * 0.5;
+  let c3 = Math.sqrt(d3 * d3 + 0.5 * 0.5);
+  let r11 = Math.atan(d3 / 0.5); // 22.8°
+  let r12 = r2 - r11;
+  let r13 = r11 - karas.math.geom.d2r(20);
+  // blue2
+  let r14 = r4 - r11;
+
+  let root = karas.render(
+    <svg width={360} height={360}>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+      }}>
+        <$polygon ref="red" points={[
+          [0.5, 0],
+          [0.5 + Math.sin(r1) * 0.5, 0.5 - Math.cos(r1) * 0.5],
+          [0.5, 0.5],
+          [0.5, 0.5],
+        ]} controls={[
+          [0.5 + d1, 0, 0.5 + Math.sin(r5) * c1, 0.5 - Math.cos(r5) * c1],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#F00',
+          strokeWidth: 0,
+        }}/>
+        <$polygon ref="green" points={[
+          [0.5, 0.5],
+          [0.5 + Math.sin(r1) * 0.5, 0.5 - Math.cos(r1) * 0.5],
+          [0.5 + Math.cos(r2) * 0.5, 0.5 + Math.sin(r2) * 0.5],
+          [0.5 - Math.sin(r3) * 0.5, 0.5 + Math.cos(r3) * 0.5],
+        ]} controls={[
+          null,
+          [0.5 + Math.sin(r7) * c2, 0.5 - Math.cos(r7) * c2, 0.5 + Math.cos(r8) * c2, 0.5 + Math.sin(r8) * c2],
+          [0.5 + Math.sin(r10) * c2, 0.5 + Math.cos(r10) * c2, 0.5 - Math.sin(r10) * c2, 0.5 + Math.cos(r10) * c2],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#0F0',
+          strokeWidth: 0,
+        }}/>
+        <$polygon ref="blue" points={[
+          [0.5, 0.5],
+          [0.5 - Math.sin(r3) * 0.5, 0.5 + Math.cos(r3) * 0.5],
+          [0.5 - Math.sin(r4) * 0.5, 0.5 - Math.cos(r4) * 0.5],
+          [0.5, 0],
+        ]} controls={[
+          null,
+          [0.5 - Math.cos(r12) * c3, 0.5 + Math.sin(r12) * c3, 0.5 - Math.cos(r13) * c3, 0.5 + Math.sin(r13) * c3],
+          [0.5 - Math.sin(r14) * c3, 0.5 - Math.cos(r14) * c3, 0.5 - d3, 0],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#00F',
+          strokeWidth: 0,
+        }}/>
+      </div>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        opacity: 0.5,
+      }}>
+        <$polygon points={[
+          [0.8, 0.4],
+          [1, 0.4],
+          [1, 0.6],
+          [0.8, 0.6],
+        ]} controls={[
+          [0.8, 0.4, 1, 0.4],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#300',
+          strokeWidth: 0,
+        }}/>
+        <$polygon points={[
+          [0.4, 0.2],
+          [0.6, 0.2],
+          [0.6, 0.8],
+          [0.4, 0.8],
+        ]} controls={[
+          null,
+          [0.6, 0.2, 0.6, 0.8],
+          [0.6, 0.8, 0.4, 0.8],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#030',
+          strokeWidth: 0,
+        }}/>
+        <$polygon points={[
+          [0.2, 0.3],
+          [0.2, 0.7],
+          [0, 0.7],
+          [0, 0.3],
+        ]} controls={[
+          null,
+          [0.2, 0.7, 0, 0.7],
+          [0, 0.7, 0, 0.3],
+        ]} style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          fill: '#003',
+          strokeWidth: 0,
+        }}/>
+      </div>
+    </svg>,
+    '#test'
+  );
+  root.ref.red.animate([
+    {},
+    {
+      points: [
+        [0.8, 0.4],
+        [1, 0.4],
+        [1, 0.6],
+        [0.8, 0.6],
+      ],
+      controls: [
+        [0.8, 0.4, 1, 0.4],
+      ],
+    },
+  ], {
+    duration: 1000,
+    fill: 'forwards',
+    easing: 'ease-in-out',
+  });
+  root.ref.green.animate([
+    {},
+    {
+      points: [
+        [0.4, 0.2],
+        [0.6, 0.2],
+        [0.6, 0.8],
+        [0.4, 0.8],
+      ],
+      controls: [
+        null,
+        [0.6, 0.2, 0.6, 0.8],
+        [0.6, 0.8, 0.4, 0.8],
+      ],
+    },
+  ], {
+    duration: 1000,
+    fill: 'forwards',
+    easing: 'ease-in-out',
+  });
+  root.ref.blue.animate([
+    {},
+    {
+      points: [
+        [0.2, 0.3],
+        [0.2, 0.7],
+        [0, 0.7],
+        [0, 0.3],
+      ],
+      controls: [
+        null,
+        [0.2, 0.7, 0, 0.7],
+        [0, 0.7, 0, 0.3],
+      ],
+    },
+  ], {
+    duration: 1000,
+    fill: 'forwards',
+    easing: 'ease-in-out',
+  });
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script>
+  seajs.config({
+    alias: {
+    },
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
