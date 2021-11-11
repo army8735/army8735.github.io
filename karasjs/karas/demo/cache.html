@@ -3,69 +3,35 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
-  <title>benchmark</title>
+  <title>cache</title>
   <link href="style.css" media="all" rel="stylesheet"/>
 </head>
 <body>
-<div class="pre">1000个节点的动画性能，仅canvas且开启cache缓存。</div>
-<div id="div"></div>
-<div id="fps"></div>
+<div class="pre">可以为节点开启位图缓存cacheAsBitmap，在重复渲染情况下能缓存自身子树，增加性能。仅canvas/webgl支持。
+<div id="example"></div>
+<div id="example2"></div>
 <pre><code class="brush:csx"></code></pre>
 <script type="text/jsx">
-  karas.debug = true;
-  let list = [];
-  for(let i = 0; i < 1000; i++) {
-    list.push(i);
-  }
-  let root = karas.render(
-    <canvas width={360} height={360} cache={true}>
-      {
-        list.map(i => {
-          let background = `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`;
-          return <div ref={i}
-                      cacheAsBitmap={true}
-                      style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        background,
-                      }}>{i}</div>;
-        })
-      }
+  karas.render(
+    <canvas width="360" height="360">
+      <div cacheAsBitmap={true}>
+        <span style={{background:'#F00'}}>aaa</span>
+        <strong style={{background:'#0F0'}}>bbb</strong>
+        <p style={{background:'#00F'}}>ccc</p>
+      </div>
     </canvas>,
-    '#div'
+    '#example'
   );
-  list.forEach(i => {
-    let node = root.ref[i];
-    node.animate([
-      {
-        translateX: 0,
-        translateY: 0,
-      },
-      {
-        translateX: -180 + Math.random() * 360,
-        translateY: -180 + Math.random() * 360,
-      }
-    ], {
-      duration: 500 + Math.random() * 500,
-      direction: 'alternate',
-      iterations: Infinity,
-    });
-  });
-  let fps = document.querySelector('#fps');
-  let arr = [];
-  karas.animate.frame.onFrame(function(diff) {
-    arr.push(diff);
-    if(arr.length > 5) {
-      arr.shift();
-      let n = 0;
-      arr.forEach(i => {
-        n += i;
-      });
-      fps.innerHTML = Math.round(1000 / (n / 5));
-    }
-  });
-  console.log(document.querySelectorAll('canvas'));
+  karas.render(
+    <webgl width="360" height="360">
+      <div cacheAsBitmap={true}>
+        <span style={{background:'#F00'}}>aaa</span>
+        <strong style={{background:'#0F0'}}>bbb</strong>
+        <p style={{background:'#00F'}}>ccc</p>
+      </div>
+    </webgl>,
+    '#example2'
+  );
 </script>
 <script src="sea.js"></script>
 <script src="homunculus.js"></script>
