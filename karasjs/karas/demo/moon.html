@@ -297,7 +297,7 @@
   }
 
   let flag;
-  let startTime = Date.now(), beginTime = Date.now(), diff = 0;
+  let startTime = Date.now(), beginTime = Date.now();
 
   function start() {
     startTime = Date.now();
@@ -307,6 +307,7 @@
 
   function re() {
     beginTime = Date.now();
+    play();
   }
 
   function raf() {
