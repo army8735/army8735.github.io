@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>moon</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      background:#000;
+      overflow:hidden;
+    }
+    #test, canvas{
+      display:block;
+      width:100%;
+      height:100%;
+      background:none;
+      box-shadow:none;
+    }
+    #time{
+      position:absolute;
+      left:0;
+      top:70%;
+      width:100%;
+      color:#999;
+      font-size:64px;
+      font-family:Menlo;
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<div id="time"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  // karas.debug = 1;
+  const W = document.body.clientWidth, H = document.body.clientHeight;
+
+  let root = karas.render(
+    <canvas width={W} height={H}>
+      <div ref="moon" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: '50vmin',
+        height: '50vmin',
+        translateX: '-50%',
+        translateY: '-80%',
+        filter: 'saturate(1000%)',
+      }}>
+        <$circle ref="circle" style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          strokeWidth: 0,
+          fill: 'radial-gradient(closest-side, transparent, rgb(245, 245, 255) 45%, transparent)',
+        }}/>
+        <img src="moon.png" ref="white" style={{
+          position: 'absolute',
+          left: '10%',
+          top: '10%',
+          width: '80%',
+          height: '80%',
+        }}/>
+        <img src="moon.png" ref="orange" style={{
+          position: 'absolute',
+          left: '10%',
+          top: '10%',
+          width: '80%',
+          height: '80%',
+          filter: 'hue-rotate(160) saturate(150%)',
+          opacity: 0,
+        }}/>
+        <img src="moon.png" ref="red" style={{
+          position: 'absolute',
+          left: '10%',
+          top: '10%',
+          width: '80%',
+          height: '80%',
+          filter: 'hue-rotate(140) saturate(200%) contrast(150%)',
+          opacity: 0,
+        }}/>
+      </div>
+      <$circle ref="clip" clip={true} style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: '50vmin',
+        height: '50vmin',
+        translateX: '-130%',
+        translateY: '-130%',
+        strokeWidth: 0,
+        fill: 'radial-gradient(closest-side, #FFF, #FFF 70%, transparent 85%)',
+      }}/>
+    </canvas>,
+    '#test'
+  );
+  console.error('root');
+  let duration = 1000 * 60 * 60 * 4;
+  let options = {
+    duration,
+    fill: 'forwards',
+  };
+  let moon = root.ref.moon;
+  let circle = root.ref.circle;
+  let white = root.ref.white;
+  let yellow = root.ref.yellow;
+  let orange = root.ref.orange;
+  let red = root.ref.red;
+  let clip = root.ref.clip;
+  let orangeAnimate = orange.animate([
+    {
+      opacity: 0,
+    },
+    {
+      opacity: 1,
+      offset: 0.3,
+    },
+    {
+      opacity: 0.7,
+      offset: 0.46,
+    },
+    {
+      opacity: 0,
+      offset: 0.5,
+    },
+    {
+      opacity: 0,
+      offset: 0.8,
+    },
+    {
+      opacity: 0.5,
+      offset: 0.9,
+    },
+    {
+      opacity: 0,
+    },
+  ], options);
+  let redAnimate = red.animate([
+    {
+      opacity: 0,
+    },
+    {
+      opacity: 0,
+      offset: 0.46,
+    },
+    {
+      opacity: 1,
+      offset: 0.5,
+    },
+    {
+      opacity: 1,
+      offset: 0.8,
+    },
+    {
+      opacity: 0,
+    },
+  ], options);
+  let moonAnimate = moon.animate([
+    {
+      opacity: 1,
+    },
+    {
+      opacity: 0.5,
+      offset: 0.46,
+    },
+    {
+      opacity: 1,
+      offset: 0.5,
+    },
+    {
+      opacity: 0.5,
+      offset: 0.54,
+    },
+    {
+      opacity: 1,
+    },
+  ], options);
+  let circleAnimate = circle.animate([
+    {},
+    {
+      filter: 'hue-rotate(160) saturate(150%)',
+      offset: 0.46,
+    },
+    {
+      filter: 'hue-rotate(140) saturate(200%) contrast(150%)',
+      offset: 0.5,
+    },
+    {
+      filter: 'hue-rotate(140) saturate(200%) contrast(150%)',
+      offset: 0.8,
+    },
+    {
+      opacity: 1,
+    },
+  ], options);
+  let clipAnimate = clip.animate([
+    {},
+    {
+      translateX: '30%',
+      translateY: '30%',
+    },
+  ], options);
+
+  function pause() {
+    orangeAnimate.pause();
+    redAnimate.pause();
+    moonAnimate.pause();
+    circleAnimate.pause();
+    clipAnimate.pause();
+  }
+
+  function resume() {
+    orangeAnimate.resume();
+    redAnimate.resume();
+    moonAnimate.resume();
+    circleAnimate.resume();
+    clipAnimate.resume();
+  }
+
+  function play(time = 0) {
+    orangeAnimate.gotoAndPlay(time);
+    redAnimate.gotoAndPlay(time);
+    moonAnimate.gotoAndPlay(time);
+    circleAnimate.gotoAndPlay(time);
+    clipAnimate.gotoAndPlay(time);
+  }
+
+  function speed(playbackRate = 1) {
+    orangeAnimate.playbackRate = playbackRate;
+    redAnimate.playbackRate = playbackRate;
+    moonAnimate.playbackRate = playbackRate;
+    circleAnimate.playbackRate = playbackRate;
+    clipAnimate.playbackRate = playbackRate;
+  }
+
+  pause();
+  let time = document.querySelector('#time');
+
+  function prefix(s) {
+    if(s.length === 1) {
+      return '0' + s;
+    }
+    return s;
+  }
+
+  function format(t) {
+    let h;
+    if(t > 1000 * 60 * 60) {
+      h = Math.floor(t / (1000 * 60 * 60));
+      t -= h * 1000 * 60 * 60;
+    }
+    if(t > 1000 * 60 * 60) {
+      h = Math.floor(t / (1000 * 60 * 60));
+    }
+    if(h) {
+      if(h < 10) {
+        h = '0' + h;
+      }
+    }
+    else {
+      h = '00';
+    }
+    let m;
+    if(t > 1000 * 60) {
+      m = Math.floor(t / (1000 * 60));
+      t -= m * 1000 * 60;
+    }
+    if(m) {
+      if(m < 10) {
+        m = '0' + m;
+      }
+    }
+    else {
+      m = '00';
+    }
+    let s;
+    if(t > 1000) {
+      s = Math.floor(t / (1000));
+    }
+    if(s) {
+      if(s < 10) {
+        s = '0' + s;
+      }
+    }
+    else {
+      s = '00';
+    }
+    return h + ':' + m + ':' + s;
+  }
+
+  let flag;
+  let startTime = Date.now(), beginTime = Date.now(), diff = 0;
+
+  function start() {
+    startTime = Date.now();
+    beginTime = Date.now();
+    play();
+  }
+
+  function re() {
+    beginTime = Date.now();
+  }
+
+  function raf() {
+    console.clear();
+    console.log('进度', (moonAnimate.currentTime * 100 / duration).toFixed(1) + '%');
+    console.log('时长', moonAnimate.currentTime, duration);
+    console.log('加速', (moonAnimate.playbackRate * 100).toFixed(1) + '%');
+    let st = new Date(startTime);
+    console.log('开始时间', prefix(st.getHours()) + ':' + prefix(st.getMinutes()));
+    let now = Date.now();
+    let diff = now - beginTime;
+    console.log('本轮用时', format(diff));
+    let t = new Date(startTime + diff);
+    let s = flag ? ':' : ' ';
+    flag = !flag;
+    time.innerHTML = prefix(t.getHours()) + s + prefix(t.getMinutes());
+  }
+  setInterval(raf, 1000);
+  raf();
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>-->
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    // var text = document.createTextNode(source);
+    // code.appendChild(text);
+    // jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
