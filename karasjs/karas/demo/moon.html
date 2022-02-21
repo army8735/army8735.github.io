@@ -11,8 +11,22 @@
       padding:0;
       width:100%;
       height:100%;
-      background:#000;
+      background:#000003;
       overflow:hidden;
+    }
+
+    #bg{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:#001;
+      opacity:0;
+    }
+
+    #test{
+      /*opacity:0.8;*/
     }
 
     #test, canvas{
@@ -26,126 +40,808 @@
     }
 
     canvas{
-      transform:translateY(-15%);
+      /*transform:translateY(-15%);*/
     }
 
     #time{
       position:absolute;
       left:0;
-      top:70%;
+      top:80%;
       width:100%;
       color:#999;
       font-size:64px;
       font-family:Menlo;
       text-align:center;
+      text-shadow:1px 1px 5px #000;
     }
   </style>
 </head>
 <body>
+<div id="bg"></div>
 <div id="test"></div>
 <div id="time"></div>
+<audio id="audio" src="moon.mp3" preload="auto"></audio>
 <pre><code class="brush:csx"></code></pre>
 <script type="text/jsx">
   // karas.debug = 1;
   const W = document.body.clientWidth, H = document.body.clientHeight;
 
+  let dom = document.querySelector('#test');
+  let bg = document.querySelector('#bg');
+  let time = document.querySelector('#time');
+  let audio = document.querySelector('#audio');
+
+  let fDeg1 = 0;
+  let fDeg2 = 0;
+  let fDeg3 = 0;
+  let fDeg4 = 0;
+  let intervalTime = 100;
+  let num = 420;
+
   let root = karas.render(
     <canvas width={W} height={H}>
-      <div ref="moon" style={{
+      <div ref="wrap" style={{
         position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: '50vmin',
-        height: '50vmin',
-        translateX: '-50%',
-        translateY: '-50%',
-        filter: 'saturate(1000%)',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        translateY: '-12%',
       }}>
-        <ParticleLaunch ref="particleLaunch"
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          width: '100%',
-                          height: '100%',
-                        }}
-                        list={[
-                          {
-                            url: 'https://gw.alipayobjects.com/mdn/rms_5f8aad/afts/img/A*xoypTLxVfCkAAAAAAAAAAAAAARQnAQ',
-                            x: 0.5,
-                            y: 0.5,
-                            distance: [0.8, 1],
-                            deg: [0, 360],
-                            rotate: true,
-                            width: [5, 15],
-                            easing: 'ease-out',
-                            duration: 5000,
-                            blink: {
-                              from: [0.6, 0.8],
-                              to: [0.2, 0.4],
-                              duration: [200, 300],
+        <div ref="moon" style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: '50vmin',
+          height: '50vmin',
+          translateX: '-50%',
+          translateY: '-50%',
+          filter: 'saturate(1000%) brightness(80%)',
+        }}>
+          <ParticleLaunch ref="lightSpot"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'blur(1) brightness(200%)',
+                          }}
+                          list={[
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_5f8aad/afts/img/A*byBQSbp1utoAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              width: [10, 20],
                               easing: 'ease-out',
-                            },
-                            fade: {
-                              from: 1,
-                              to: 0,
                               duration: 5000,
-                              easing: 'ease-out',
-                            },
-                          }
-                        ]}
-                        interval={60}
-                        intervalNum={3}
-                        initNum={5}
-                        num={Infinity}/>
-        <$circle ref="circle" style={{
+                              blink: {
+                                from: [0.6, 0.8],
+                                to: [0.2, 0.4],
+                                duration: [200, 300],
+                                easing: 'ease-out',
+                              },
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 5000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 5000,
+                                easing: 'ease-out',
+                              },
+                            }
+                          ]}
+                          interval={60}
+                          intervalNum={3}
+                          initNum={5}
+                          num={Infinity}/>
+          <$circle ref="circle" style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            strokeWidth: 0,
+            fill: 'radial-gradient(closest-side, transparent, rgb(245, 245, 255) 45%, transparent)',
+          }}/>
+          <img src="moon.png" ref="white" style={{
+            position: 'absolute',
+            left: '10%',
+            top: '10%',
+            width: '80%',
+            height: '80%',
+          }}/>
+          <img src="moon.png" ref="orange" style={{
+            position: 'absolute',
+            left: '10%',
+            top: '10%',
+            width: '80%',
+            height: '80%',
+            filter: 'hue-rotate(160) saturate(150%)',
+            opacity: 0,
+          }}/>
+          <img src="moon.png" ref="red" style={{
+            position: 'absolute',
+            left: '10%',
+            top: '10%',
+            width: '80%',
+            height: '80%',
+            filter: 'hue-rotate(140) saturate(200%) contrast(150%)',
+            opacity: 0,
+          }}/>
+        </div>
+        <$circle ref="clip" clip={true} style={{
           position: 'absolute',
-          left: 0,
-          top: 0,
-          width: '100%',
-          height: '100%',
+          left: '50%',
+          top: '50%',
+          width: '50vmin',
+          height: '50vmin',
+          translateX: '-130%',
+          translateY: '-130%',
           strokeWidth: 0,
-          fill: 'radial-gradient(closest-side, transparent, rgb(245, 245, 255) 45%, transparent)',
+          fill: 'radial-gradient(closest-side, #FFF, #FFF 70%, transparent 85%)',
         }}/>
-        <img src="moon.png" ref="white" style={{
+        <div ref="end" style={{
           position: 'absolute',
-          left: '10%',
-          top: '10%',
-          width: '80%',
-          height: '80%',
-        }}/>
-        <img src="moon.png" ref="orange" style={{
-          position: 'absolute',
-          left: '10%',
-          top: '10%',
-          width: '80%',
-          height: '80%',
-          filter: 'hue-rotate(160) saturate(150%)',
-          opacity: 0,
-        }}/>
-        <img src="moon.png" ref="red" style={{
-          position: 'absolute',
-          left: '10%',
-          top: '10%',
-          width: '80%',
-          height: '80%',
-          filter: 'hue-rotate(140) saturate(200%) contrast(150%)',
-          opacity: 0,
-        }}/>
+          left: '50%',
+          top: '50%',
+          width: '50vmin',
+          height: '50vmin',
+          translateX: '-50%',
+          translateY: '-50%',
+        }}>
+          <ParticleLaunch ref="feather1"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'brightness(20%) blur(1)',
+                          }}
+                          hookData={o => {
+                            fDeg1 += 10;
+                            fDeg1 %= 360;
+                            let deg = fDeg1;
+                            o.deg = deg;
+                            let distance = o.distance;
+                            if(deg >= 270) {
+                              deg = 360 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 180) {
+                              deg = deg - 180;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 90) {
+                              deg = 180 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            else {
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            o.dx = o.tx - o.x;
+                            o.dy = o.ty - o.y;
+                            return o;
+                          }}
+                          autoPlay={false}
+                          list={[
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*G439RJfSGdQAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*3pA7RY-wdY4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*AEH0RJnynDoAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*lFtZRaCxFu4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: -10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                          ]}
+                          interval={intervalTime}
+                          num={num}/>
+          <ParticleLaunch ref="feather2"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'brightness(50%) blur(1)',
+                          }}
+                          hookData={o => {
+                            fDeg2 += 10;
+                            fDeg2 %= 360;
+                            let deg = fDeg2;
+                            o.deg = deg;
+                            let distance = o.distance;
+                            if(deg >= 270) {
+                              deg = 360 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 180) {
+                              deg = deg - 180;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 90) {
+                              deg = 180 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            else {
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            o.dx = o.tx - o.x;
+                            o.dy = o.ty - o.y;
+                            return o;
+                          }}
+                          autoPlay={false}
+                          list={[
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*G439RJfSGdQAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*3pA7RY-wdY4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*AEH0RJnynDoAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*lFtZRaCxFu4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: -10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                          ]}
+                          interval={intervalTime}
+                          delay={1000}
+                          num={num}/>
+          <ParticleLaunch ref="feather3"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'brightness(75%) blur(1)',
+                          }}
+                          hookData={o => {
+                            fDeg3 += 10;
+                            fDeg3 %= 360;
+                            let deg = fDeg3;
+                            o.deg = deg;
+                            let distance = o.distance;
+                            if(deg >= 270) {
+                              deg = 360 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 180) {
+                              deg = deg - 180;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 90) {
+                              deg = 180 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            else {
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            o.dx = o.tx - o.x;
+                            o.dy = o.ty - o.y;
+                            return o;
+                          }}
+                          autoPlay={false}
+                          list={[
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*G439RJfSGdQAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*3pA7RY-wdY4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*AEH0RJnynDoAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*lFtZRaCxFu4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: -10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                          ]}
+                          interval={intervalTime}
+                          delay={2000}
+                          num={num}/>
+          <ParticleLaunch ref="feather4"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'blur(1)',
+                          }}
+                          hookData={o => {
+                            fDeg4 += 10;
+                            fDeg4 %= 360;
+                            let deg = fDeg4;
+                            o.deg = deg;
+                            let distance = o.distance;
+                            if(deg >= 270) {
+                              deg = 360 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 180) {
+                              deg = deg - 180;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y - distance * Math.sin(deg);
+                            }
+                            else if(deg >= 90) {
+                              deg = 180 - deg;
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x - distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            else {
+                              deg = karas.math.geom.d2r(deg);
+                              o.tx = o.x + distance * Math.cos(deg);
+                              o.ty = o.y + distance * Math.sin(deg);
+                            }
+                            o.dx = o.tx - o.x;
+                            o.dy = o.ty - o.y;
+                            return o;
+                          }}
+                          autoPlay={false}
+                          list={[
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*G439RJfSGdQAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*3pA7RY-wdY4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*AEH0RJnynDoAAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: 60,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                            {
+                              url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*lFtZRaCxFu4AAAAAAAAAAAAAARQnAQ',
+                              x: 0.5,
+                              y: 0.5,
+                              distance: [0.8, 1],
+                              deg: [0, 360],
+                              direction: -10,
+                              width: [30, 50],
+                              easing: 'ease-out',
+                              duration: 2000,
+                              fade: {
+                                from: 1,
+                                to: 0,
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                              scale: {
+                                from: 1,
+                                to: [1.5, 2],
+                                duration: 3000,
+                                easing: 'ease-out',
+                              },
+                            },
+                          ]}
+                          interval={intervalTime}
+                          delay={3000}
+                          num={num}/>
+        </div>
+        <FallingFlower ref="flower"
+                       style={{
+                         position: 'absolute',
+                         left: 0,
+                         top: 0,
+                         width: '100%',
+                         height: '100%',
+                         filter: 'blur(1)',
+                       }}
+                       list={[
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*mt5vTp91s_QAAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [30, 50],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*mt5vTp91s_QAAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [20, 30],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*VuFHR5pgHbUAAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [30, 50],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*SrVTT5CITcQAAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [30, 50],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_98fd69/afts/img/A*ZbxaRoK0Tv4AAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [30, 50],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                         {
+                           url: 'https://gw.alipayobjects.com/mdn/rms_5f8aad/afts/img/A*W7jURJYPDdgAAAAAAAAAAAAAARQnAQ',
+                           x: [0.1, 0.9],
+                           y: [-0.1, 0],
+                           distance: [1.1, 1.3],
+                           deg: [45, 90],
+                           origin: [-4, -2],
+                           width: [30, 50],
+                           duration: [10000, 15000],
+                           iterations: [2, 4], // 下落过程分为几个左右来回，默认1
+                         },
+                       ]}
+                       autoPlay={false}
+                       interval={1000}
+                       intervalNum={1}
+                       initNum={2}
+                       num={Infinity}
+                       delay={200}/>
       </div>
-      <$circle ref="clip" clip={true} style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: '50vmin',
-        height: '50vmin',
-        translateX: '-130%',
-        translateY: '-130%',
-        strokeWidth: 0,
-        fill: 'radial-gradient(closest-side, #FFF, #FFF 70%, transparent 85%)',
-      }}/>
     </canvas>,
-    '#test'
+    dom
   );
   let duration = 1000 * 60 * 60 * 4;
   let options = {
@@ -155,10 +851,14 @@
   let moon = root.ref.moon;
   let circle = root.ref.circle;
   let white = root.ref.white;
-  let yellow = root.ref.yellow;
   let orange = root.ref.orange;
   let red = root.ref.red;
   let clip = root.ref.clip;
+  let feather1 = root.ref.feather1;
+  let feather2 = root.ref.feather2;
+  let feather3 = root.ref.feather3;
+  let feather4 = root.ref.feather4;
+  let flower = root.ref.flower;
 
   let orangeAnimate = orange.animate([
     {
@@ -270,12 +970,13 @@
     clipAnimate.resume();
   }
 
-  function play(time = 0) {
+  function play(time = 0, playbackRate = 1) {
     orangeAnimate.gotoAndPlay(time);
     redAnimate.gotoAndPlay(time);
     moonAnimate.gotoAndPlay(time);
     circleAnimate.gotoAndPlay(time);
     clipAnimate.gotoAndPlay(time);
+    speed(playbackRate);
   }
 
   function speed(playbackRate = 1) {
@@ -287,10 +988,9 @@
   }
 
   pause();
-  let time = document.querySelector('#time');
 
   function prefix(s) {
-    if(s.length === 1) {
+    if(String(s).length === 1) {
       return '0' + s;
     }
     return s;
@@ -344,18 +1044,82 @@
   let flag;
   let startTime = Date.now(), beginTime = Date.now();
 
-  function start() {
+  function start(rate) {
     startTime = Date.now();
     beginTime = Date.now();
-    play();
+    play(0, rate);
   }
 
-  function re() {
+  function re(rate) {
     beginTime = Date.now();
-    play();
+    play(0, rate);
   }
 
-  function raf() {
+  function end() {
+    speed(1000);
+    feather1.play();
+    feather2.play();
+    feather3.play();
+    feather4.play();
+    audio.play();
+    let bga = bg.animate([
+      {
+        background: '#001',
+      },
+      {
+        background: '#001',
+        offset: 0.3,
+      },
+      {
+        background: '#FFF',
+        offset: 0.5,
+      },
+      {
+        background: '#001',
+        offset: 0.7,
+      },
+      {
+        background: '#001',
+        offset: 1,
+      },
+    ], {
+      duration: 970,
+      fill: 'forwards',
+      iterations: 47,
+    });
+    bga.onfinish = function() {
+      bg.animate([
+        {
+          background: '#001',
+        },
+        {
+          background: '#FFF',
+        },
+      ], {
+        duration: 1000,
+        fill: 'forwards',
+      });
+      dom.style.opacity = 1;
+      setTimeout(function() {
+        flower.play();
+      }, 2000)
+    };
+    bg.animate([
+      {
+        opacity: 0,
+      },
+      {
+        opacity: 1,
+      }
+    ], {
+      duration: 10000,
+      fill: 'forwards',
+    });
+  }
+
+  // end();
+
+  function interval() {
     console.clear();
     console.log('进度', (moonAnimate.currentTime * 100 / duration).toFixed(1) + '%');
     console.log('时长', moonAnimate.currentTime, duration);
@@ -371,15 +1135,15 @@
     time.innerHTML = prefix(t.getHours()) + s + prefix(t.getMinutes());
   }
 
-  setInterval(raf, 1000);
-  raf();
+  setInterval(interval, 1000);
+  interval();
 </script>
 <script src="sea.js"></script>
 <script src="homunculus.js"></script>
 <script src="yurine.js"></script>
 <script src="../index.js"></script>
-<script src="https://gw.alipayobjects.com/os/lib/karas-particle-launch/0.4.2/index.min.js"></script>
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>-->
+<script src="https://gw.alipayobjects.com/os/lib/karas-particle-launch/0.6.4/index.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/karas-falling-flower/0.3.0/index.js"></script>
 <script>
   seajs.config({
     alias: {},
