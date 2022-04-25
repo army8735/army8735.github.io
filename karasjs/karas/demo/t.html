@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>temp</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    canvas {
+      /*background: #000;*/
+      /*font-kerning: none;*/
+      /*letter-spacing: 10px;*/
+    }
+    #test2{
+      height:auto;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<svg width="360" height="360">
+  <path fill="rgba(0,0,255,.5)" d=""/>
+</svg>
+<div id="output"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+
+  paper.install(window);
+  paper.setup('canvas');
+
+  var p1 = 'M100,150C100,122.38576250846032 122.38576250846032,100 150,100C177.61423749153968,100 200,122.38576250846032 200,150C200,177.61423749153968 177.61423749153968,200 150,200C122.38576250846032,200 100,177.61423749153968 100,150',
+    p2 = 'M150,150L250,150L250,250L150,250L150,150',
+    path1 = new Path(p1),
+    path2 = new Path(p2);
+
+  path1.fillColor = 'rgba(255,0,0,.5)';
+  path1.position = new Point(100, 100);
+
+  path2.fillColor = 'rgba(0,255,0,.5)';
+  path2.position = new Point(150, 150);
+
+  var result = path2.intersect(path1);
+  result.selected = true;
+  result.fillColor = '#77f';
+
+  //exportSVG() docu: http://paperjs.org/reference/item/#exportsvg
+  var svgPathElement = result.exportSVG(),
+    dPath = svgPathElement.getAttribute('d');
+
+  document.querySelector('path').setAttribute('d', dPath);
+
+  var output = document.querySelector('#output');
+  output.innerHTML = '<pre><b>D value from path:</b> ' + dPath + '</pre>';
+  output.innerHTML += '<xmp>HTML string of path: ' + svgPathElement.outerHTML + '</xmp>';
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script src="paper-full.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function (url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function (jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for (var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if (node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if (!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
