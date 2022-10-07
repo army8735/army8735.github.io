@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>千千晚星</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      background:#000000;
+      overflow:hidden;
+    }
+
+    #bg{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:#000;
+      opacity:0;
+    }
+
+    #test{
+      /*opacity:0.8;*/
+    }
+
+    #test, canvas{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:none;
+      box-shadow:none;
+    }
+
+    canvas{
+      /*transform:translateY(-15%);*/
+    }
+
+    #time{
+      position:absolute;
+      left:0;
+      top:80%;
+      width:100%;
+      color:#999;
+      font-size:64px;
+      font-family:Menlo;
+      text-align:center;
+      text-shadow:1px 1px 5px #000;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  // karas.debug = 1;
+  const W = document.body.clientWidth, H = document.body.clientHeight;
+  let dom = document.querySelector('#test');
+  let list = [];
+  for(let i = 0; i < 500; i++) {
+    list.push(i);
+  }
+
+  karas.style.font.register('Xingkai SC', {
+    emSquare: 2048,
+  });
+
+  let root = karas.render(
+    <canvas width={W} height={H}>
+      {
+        list.map(i => {
+          let d = 5 + Math.random() * 5;
+          let r = Math.floor(Math.random() * 255);
+          let g, b;
+          if(r > 170) {
+            b = 170 + Math.floor(Math.random() * 85);
+            g = 170 + Math.floor(Math.random() * 85);
+          }
+          else if(r > 85) {
+            b = 85 + Math.floor(Math.random() * 170);
+            g = Math.floor(Math.random() * 85);
+          }
+          else {
+            b = Math.floor(Math.random() * r);
+            g = Math.floor(Math.random() * r);
+          }
+          let points = [
+            [0.4 + Math.random() * 0.2, Math.random() * 0.2],
+            [0.8 + Math.random() * 0.2, 0.4 + Math.random() * 0.2],
+            [0.4 + Math.random() * 0.2, 0.8 + Math.random() * 0.2],
+            [Math.random() * 0.2, 0.4 + Math.random() * 0.2],
+          ];
+          let controls = [
+            [0.5 + Math.random() * 0.05, 0.5 - Math.random() * 0.05],
+            [0.5 + Math.random() * 0.05, 0.5 + Math.random() * 0.05],
+            [0.5 - Math.random() * 0.05, 0.5 + Math.random() * 0.05],
+            [0.5 - Math.random() * 0.05, 0.5 - Math.random() * 0.05],
+          ];
+          return <$polygon style={{
+            position: 'absolute',
+            left: Math.random() * W,
+            top: Math.random() * H,
+            width: d,
+            height: d,
+            stroke: 0,
+            fill: `rgb(${r}, ${g}, ${b})`,
+            opacity: 0,
+          }} ref={i} points={points} controls={controls}/>;
+        })
+      }
+      <div ref="t1" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 128,
+        translate: '-70%',
+      }}>楔子</div>
+      <div ref="t2" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 128,
+        fontFamily: 'Xingkai SC',
+      }}>楔子</div>
+    </canvas>,
+    dom
+  );
+  for(let i = 0; i < list.length; i++) {
+    root.ref[i].animate([
+      {},
+      {
+        opacity: Math.random(),
+      },
+    ], {
+      duration: 200 + Math.floor(Math.random() * 800),
+      direction: 'alternate',
+      iterations: Infinity,
+    });
+  }
+  function go(i) {
+    if(i === 1) {
+      root.ref.t1.children[0].updateContent('一');
+      root.ref.t2.children[0].updateContent('丫');
+    }
+    else if(i === 2) {
+      root.ref.t1.children[0].updateContent('二');
+      root.ref.t2.children[0].updateContent('乙');
+    }
+    else if(i === 3) {
+      root.ref.t1.children[0].updateContent('三');
+      root.ref.t2.children[0].updateContent('伞');
+    }
+    else {
+      root.ref.t1.children[0].updateContent('楔子');
+      root.ref.t2.children[0].updateContent('');
+    }
+  }
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    // var text = document.createTextNode(source);
+    // code.appendChild(text);
+    // jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
