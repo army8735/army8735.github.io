@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=0.5,maximum-scale=0.5,minimum-scale=0.5,user-scalable=0"/>
+  <title>pixi-webgl-1w</title>
+  <link href="../demo/style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div id="test"></div>
+<div id="fps"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  let app = new PIXI.Application({ width: 360, height: 360, transparent: true });
+  document.querySelector('#test').appendChild(app.view);
+  let list = [], config = [];
+  for(let i = 0; i < 10000; i++) {
+    let container = new PIXI.Container();
+    container.cacheAsBitmap = true;
+    container.x = container.y = 180;
+    let rectangle = new PIXI.Graphics();
+    rectangle.beginFill(Math.floor(Math.random() * 16777215));
+    let s = String(i), len = s.length;
+    rectangle.drawRect(-6 * len, -12, len * 6, 12);
+    rectangle.endFill();
+    container.addChild(rectangle);
+    let text = new PIXI.Text(String(i), {
+      fontSize: '12px',
+    });
+    text.x = -6 * len;
+    text.y = -12;
+    container.addChild(text);
+    list[i] = container;
+    config[i] = {
+      count: 0,
+      total: 50 + Math.floor(Math.random() * 50),
+      direction: 1,
+      tx: -180 + Math.random() * 360,
+      ty: -180 + Math.random() * 360,
+      ts: Math.random() * 1.5,
+      tr: Math.random() * Math.PI * 2,
+    };
+    app.stage.addChild(container);
+  }
+
+  let fps = document.querySelector('#fps');
+  let arr = [];
+  let last = Date.now();
+  function tick() {
+    for(let i = 0, len = list.length; i < len; i++) {
+      let item = list[i], cfg = config[i];
+      let total = cfg.total;
+      if(cfg.count++ >= total) {
+        cfg.count = 0;
+        cfg.direction *= -1;
+      }
+      item.x += cfg.direction * cfg.tx / total;
+      item.y += cfg.direction * cfg.ty / total;
+      if(cfg.direction === 1) {
+        item.scale.x = item.scale.y = cfg.ts * cfg.count / total;
+        item.rotation = cfg.tr * cfg.count / total;
+      }
+      else {
+        item.scale.x = item.scale.y = cfg.ts * (total - cfg.count) / total;
+        item.rotation = cfg.tr * (total - cfg.count) / total;
+      }
+    }
+    let now = Date.now();
+    arr.push(now - last);
+    last = now;
+    if(arr.length > 5) {
+      arr.shift();
+      let n = 0;
+      arr.forEach(i => {
+        n += i;
+      });
+      fps.innerHTML = Math.round(1000 / (n / 5));
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+<script src="../demo/sea.js"></script>
+<script src="../demo/homunculus.js"></script>
+<script src="../demo/yurine.js"></script>
+<script src="pixi.min.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>

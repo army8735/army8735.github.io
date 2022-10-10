@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>html-waa-5k</title>
+  <link href="../demo/style.css" media="all" rel="stylesheet"/>
+  <style>
+    #test{
+      position:relative;
+      width:360px;
+      height:360px;
+    }
+    .container{
+      position:absolute;
+      left:50%;
+      top:50%;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<div id="fps"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  let list = [], config = [];
+  let test = document.querySelector('#test');
+  for(let i = 0; i < 5000; i++) {
+    let div = document.createElement('div');
+    div.className = 'container';
+    div.innerText = String(i);
+    div.style.background = `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`;
+    test.appendChild(div);
+    div.animate([
+      {
+        transform: 'translateX(0) translateY(0) rotateZ(0) scale(0)',
+      },
+      {
+        transform: `translateX(${-180 + Math.random() * 360}px) translateY(${-180 + Math.random() * 360}px) rotateZ(${Math.random() * 360}deg) scale(${Math.random() * 2})`,
+      }
+    ], {
+      duration: 500 + Math.random() * 500,
+      direction: 'alternate',
+      iterations: Infinity,
+    });
+  }
+
+  let fps = document.querySelector('#fps');
+  let arr = [];
+  let last = Date.now();
+  function tick() {
+    let now = Date.now();
+    arr.push(now - last);
+    last = now;
+    if(arr.length > 5) {
+      arr.shift();
+      let n = 0;
+      arr.forEach(i => {
+        n += i;
+      });
+      fps.innerHTML = Math.round(1000 / (n / 5));
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+<script src="../demo/sea.js"></script>
+<script src="../demo/homunculus.js"></script>
+<script src="../demo/yurine.js"></script>
+<script src="pixi-legacy.min.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
