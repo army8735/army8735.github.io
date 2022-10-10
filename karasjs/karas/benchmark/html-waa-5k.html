@@ -9,12 +9,16 @@
       position:relative;
       width:360px;
       height:360px;
+      overflow:hidden;
     }
     .container{
       position:absolute;
       left:50%;
       top:50%;
       font-size:10px;
+    }
+    #fps{
+      transform:translateZ(0);
     }
   </style>
 </head>
@@ -58,7 +62,7 @@
       arr.forEach(i => {
         n += i;
       });
-      fps.innerHTML = Math.round(1000 / (n / 5));
+      fps.innerText = Math.round(1000 / (n / 5));
     }
     requestAnimationFrame(tick);
   }

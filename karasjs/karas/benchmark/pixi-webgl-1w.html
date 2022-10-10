@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=0.5,maximum-scale=0.5,minimum-scale=0.5,user-scalable=0"/>
   <title>pixi-webgl-1w</title>
   <link href="../demo/style.css" media="all" rel="stylesheet"/>
+  <style>
+    #fps{
+      transform:translateZ(0);
+    }
+  </style>
 </head>
 <body>
 <div id="test"></div>
@@ -74,7 +79,7 @@
       arr.forEach(i => {
         n += i;
       });
-      fps.innerHTML = Math.round(1000 / (n / 5));
+      fps.innerText = Math.round(1000 / (n / 5));
     }
     requestAnimationFrame(tick);
   }
