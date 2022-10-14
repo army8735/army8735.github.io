@@ -55,7 +55,7 @@
   const COLOR = ['#6FF', '#F6F', '#FF6'];
 
   let root = karas.render(
-    <canvas width={360} height={360} style={{background:'#FFF'}}>
+    <webgl width={360} height={360} style={{background:'#FFF'}}>
       <div style={{
         position: 'absolute',
         left: 0,
@@ -85,7 +85,7 @@
           }}>{item.n}</div>;
         })
       }
-    </canvas>,
+    </webgl>,
     '#test'
   );
   function checkClick(item) {
