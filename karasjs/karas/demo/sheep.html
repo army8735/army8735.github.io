@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>羊了个羊</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  // 有3种格子，先随机打乱供后续获取
+  const LIST = [];
+  for(let i = 0; i < 10; i++) {
+    LIST.push(0);
+    LIST.push(1);
+    LIST.push(2);
+  }
+  LIST.sort(function() { return Math.random() > 0.5 });
+
+  const DATA = [];
+  // 3层
+  for(let i = 0; i < 3; i++) {
+    let hash = {};
+    // 每层划分为20*20的格子，每个格子占2*2，每层有10个随机格子
+    for(let j = 0; j < 10; j++) {
+      let x = Math.floor(Math.random() * 9);
+      let y = Math.floor(Math.random() * 9);
+      // 每个占2 * 2单位，防重
+      if(hash.hasOwnProperty(x + ',' + y)
+        || hash.hasOwnProperty((x + 1) + ',' + y)
+        || hash.hasOwnProperty((x + 1) + ',' + (y + 1))
+        || hash.hasOwnProperty(x + ',' + (y + 1))) {
+        j--;
+        continue;
+      }
+      hash[x + ',' + y]
+        = hash[(x + 1) + ',' + y]
+        = hash[(x + 1) + ',' + (y + 1)]
+        = hash[x + ',' + (y + 1)]
+        = true;
+      DATA.push({
+        level: i,
+        x,
+        y,
+        n: LIST.pop(),
+        count: 10,
+      });
+    }
+  }
+  console.log(DATA);
+
+  const BGC = ['#F66', '#6F6', '#66F'];
+  const COLOR = ['#6FF', '#F6F', '#FF6'];
+
+  let root = karas.render(
+    <canvas width={360} height={360} style={{background:'#FFF'}}>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100vw',
+        height: '100vw',
+        background: '#EEE',
+      }}/>
+      {
+        DATA.map((item, i) => {
+          item.key = i;
+          return <div ref={i} cacheAsBitmap={1} style={{
+            position: 'absolute',
+            left: item.x * 10 + 'vw',
+            top: item.y * 10 + 'vw',
+            width: '19vw', // 20尺寸，留点空白
+            height: '19vw',
+            backgroundColor: BGC[item.n],
+            borderRadius: 10,
+            fontSize: 36,
+            textAlign: 'center',
+            lineHeight: '20vw',
+            color: COLOR[i],
+            filter: 'contrast(20%)',
+          }} onClick={() => {
+            checkClick(item);
+          }}>{item.n}</div>;
+        })
+      }
+    </canvas>,
+    '#test'
+  );
+  function checkClick(item) {
+    if(item.show) {
+      item.clear = true;
+      let node = root.ref[item.key];
+      let a = node.animate([
+        {
+          opacity: 1,
+        },
+        {
+          opacity: 0,
+        },
+      ], {
+        duration: 300,
+        fill: 'forwards',
+      });
+      a.on('finish', function() {
+        node.remove();
+        checkShow();
+      });
+    }
+  }
+  function checkShow() {
+    let hash = {};
+    for(let i = DATA.length - 1; i >= 0; i--) {
+      let item = DATA[i];
+      let { x, y, key } = item;
+      if(item.clear) {
+        continue;
+      }
+      if(hash.hasOwnProperty(x + ',' + y)
+        || hash.hasOwnProperty((x + 1) + ',' + y)
+        || hash.hasOwnProperty((x + 1) + ',' + (y + 1))
+        || hash.hasOwnProperty(x + ',' + (y + 1))) {
+        //
+      }
+      else {
+        let node = root.ref[key];
+        node.updateStyle({
+          filter: 'drop-shadow(0, 0, 4, rgba(0, 0, 0, 0.5))',
+        });
+        item.show = true;
+      }
+      hash[x + ',' + y]
+        = hash[(x + 1) + ',' + y]
+        = hash[(x + 1) + ',' + (y + 1)]
+        = hash[x + ',' + (y + 1)]
+        = true;
+    }
+  }
+  checkShow();
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
