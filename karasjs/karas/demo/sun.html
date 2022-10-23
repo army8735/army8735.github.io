@@ -248,12 +248,6 @@ vec4 mainImage( out vec4 fragColor, in vec2 fragCoord ) {
   f = 1.0 - smoothstep(0.2, .42, r);
   color = mix(color, vec3(0.965,0.750,0.008), f*rs);
 
-  float rs2 = fbm(vec2(10.0*r-anim,5.0*aa));
-  // color = mix(color, vec3(0.925,0.720,0.01), f*rs2);
-
-  float rs3 = fbm(vec2(12.0*r-anim,6.0*aa));
-  // color = mix(color, vec3(0.9,0.7,0.02), f*rs3);
-
   // sun center
   f = 1.0 - smoothstep(0.1,0.4+(rs*0.005), r);
   color = mix(color, vec3(0.98,0.85,0.590), f * 0.4);
@@ -313,21 +307,56 @@ void main() {
 
   let root = karas.render(
     <webgl webgl2={true} width={W} height={H}>
-      <$custom ref='sun' style={{
+      <$custom ref="sun" cacheAsBitmap={1} style={{
         width: '100%',
         height: '100%',
       }}/>
-      <$circle ref='moon' style={{
+      <$circle ref="sunM" style={{
         position: 'absolute',
         left: '50%',
         top: '50%',
-        width: '58vmin',
-        height: '58vmin',
+        width: '60vmin',
+        height: '60vmin',
         strokeWidth: 0,
         fill: '#000',
         filter: 'blur(3)',
-        translateX: '100%',
+        translateX: '50%',
         translateY: '-150%',
+      }}/>
+      <$circle mask={1} style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: '100vmin',
+        height: '100vmin',
+        strokeWidth: 0,
+        fill: 'radial-gradient(rgba(255,255,255,1) 41%, rgba(255,255,255,0) 43%)',
+        translateX: '-50%',
+        translateY: '-50%',
+      }}/>
+      <img ref="moon" src="moon.png" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: '63vmin',
+        height: '63vmin',
+        translateX: '-50%',
+        translateY: '-50%',
+        opacity: 0,
+        filter: 'saturate(1000%) brightness(80%)',
+      }}/>
+      <$circle ref="moonM" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        width: '60vmin',
+        height: '60vmin',
+        opacity: 0,
+        strokeWidth: 0,
+        fill: '#000',
+        filter: 'blur(3)',
+        translateX: '-50%',
+        translateY: '-50%',
       }}/>
       <$circle mask={1} style={{
         position: 'absolute',
@@ -340,49 +369,143 @@ void main() {
         translateX: '-50%',
         translateY: '-50%',
       }}/>
-      <$circle ref='ring' style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: '58vmin',
-        height: '58vmin',
-        strokeWidth: 0,
-        fill: 'radial-gradient(rgba(255,255,255,0) 41%, rgba(255,255,64,1) 42%, rgba(255,255,255,0) 43%)',
-        filter: 'blur(1)',
-        scale: 100 / 58,
-        translateX: '100%',
-        translateY: '-150%',
-      }}/>
-      <$circle mask={1} style={{
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: '100vmin',
-        height: '100vmin',
-        strokeWidth: 0,
-        fill: 'radial-gradient(rgba(255,255,255,1) 40%, rgba(255,255,255,0) 41%)',
-        translateX: '-50%',
-        translateY: '-50%',
-      }}/>
     </webgl>,
     dom
   );
 
   let sun = root.ref.sun;
   sun.frameAnimate(function() {
+    sun.clearCache();
     sun.refresh(karas.refresh.level.CACHE);
   });
   let moon = root.ref.moon;
-  moon.animate([
-    {},
-    {
-      translateX: '-50%',
-      translateY: '-50%',
-    },
-  ], {
-    duration: 1000 * 60 * 10,
-    fill: 'forwards',
-  });
+  let sunM = root.ref.sunM;
+  let moonM = root.ref.moonM;
+  let a1, a2;
+
+  function go(step) {
+    // 等待
+    if(step === 0) {
+      sunM.clearAnimate();
+      moonM.clearAnimate();
+      moon.updateStyle({
+        opacity: 0,
+      });
+    }
+    // 第一幕日全食
+    else if(step === 1) {
+      sunM.animate([
+        {
+          translateX: '50%',
+          translateY: '-150%',
+        },
+        {
+          translateX: '-50%',
+          translateY: '-50%',
+        },
+      ], {
+        duration: 1000 * 60 * 60,
+        fill: 'forwards',
+      });
+    }
+    // 第二幕日偏食和月偏食交替
+    else if(step === 2) {
+      let x = sunM.currentStyle[karas.enums.STYLE_KEY.TRANSLATE_X].v;
+      let y = sunM.currentStyle[karas.enums.STYLE_KEY.TRANSLATE_Y].v;
+      moonM.updateStyle({
+        opacity: 1,
+        translateX: x + '%',
+        translateY: y + '%',
+      });
+      sunM.clearAnimate();
+      sunM.animate([
+        {
+          translateX: x + '%',
+          translateY: y + '%',
+        },
+        {
+          translateX: '-100%',
+          translateY: '0%',
+        },
+      ], {
+        duration: 1000 * 60 * 60,
+        fill: 'forwards',
+      });
+      moonM.animate([
+        {},
+        {
+          translateX: '-100%',
+          translateY: '0%',
+        },
+      ], {
+        duration: 1000 * 60 * 60,
+        fill: 'forwards',
+      });
+      a1 = sun.animate([
+        {
+          filter: 'hue-rotate(0) brightness(100%)',
+        },
+        {
+          filter: 'hue-rotate(0) brightness(100%)',
+        },
+        {
+          filter: 'hue-rotate(180) brightness(50%)',
+        },
+        {
+          filter: 'hue-rotate(180) brightness(50%)',
+        },
+      ], {
+        duration: 8000,
+        iterations: Infinity,
+        direction: 'alternate',
+        fill: 'forwards',
+      });
+      a2 = moon.animate([
+        {
+          opacity: 0,
+        },
+        {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+        },
+        {
+          opacity: 1,
+        },
+      ], {
+        duration: 8000,
+        iterations: Infinity,
+        direction: 'alternate',
+        fill: 'forwards',
+      });
+    }
+    // 第三幕复圆
+    else if(step === 3) {
+      a1.on('begin', function() {
+        if(a1.playCount % 2 === 0) {
+          a1.pause();
+          a2.pause();
+          sunM.updateStyle({
+            filter: 'blur(3)',
+          });
+          moonM.updateStyle({
+            opacity: 0,
+          });
+          sunM.animate([
+            {},
+            {
+              translateX: '-150%',
+              translateY: '50%',
+            },
+          ], {
+            duration: 1000 * 60 * 60,
+            fill: 'forwards',
+          });
+        }
+      });
+    }
+  }
 </script>
 <script src="sea.js"></script>
 <script src="homunculus.js"></script>
