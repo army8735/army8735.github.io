@@ -215,7 +215,7 @@ vec4 mainImage( out vec4 fragColor, in vec2 fragCoord ) {
   // abs is to fix the -pi/pi discontinuity in atan and noise artifact
   float a = atan( p.y, abs(p.x) ); // angle
 
-  vec3 color = vec3(0.,0.,0.140);
+  vec3 color = vec3(0.,0.,0.001);
   float anim = iTime*0.7;
 
   // red burn
@@ -224,7 +224,7 @@ vec4 mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
   // shine
   // f = smoothstep(0.4, 0.3, 2.0 * length(p - vec2(0.1,0.1)));
-  // color += vec3(1.0,0.85,0.68) * f ;
+  color += vec3(1.0,0.85,0.68) * f ;
 
   // angular distortion
   float aa = a + 0.2 * fbm (15.0*p);
@@ -235,22 +235,22 @@ vec4 mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 
   // dissipation
   f = smoothstep(0.40, .5, r);
-  color = mix(color, vec3(0.0,0.0,0.140),f);/**/
+  color = mix(color, vec3(0.0,0.0,0.001),f);/**/
 
   // radius of the sun
   float rs = fbm(vec2(20.0*r-anim,15.0*aa));
 
   // sun
-  f = 1.0 - smoothstep(0.29,0.3+(rs*0.005), r);
+  f = 1.0 - smoothstep(0.28,0.3+(rs*0.005), r);
   color = mix(color, vec3(0.9,0.8,0.490), f);
 
   // corona
-  f = 1.0 - smoothstep(0.2, .42, r);
+  f = 1.0 - smoothstep(0.22, .42, r);
   color = mix(color, vec3(0.965,0.750,0.008), f*rs);
 
   // sun center
   f = 1.0 - smoothstep(0.1,0.4+(rs*0.005), r);
-  color = mix(color, vec3(0.98,0.85,0.590), f * 0.4);
+  color = mix(color, vec3(0.98,0.85,0.590), f * 0.3);
 
   // moon
   // f = smoothstep(0.29,0.3,r);
@@ -261,7 +261,7 @@ vec4 mainImage( out vec4 fragColor, in vec2 fragCoord ) {
   color += vec3(.9,0.7,0.0) * 0.3 * f ;
 
   // atmosphere
-  color = mix(color, vec3(.9,0.8,0.6), smoothstep(0.4,1.0,r)*0.2*fbm(vec2(4.1*r-anim,25.*(a+0.2 * fbm (3.0*p)))));
+  color = mix(color, vec3(.9,0.8,0.6), smoothstep(0.4,1.0,r)*0.2*fbm(vec2(4.1*r-anim,25.*(a+0.2 * fbm (3.0*p)))) * 0.3);
 
   return vec4(color,1.0);
 }
@@ -495,8 +495,8 @@ void main() {
           sunM.animate([
             {},
             {
-              translateX: '-150%',
-              translateY: '50%',
+              translateX: '-200%',
+              translateY: '100%',
             },
           ], {
             duration: 1000 * 60 * 60,
