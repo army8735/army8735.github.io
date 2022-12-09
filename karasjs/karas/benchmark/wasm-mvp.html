@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>temp</title>
+  <link href="../demo/style.css" media="all" rel="stylesheet"/>
+  <style>
+    #test{
+      position:relative;
+      width:360px;
+      height:360px;
+      overflow:hidden;
+    }
+    .container{
+      position:absolute;
+      left:50%;
+      top:50%;
+      font-size:10px;
+    }
+    #fps{
+      transform:translateZ(0);
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<div id="fps"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  let list = [];
+  for(let i = 0; i < 20000; i++) {
+    list.push(i);
+  }
+  karas.wasm.init('rust_bg.wasm', function() {
+    let root = karas.render(
+      <webgl webgl2={true} width={360} height={360}>
+        {
+          list.map(i => {
+            let background = `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`;
+            return <div ref={i}
+                        cacheAsBitmap={1}
+                        style={{
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          width: 10,
+                          height: 10,
+                          background,
+                        }}/>;
+          })
+        }
+      </webgl>,
+      '#test'
+    );
+    let list2 = [];
+    list.forEach(i => {
+      let node = root.ref[i];
+      let a = node.animate([
+        {
+          translateX: 0,
+          translateY: 0,
+          rotateZ: 0,
+          scale: 1,
+        },
+        {
+          translateX: -180 + Math.random() * 360,
+          translateY: -180 + Math.random() * 360,
+          rotateZ: Math.random() * 360,
+          scale: Math.random() * 2 + 0.1,
+        }
+      ], {
+        duration: 500 + Math.random() * 500,
+        direction: 'alternate',
+        iterations: Infinity,
+      });
+      list2.push(a);
+    });
+    let wasm = root.genWasm(root.__structs);
+    list2.forEach(item => {
+      item.__wa.set_root(wasm.wasmRoot.ptr + 4);
+    });
+  });
+  let fps = document.querySelector('#fps');
+  let arr = [];
+  karas.animate.frame.onFrame(function(diff) {
+    arr.push(diff);
+    if(arr.length > 5) {
+      arr.shift();
+      let n = 0;
+      arr.forEach(i => {
+        n += i;
+      });
+      fps.innerHTML = Math.round(1000 / (n / 5));
+    }
+  });
+</script>
+<script src="../demo/sea.js"></script>
+<script src="../demo/homunculus.js"></script>
+<script src="../demo/yurine.js"></script>
+<script src="mvp.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
