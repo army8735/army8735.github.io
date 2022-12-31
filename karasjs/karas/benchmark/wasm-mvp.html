@@ -32,9 +32,9 @@
   for(let i = 0; i < 20000; i++) {
     list.push(i);
   }
-  karas.wasm.init('rust_bg.wasm', function() {
+  karas.wasm.init('karas_bg.wasm', function() {
     let root = karas.render(
-      <webgl webgl2={true} width={360} height={360}>
+      <webgl webgl2={true} wasm={1} width={360} height={360}>
         {
           list.map(i => {
             let background = `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`;
@@ -53,10 +53,9 @@
       </webgl>,
       '#test'
     );
-    let list2 = [];
     list.forEach(i => {
       let node = root.ref[i];
-      let a = node.animate([
+      node.animate([
         {
           translateX: 0,
           translateY: 0,
@@ -67,18 +66,13 @@
           translateX: -180 + Math.random() * 360,
           translateY: -180 + Math.random() * 360,
           rotateZ: Math.random() * 360,
-          scale: Math.random() * 2 + 0.1,
+          scale: 1 + Math.random(),
         }
       ], {
         duration: 500 + Math.random() * 500,
         direction: 'alternate',
         iterations: Infinity,
       });
-      list2.push(a);
-    });
-    let wasm = root.genWasm(root.__structs);
-    list2.forEach(item => {
-      item.__wa.set_root(wasm.wasmRoot.ptr + 4);
     });
   });
   let fps = document.querySelector('#fps');
