@@ -1,0 +1,3759 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>Rain</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body, #test, canvas {
+      display: block;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<script type="text/jsx">
+  const W = document.body.clientWidth * 2, H = document.body.clientHeight * 2;
+
+  const CLICK = {
+    "name": "zhakai",
+    "tagName": "div",
+    "props": {
+      "style": {
+        "position": "absolute",
+        "width": 268,
+        "height": 258,
+        "scale": 2,
+        "pointerEvents": "none",
+        "visibility": "hidden"
+      }
+    },
+    "children": [
+      {
+        "name": "形状图层 1",
+        "libraryId": 6,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "transformOrigin": "51 -500 0",
+            "left": -51,
+            "top": 500,
+            "opacity": 0,
+            "translateX": 131,
+            "translateY": 128,
+            "scaleX": 0.05,
+            "scaleY": 0.05
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.19,
+                "opacity": 1
+              },
+              {
+                "offset": 0.34,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "scaleX": 0.05,
+                "scaleY": 0.05,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.53,
+                "scaleX": 0.77,
+                "scaleY": 0.77
+              },
+              {
+                "offset": 1,
+                "scaleX": 0.77,
+                "scaleY": 0.77
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "img_3.png",
+        "libraryId": 5,
+        "init": {
+          "style": {
+            "left": -14,
+            "top": -14,
+            "translateX": 132,
+            "translateY": 117,
+            "scaleX": 0.87,
+            "scaleY": 0.87
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 0.47,
+                "visibility": "hidden",
+                "pointerEvents": "none"
+              },
+              {
+                "offset": 1,
+                "visibility": "hidden",
+                "pointerEvents": "none"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.09,
+                "opacity": 0.76,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.19,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.28,
+                "opacity": 0.63,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.38,
+                "opacity": 0.86,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.47,
+                "opacity": 0.92,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.56,
+                "opacity": 0.62,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0,
+                "easing": [
+                  0.47,
+                  0.22,
+                  0.8,
+                  1
+                ],
+                "translatePath": [
+                  132,
+                  117,
+                  107,
+                  118,
+                  75,
+                  128,
+                  51,
+                  150
+                ]
+              },
+              {
+                "offset": 0.47,
+                "translateX": 51,
+                "translateY": 150
+              },
+              {
+                "offset": 1,
+                "translateX": 51,
+                "translateY": 150
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.09,
+                "scaleX": 0.58,
+                "scaleY": 0.58,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.19,
+                "scaleX": 0.84,
+                "scaleY": 0.84,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.28,
+                "scaleX": 0.68,
+                "scaleY": 0.68,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.38,
+                "scaleX": 0.98,
+                "scaleY": 0.98,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.47,
+                "scaleX": 0.73,
+                "scaleY": 0.73,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.56,
+                "scaleX": 0.42,
+                "scaleY": 0.42,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "scaleX": 1,
+                "scaleY": 1
+              },
+              {
+                "offset": 1,
+                "scaleX": 1,
+                "scaleY": 1
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "img_3.png",
+        "libraryId": 5,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -14,
+            "top": -14,
+            "opacity": 0,
+            "translateX": 128,
+            "translateY": 127,
+            "scaleX": 0.66,
+            "scaleY": 0.66
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.16,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 0.69,
+                "visibility": "hidden",
+                "pointerEvents": "none"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "opacity": 0,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.13,
+                "opacity": 0.85,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.22,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.31,
+                "opacity": 0.76,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.41,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.5,
+                "opacity": 0.63,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 0.86,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.69,
+                "opacity": 0.92,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.78,
+                "opacity": 0.62,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.88,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.16,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  128,
+                  127,
+                  111,
+                  129,
+                  92,
+                  154,
+                  74,
+                  170
+                ]
+              },
+              {
+                "offset": 0.69,
+                "translateX": 74,
+                "translateY": 170
+              },
+              {
+                "offset": 1,
+                "translateX": 74,
+                "translateY": 170
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "scaleX": 0.66,
+                "scaleY": 0.66,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.13,
+                "scaleX": 0.51,
+                "scaleY": 0.51,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.22,
+                "scaleX": 0.57,
+                "scaleY": 0.57,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.31,
+                "scaleX": 0.38,
+                "scaleY": 0.38,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.41,
+                "scaleX": 0.55,
+                "scaleY": 0.55,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.5,
+                "scaleX": 0.45,
+                "scaleY": 0.45,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "scaleX": 0.65,
+                "scaleY": 0.65,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.69,
+                "scaleX": 0.48,
+                "scaleY": 0.48,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.78,
+                "scaleX": 0.28,
+                "scaleY": 0.28,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.88,
+                "scaleX": 0.66,
+                "scaleY": 0.66
+              },
+              {
+                "offset": 1,
+                "scaleX": 0.66,
+                "scaleY": 0.66
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "img_3.png",
+        "libraryId": 5,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -14,
+            "top": -14,
+            "opacity": 0,
+            "translateX": 122,
+            "translateY": 120,
+            "scaleX": 0.66,
+            "scaleY": 0.66
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.44,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 0.84,
+                "visibility": "hidden",
+                "pointerEvents": "none"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "opacity": 0,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.38,
+                "opacity": 0.85,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.47,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.56,
+                "opacity": 0.76,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.75,
+                "opacity": 0.63,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.84,
+                "opacity": 0.86,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.94,
+                "opacity": 0.92,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  0.44
+                ]
+              },
+              {
+                "offset": 1,
+                "opacity": 0.7,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.44,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  122,
+                  120,
+                  105,
+                  119,
+                  89,
+                  124,
+                  72,
+                  140
+                ]
+              },
+              {
+                "offset": 0.84,
+                "translateX": 72,
+                "translateY": 140
+              },
+              {
+                "offset": 1,
+                "translateX": 72,
+                "translateY": 140
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "scaleX": 0.66,
+                "scaleY": 0.66,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.38,
+                "scaleX": 0.51,
+                "scaleY": 0.51,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.47,
+                "scaleX": 0.57,
+                "scaleY": 0.57,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.56,
+                "scaleX": 0.38,
+                "scaleY": 0.38,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "scaleX": 0.55,
+                "scaleY": 0.55,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.75,
+                "scaleX": 0.45,
+                "scaleY": 0.45,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.84,
+                "scaleX": 0.65,
+                "scaleY": 0.65,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.94,
+                "scaleX": 0.48,
+                "scaleY": 0.48,
+                "easing": [
+                  0.17,
+                  0.11,
+                  0.67,
+                  0.44
+                ]
+              },
+              {
+                "offset": 1,
+                "scaleX": 0.35,
+                "scaleY": 0.35,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "img_3.png",
+        "libraryId": 5,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -14,
+            "top": -14,
+            "opacity": 0.28,
+            "translateX": 136,
+            "translateY": 109,
+            "scaleX": 0.61,
+            "scaleY": 0.61
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.13,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 0.63,
+                "visibility": "hidden",
+                "pointerEvents": "none"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0,
+                "easing": [
+                  0.83,
+                  0.56,
+                  1,
+                  1
+                ]
+              },
+              {
+                "offset": 0.06,
+                "opacity": 0.85,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.16,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.25,
+                "opacity": 0.76,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.34,
+                "opacity": 1,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.44,
+                "opacity": 0.63,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0.86,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.63,
+                "opacity": 0.92,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.72,
+                "opacity": 0.62,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.81,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.13,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  136,
+                  109,
+                  168,
+                  108,
+                  199,
+                  120,
+                  210,
+                  140
+                ]
+              },
+              {
+                "offset": 0.63,
+                "translateX": 210,
+                "translateY": 140
+              },
+              {
+                "offset": 1,
+                "translateX": 210,
+                "translateY": 140
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0,
+                "easing": [
+                  0.83,
+                  0.56,
+                  1,
+                  0.89
+                ]
+              },
+              {
+                "offset": 0.06,
+                "scaleX": 0.51,
+                "scaleY": 0.51,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.16,
+                "scaleX": 0.57,
+                "scaleY": 0.57,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.25,
+                "scaleX": 0.38,
+                "scaleY": 0.38,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.34,
+                "scaleX": 0.55,
+                "scaleY": 0.55,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.44,
+                "scaleX": 0.45,
+                "scaleY": 0.45,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "scaleX": 0.65,
+                "scaleY": 0.65,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.63,
+                "scaleX": 0.48,
+                "scaleY": 0.48,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.72,
+                "scaleX": 0.28,
+                "scaleY": 0.28,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.81,
+                "scaleX": 0.66,
+                "scaleY": 0.66
+              },
+              {
+                "offset": 1,
+                "scaleX": 0.66,
+                "scaleY": 0.66
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "空 1",
+        "tagName": "div",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 100,
+            "height": 100,
+            "transformOrigin": "0 0 0",
+            "translateX": 166,
+            "translateY": 160,
+            "scaleX": 0.55,
+            "scaleY": 0.55
+          }
+        },
+        "children": [
+          {
+            "name": "img_3.png",
+            "libraryId": 5,
+            "init": {
+              "style": {
+                "visibility": "hidden",
+                "pointerEvents": "none",
+                "left": -14,
+                "top": -14,
+                "opacity": 0,
+                "translateX": -45,
+                "translateY": -80
+              }
+            },
+            "animate": [
+              {
+                "value": [
+                  {
+                    "offset": 0
+                  },
+                  {
+                    "offset": 0.31,
+                    "visibility": "inherit",
+                    "pointerEvents": "auto"
+                  },
+                  {
+                    "offset": 0.72,
+                    "visibility": "hidden",
+                    "pointerEvents": "none"
+                  }
+                ],
+                "options": {
+                  "duration": 1333,
+                  "fill": "forwards",
+                  "iterations": 1
+                }
+              },
+              {
+                "value": [
+                  {
+                    "offset": 0
+                  },
+                  {
+                    "offset": 0.16,
+                    "opacity": 0,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.25,
+                    "opacity": 0.85,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.34,
+                    "opacity": 1,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.44,
+                    "opacity": 0.76,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.53,
+                    "opacity": 1,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.63,
+                    "opacity": 0.63,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.72,
+                    "opacity": 0.86,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.81,
+                    "opacity": 0.92,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 0.91,
+                    "opacity": 0.62,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "opacity": 0
+                  }
+                ],
+                "options": {
+                  "duration": 1333,
+                  "fill": "forwards",
+                  "iterations": 1
+                }
+              },
+              {
+                "value": [
+                  {
+                    "offset": 0
+                  },
+                  {
+                    "offset": 0.31,
+                    "easing": [
+                      0.33,
+                      0,
+                      0.67,
+                      1
+                    ],
+                    "translatePath": [
+                      -45,
+                      -80,
+                      -25,
+                      -100,
+                      24,
+                      -126,
+                      68,
+                      -120
+                    ]
+                  },
+                  {
+                    "offset": 0.72,
+                    "translateX": 68,
+                    "translateY": -120
+                  },
+                  {
+                    "offset": 1,
+                    "translateX": 68,
+                    "translateY": -120
+                  }
+                ],
+                "options": {
+                  "duration": 1333,
+                  "fill": "forwards",
+                  "iterations": 1
+                }
+              },
+              {
+                "value": [
+                  {
+                    "offset": 0
+                  },
+                  {
+                    "offset": 0.16,
+                    "scaleX": 1,
+                    "scaleY": 1,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.25,
+                    "scaleX": 0.78,
+                    "scaleY": 0.78,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.34,
+                    "scaleX": 0.87,
+                    "scaleY": 0.87,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.44,
+                    "scaleX": 0.58,
+                    "scaleY": 0.58,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.53,
+                    "scaleX": 0.84,
+                    "scaleY": 0.84,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.63,
+                    "scaleX": 0.68,
+                    "scaleY": 0.68,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.72,
+                    "scaleX": 0.98,
+                    "scaleY": 0.98,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.81,
+                    "scaleX": 0.73,
+                    "scaleY": 0.73,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 0.91,
+                    "scaleX": 0.42,
+                    "scaleY": 0.42,
+                    "easing": [
+                      0.17,
+                      0.17,
+                      0.83,
+                      0.83
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "scaleX": 1,
+                    "scaleY": 1
+                  }
+                ],
+                "options": {
+                  "duration": 1333,
+                  "fill": "forwards",
+                  "iterations": 1
+                }
+              }
+            ]
+          }
+        ],
+        "animate": []
+      },
+      {
+        "name": "编组 3备份 3.png",
+        "libraryId": 4,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -34,
+            "top": -33,
+            "opacity": 0,
+            "translateX": 95,
+            "translateY": 125,
+            "scaleX": 0.66,
+            "scaleY": 0.66
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.28,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.34,
+                "opacity": 0.71,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.44,
+                "opacity": 1
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translateX": 95,
+                "translateY": 125
+              },
+              {
+                "offset": 0.59,
+                "translateX": 100,
+                "translateY": 266
+              },
+              {
+                "offset": 1,
+                "translateX": 100,
+                "translateY": 266
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 3备份 3.png",
+        "libraryId": 4,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -34,
+            "top": -33,
+            "opacity": 0,
+            "translateX": 135,
+            "translateY": 116,
+            "scaleX": 0.53,
+            "scaleY": 0.53
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.44,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.5,
+                "opacity": 0.37,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0.94,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 0.48,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.72,
+                "opacity": 0.85,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.78,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  135,
+                  116,
+                  159,
+                  123,
+                  187,
+                  156,
+                  182,
+                  201
+                ]
+              },
+              {
+                "offset": 0.75,
+                "translateX": 182,
+                "translateY": 201
+              },
+              {
+                "offset": 1,
+                "translateX": 182,
+                "translateY": 201
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 3备份 3.png",
+        "libraryId": 4,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -34,
+            "top": -33,
+            "opacity": 0,
+            "translateX": 158,
+            "translateY": 103,
+            "scaleX": 0.52,
+            "scaleY": 0.52
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.34,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.41,
+                "opacity": 0.5,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.47,
+                "opacity": 0.98
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 0.28,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  158,
+                  103,
+                  213,
+                  88,
+                  226,
+                  94,
+                  253,
+                  145
+                ]
+              },
+              {
+                "offset": 0.66,
+                "translateX": 253,
+                "translateY": 145
+              },
+              {
+                "offset": 1,
+                "translateX": 253,
+                "translateY": 145
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 3备份 3.png",
+        "libraryId": 4,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -34,
+            "top": -33,
+            "opacity": 0,
+            "translateX": 158,
+            "translateY": 103,
+            "scaleX": 0.52,
+            "scaleY": 0.52
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.16,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.16,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.22,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.28,
+                "opacity": 0.41,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.34,
+                "opacity": 0.82,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.41,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.47,
+                "opacity": 0.26,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.16,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  158,
+                  103,
+                  121,
+                  86,
+                  52,
+                  91,
+                  24,
+                  154
+                ]
+              },
+              {
+                "offset": 0.53,
+                "translateX": 24,
+                "translateY": 154
+              },
+              {
+                "offset": 1,
+                "translateX": 24,
+                "translateY": 154
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 3备份 3.png",
+        "libraryId": 4,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -34,
+            "top": -33,
+            "opacity": 0,
+            "translateX": 158,
+            "translateY": 103,
+            "scaleX": 0.52,
+            "scaleY": 0.52
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.28,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.34,
+                "opacity": 0.32,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.41,
+                "opacity": 0.89,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.47,
+                "opacity": 0.69,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  158,
+                  103,
+                  133,
+                  107,
+                  105,
+                  143,
+                  96,
+                  190
+                ]
+              },
+              {
+                "offset": 0.59,
+                "translateX": 96,
+                "translateY": 190
+              },
+              {
+                "offset": 1,
+                "translateX": 96,
+                "translateY": 190
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.22,
+                "scaleX": 0.52,
+                "scaleY": 0.52,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ]
+              },
+              {
+                "offset": 0.59,
+                "scaleX": 0.33,
+                "scaleY": 0.33
+              },
+              {
+                "offset": 1,
+                "scaleX": 0.33,
+                "scaleY": 0.33
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 4备份.png",
+        "libraryId": 3,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "transformOrigin": "62 56 0",
+            "left": -62,
+            "top": -56,
+            "opacity": 0,
+            "translateX": 138,
+            "translateY": 108,
+            "rotateZ": 62,
+            "scaleX": 0.45,
+            "scaleY": 0.45
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.31,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.31,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.44,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0.62,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.59,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.69,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.31,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translateX": 138,
+                "translateY": 108
+              },
+              {
+                "offset": 0.69,
+                "translateX": 248,
+                "translateY": 40
+              },
+              {
+                "offset": 1,
+                "translateX": 248,
+                "translateY": 40
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "2.png",
+        "libraryId": 2,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "transformOrigin": "90 91 0",
+            "left": -90,
+            "top": -91,
+            "opacity": 0,
+            "translateX": 127,
+            "translateY": 115,
+            "scaleX": 0.46,
+            "scaleY": 0.46
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.41,
+                "opacity": 1
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.28,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translateX": 127,
+                "translateY": 115
+              },
+              {
+                "offset": 0.66,
+                "translateX": 50,
+                "translateY": 51
+              },
+              {
+                "offset": 1,
+                "translateX": 50,
+                "translateY": 51
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "2.png",
+        "libraryId": 2,
+        "init": {
+          "style": {
+            "transformOrigin": "90 91 0",
+            "left": -90,
+            "top": -91,
+            "opacity": 0,
+            "translateX": 138,
+            "translateY": 120,
+            "scaleX": 0.27,
+            "scaleY": 0.27
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.16,
+                "opacity": 1
+              },
+              {
+                "offset": 0.28,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.44,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.03,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  138,
+                  120,
+                  97,
+                  93,
+                  57,
+                  96,
+                  10,
+                  135
+                ]
+              },
+              {
+                "offset": 0.44,
+                "translateX": 10,
+                "translateY": 135
+              },
+              {
+                "offset": 1,
+                "translateX": 10,
+                "translateY": 135
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "2.png",
+        "libraryId": 2,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "transformOrigin": "90 91 0",
+            "left": -90,
+            "top": -91,
+            "opacity": 0,
+            "translateX": 138,
+            "translateY": 120,
+            "scaleX": 0.27,
+            "scaleY": 0.27
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.09,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.13,
+                "opacity": 0,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.25,
+                "opacity": 1
+              },
+              {
+                "offset": 0.38,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.53,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.13,
+                "easing": [
+                  0.33,
+                  0,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  138,
+                  120,
+                  141,
+                  77,
+                  173,
+                  40,
+                  201,
+                  23
+                ]
+              },
+              {
+                "offset": 0.53,
+                "translateX": 201,
+                "translateY": 23
+              },
+              {
+                "offset": 1,
+                "translateX": 201,
+                "translateY": 23
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "空 1",
+        "libraryId": 1,
+        "init": {
+          "style": {
+            "transformOrigin": "0 0 0",
+            "opacity": 0,
+            "translateX": 166,
+            "translateY": 160,
+            "scaleX": 0.55,
+            "scaleY": 0.55
+          }
+        },
+        "animate": []
+      },
+      {
+        "name": "编组 5备份 3.png",
+        "libraryId": 0,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -99,
+            "top": -91,
+            "translateX": 109,
+            "translateY": 102,
+            "scaleX": 0.2,
+            "scaleY": 0.2
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "opacity": 1
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "easing": [
+                  0.17,
+                  0.18,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  109,
+                  102,
+                  91,
+                  97,
+                  73,
+                  111,
+                  54,
+                  142
+                ]
+              },
+              {
+                "offset": 0.66,
+                "translateX": 54,
+                "translateY": 142
+              },
+              {
+                "offset": 1,
+                "translateX": 54,
+                "translateY": 142
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 5备份 3.png",
+        "libraryId": 0,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -99,
+            "top": -91,
+            "translateX": 158,
+            "translateY": 99,
+            "scaleX": 0.17,
+            "scaleY": 0.17
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "opacity": 1
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.67,
+                  1
+                ],
+                "translatePath": [
+                  158,
+                  99,
+                  167,
+                  114,
+                  191,
+                  114,
+                  215,
+                  189
+                ]
+              },
+              {
+                "offset": 0.66,
+                "translateX": 215,
+                "translateY": 189
+              },
+              {
+                "offset": 1,
+                "translateX": 215,
+                "translateY": 189
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      },
+      {
+        "name": "编组 5备份 3.png",
+        "libraryId": 0,
+        "init": {
+          "style": {
+            "visibility": "hidden",
+            "pointerEvents": "none",
+            "left": -99,
+            "top": -91,
+            "translateX": 130,
+            "translateY": 126,
+            "scaleX": 0.24,
+            "scaleY": 0.24
+          }
+        },
+        "animate": [
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              },
+              {
+                "offset": 1,
+                "visibility": "inherit",
+                "pointerEvents": "auto"
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.38,
+                "opacity": 1
+              },
+              {
+                "offset": 0.53,
+                "opacity": 1,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.83,
+                  0.83
+                ]
+              },
+              {
+                "offset": 0.66,
+                "opacity": 0
+              },
+              {
+                "offset": 1,
+                "opacity": 0
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          },
+          {
+            "value": [
+              {
+                "offset": 0
+              },
+              {
+                "offset": 0.25,
+                "easing": [
+                  0.17,
+                  0.17,
+                  0.67,
+                  1
+                ],
+                "translateX": 130,
+                "translateY": 126
+              },
+              {
+                "offset": 0.66,
+                "translateX": 135,
+                "translateY": 219
+              },
+              {
+                "offset": 1,
+                "translateX": 135,
+                "translateY": 219
+              }
+            ],
+            "options": {
+              "duration": 1333,
+              "fill": "forwards",
+              "iterations": 1
+            }
+          }
+        ]
+      }
+    ],
+    "library": [
+      {
+        "id": 0,
+        "tagName": "div",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 198,
+            "height": 181
+          }
+        },
+        "children": [
+          {
+            "name": "编组 5备份 3.png",
+            "tagName": "img",
+            "props": {
+              "style": {
+                "position": "absolute",
+                "width": 135,
+                "height": 138,
+                "left": 29,
+                "top": 20
+              },
+              "src": "data:image/png;base64,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"
+            }
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "name": null,
+        "tagName": "div",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 100,
+            "height": 100
+          }
+        }
+      },
+      {
+        "id": 2,
+        "tagName": "div",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 172,
+            "height": 172
+          }
+        },
+        "children": [
+          {
+            "name": "2.png",
+            "tagName": "img",
+            "props": {
+              "style": {
+                "position": "absolute",
+                "width": 104,
+                "height": 96,
+                "left": 34,
+                "top": 40
+              },
+              "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAABgAgMAAACMId9fAAAADFBMVEXNamL/7anIdWLyypFC2amZAAAABHRSTlMBMgoeLCDl6AAAAq9JREFUSMftVj1r3EAQFVsN9yuWqS4KIb9GOXCR9E4dDBdwxFbD9u7NgkGMiFO5ORPcp7+fEDAq0qUxOM7sSjrNShfXCUTcnUBPb/fNx765ovh//c0Xov0DQkUB9VEECgpE5I5ANSEQFWAXTABLoQxUF8sNLZGnJgAZmCMOsWFmNHOWMYBcCnRJMFcC6JHjhdbmK9qaQkJ4yUJcM7d3v7pAIlZvBU6Wa79W1ZmsmEdW49rzl0qu88blSwJ55p8Rqu4pY8VUcJuQ6gQRNebQ8/ceetNYnSwAX/K+h6ouYxmR/npAqi1ZxbKI/HmE3uqiGSNR3YzQpiHUGUS+GKHq3mUCmQ9IdWpVaJZ8O0EnQafQTypEh1Zv1hqSoA8lM9ZPAkViUA0pLA01CsE+TVKvTXzlm6oZUBOh7vHsId7vg1LIidVJpfd9YFNcPkX8wNe7FLMKbFWmiLdtX8+t2ksSlR517W1fFlWU4W3u+vt6wqBP4XZ3PbCm3Lt+rxMe2Dq/mB59vN4NLDq0APDAaoe9apWqXuGPQUaYDguMCgcZ2iYgJUpY6X7aTAuaVVrwPd/2uUR9+sr06Olpl+7B6vTGXnvcV58u0mExiuWlhBthbD7Il4Pu7DJrANQsd6U6KigWWHyl+lBpjy2gu9dn4t1K9Xy4zA6z3x8g8Y6plEbabTpfjDPjmE4le51esZuXI3Qe1jOTKg8O0ATtRda61c24FdW53wC+GKJqiHJHdOOKHWcBi3qR3zsbB7Q2N1g56rLbu47LrFo9WPLdUyekuWmDhBYtW0gyI/LNrAwBQYK40NyYnbgRysCZRRWDFosQ2w6IYBYDpxbbBm/rejnFDMgMc/F3McBAMmLi/IIjg8+CdWCWA8zEj2xzdF7KUgaPz1jz3GgW3XB8ONvnaGD/pf8fvwHySI4x2z+JLgAAAABJRU5ErkJggg=="
+            }
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "编组 4备份.png",
+        "tagName": "img",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 119,
+            "height": 105
+          },
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHcAAABpBAMAAADyy6FSAAAAGFBMVEVHcEy1Rz3FZFP/25b/t2DYjW/0xpX//OIuGGxdAAAACHRSTlMABQ5lZSI9ZncP/ScAAAR7SURBVFjD7VhNbts8ENXcgOSiexJgDlDa8gGkC9Stsm9q+wL+8OX6nT9KClCRlAJ0VSaAHSCPb+bNcDjDrvu3cEFn4DiWljm6AeLMss1ObDb+bzutQAOz+X+J2Sw+H+A2ivp8ruAvHAF9yJldCbaWG44zHwgWLMywQ3H8V2MRBkd85v8HojPZ/B1xM7T4SJrdThtiYmbQHfakGTCKDYAjDhsLVlnNjgw3LJa1iKYtdp9JjBTiEG2Ftv2YUDYSMS7D7Oo3tOaInRduAzvUprQkmFM0OiB50o51znpcGY/GN8HRQ6L1HvH4IXCx2zRgUS9EOu+DU9s55NAYKOuDDyE4r6ZTvKHFbgwtekxY3GCBtwYarAsuyELzxXRouPgoMxGcsUKf4S1qk8vzcoo2pp4p5DGZHUIM1+tVyVvd5hOF0IjoEBTN8YZatKiAMDjEx+MxxcVvDlhVa9ImhOmSnpfUT8qN+WYtF8Va7SPwr5SGlNLzcY1RLSfuJuaYTiOuYUj9VchRM9yWqmqF2IYXAeNK6c7czotmtShjpL6nExot7OnO3I5TvEQtYltymRfDFR2qoWarffyPmXGJ6W+EdlIYoJhguL6chjSuuPurSGbLwUJBkfkFwRwqBBN66CObzYZvwq0UsEgqn4YLwwdCnxf0NjPVWmcjiUzo9wt6fWK3Y7Z7k1qYfbgRGEV7f38+RvJ7ILdrx1rqffgxsl5jetynG2uezqI3mM1Qi9o+vLDduO7T9IM8wD+vQU61KZ5mrEJxFOpTP8VpZNUufdCasAHPt2sgu2fq7/RtIGq2G8pJ4h3ZLeh+ml5Hjnc6y/WzKbfkNhXPmxo+kNfyLV21EpavVwS/joo+E/VIXqevfHVtMcMst1APLNkvpkXFezG7xozUL3KY05CPJ9J/Y7nLzI5qLwlOaBEdPzDWb2i32cwx6lxA7Z7G7Laix+GrK/os1YCvDDF8QSNzX8xuLfp6WanheSG4xixovjRY8QU9pp5itRnoHCsnl2y8Ue1euCs+c8Nns+ExCvVFakr6WTxXkL1W6kA1hTR7fz7T5enLGQZzAyjUZLmgcZ29lSzZZM7lV70O042cJuzzzZW6Klh57ebG5FXB/wcvhchuz2PKPHc1aPrjQuC34Cr9nOExCqR1zegQXx93LJ/elnoTaW+p4WPNcldEOLpwrN44BWb12q3c1r7G1+46Hv80RxdubQ70NJd8lg0Iu+7nvPYlpsJMfaZWcJfhPuQKVujHGMuDq1XL2fbc90N50hF0l90WdtxDiI0oWhpvdIwUt+kWIOkzcRmro77JI5LPm2gjZroq83rC8nnW0KG6PtbNB2wZ0SRBTO2VxWi6rNE5++rMRp9qsugyEcumUB3sJA91ApfhyHBhb+j4dQdJN94B2h+M8gAouucXE34abJvt5mukMxrg1nlWT8hHHbrOmFbL9QVTfjrY91pjYCnnmXnfC9U69rueTcz6WWz329aHZ7FDD7CaW7uxc7QOP0aqy0fwcPAlcM0Mx/HdZx5gP/l4+8f1G4aBBBKu7ZduAAAAAElFTkSuQmCC"
+        }
+      },
+      {
+        "id": 4,
+        "name": "编组 3备份 3.png",
+        "tagName": "img",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 67,
+            "height": 66
+          },
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEMAAABCCAMAAAA7SJvkAAAAP1BMVEVHcEz/8ZP/8JP/8JP/8JP/8JX/8ZL874n/8pb/8ZP/8JP/8ZP/8pP/8JP/8JP/8JP/8ZP/8JP///7//67//9t12x/6AAAAEnRSTlMANm+DKRMcAgYNUENel6u/89pcrDLXAAACC0lEQVRYw+2X27KDIAxF5aYiCCr+/7eeJKD0TDtVoG8t767JTnYudt3vfekbugFeGyK9DyAaIPDtiK8BEhFaa8K0IYhSB0GE1kr1SgGkgaH6XvZIqYKgFEBIJqXsiTHUMAjBDGMJUiNFK8mMmSYDkDoGKmFmshYgUiooTU0YoGSynHM7USDFECgKZMNYLoRACGWkLgwu5nkWHNT0qjQjMRugZHYOIKimsDRDVuL86t3MrWFl9U0ICEPMflkWj2owrfch5Ay0BipZQwirj2puQ06PE8KHsIdldQAx7K7nU6cRApSsYd92CMQJfhuSEVhWty5h27Z9KYKcQh4QG6rBvBJEX0FSGBmxb48Q7D51MdQe8ykygiDkEiyOGt8GcmZjOvK5nZD1cMlVIN3BsE+MxR19876DaZKfWvxrLVdGy2LIYGvOqUebWRxGl4sCkwpNjxnJkIS4WdtYGZijB4QMgogyoxIk1QZabt9Lvf5U4CWQEkTIO0JeQLD3sW1zLrp7E2TokuMtGf50V+FojwuKUuIfx1jRUB5xrsfWm4U4xmlXN9hhv8AgNLQty/ccTnaEcOx5CKNh30KXTJVLO+0HWPtTnBpVR8xInjcGnFF5O0BGYvexiBgbbinZcEudNx081XJcamzhdFtWMoZ0445j9bWdLuWxAfHv6P/Az8cHfoIaf8bwb+z3T/q17w+IWSmrtuF4CQAAAABJRU5ErkJggg=="
+        }
+      },
+      {
+        "id": 5,
+        "name": "img_3.png",
+        "tagName": "img",
+        "props": {
+          "style": {
+            "position": "absolute",
+            "width": 28,
+            "height": 28
+          },
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAhFBMVEX//5D//5j//5T//5b//5n//6H//4D///9HcEz//5T//5f//5n//5P/+Jb/+Zb/+Zb/+5f//Jf/+pX/+6D//5b//Jj//sj/+5b//Jz/+5b//J//+pf//Jb/+5f/+5r/+5f//Jn/+pf//Jb//KD/+5f//cH//bf//Kr//cb//MD//KT//tXPjNz7AAAAK3RSTlMCER0UBQYEAQAJDQ8aJCgrO08yjhdH/EDU5/o2VnqDssBnXG+k4fia6cLwsSZFFQAAAUdJREFUKM99k+eSgzAMhMGUHOAOBhN6S33/9zvZSZzkZo7ln79ZWVoL7+elg5M78hzxnBz3ngzO4tAqtvgNgcVhlDwVAX9QA8EWA0ozH5SlgMF9eEDwgS31gwIjhIvAT8FsvZ6tGSVZgBGhIIJwkBkvUICWFYiwhnPeSEZQ8aAWhkkaICor0c5zq7gkKEiT0EDoJkp8TBqx5Odz3k2ikgT7SQQ9wRcbI1P9dbtsesgXwZmxxhaGcCPhy7W838uTHvNJSQK3hk/oY6ry7Q4qb3ro2oZCXQcRE+eLhcd67GdO0TfMN1sWYP4HYqa68VQCM86Wf5aFhqpp1bcjML12onk3ZEeRoh90Xdd66OfqYxQbAuVtvw7jsPZmklcILj4upq7vllZJ6uJzwUO4Sqiq+Q7+/WQM9P1ku4+9vyb7C7a/mvtL/c/v8AvtECIEMIFCNwAAAABJRU5ErkJggg=="
+        }
+      },
+      {
+        "id": 6,
+        "name": null,
+        "tagName": "div",
+        "props": {
+          "style": {
+            "position": "absolute"
+          }
+        },
+        "children": [
+          {
+            "tagName": "div",
+            "props": {
+              "style": {
+                "position": "absolute",
+                "transformOrigin": "0 0",
+                "translateX": 51,
+                "translateY": -500
+              }
+            },
+            "children": [
+              {
+                "tagName": "$polyline",
+                "props": {
+                  "style": {
+                    "position": "absolute",
+                    "width": 283,
+                    "height": 283,
+                    "left": -142,
+                    "top": -142,
+                    "fill": [
+                      "radialGradient(0.50 0.50 0.94 0.51, rgba(255.00,255,255,1), rgba(255.00,255,255,0))"
+                    ],
+                    "strokeWidth": [
+                      0
+                    ]
+                  },
+                  "points": [
+                    [
+                      0.5,
+                      0
+                    ],
+                    [
+                      1,
+                      0.5
+                    ],
+                    [
+                      0.5,
+                      1
+                    ],
+                    [
+                      0,
+                      0.5
+                    ],
+                    [
+                      0.5,
+                      0
+                    ]
+                  ],
+                  "controls": [
+                    [
+                      0.78,
+                      0,
+                      1,
+                      0.22
+                    ],
+                    [
+                      1,
+                      0.78,
+                      0.78,
+                      1
+                    ],
+                    [
+                      0.22,
+                      1,
+                      0,
+                      0.78
+                    ],
+                    [
+                      0,
+                      0.22,
+                      0.28,
+                      0
+                    ]
+                  ]
+                },
+                "animate": []
+              }
+            ],
+            "animate": []
+          }
+        ]
+      }
+    ],
+    "abbr": false,
+    "imgs": [
+      "data:image/png;base64,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",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHcAAABpBAMAAADyy6FSAAAAGFBMVEVHcEy1Rz3FZFP/25b/t2DYjW/0xpX//OIuGGxdAAAACHRSTlMABQ5lZSI9ZncP/ScAAAR7SURBVFjD7VhNbts8ENXcgOSiexJgDlDa8gGkC9Stsm9q+wL+8OX6nT9KClCRlAJ0VSaAHSCPb+bNcDjDrvu3cEFn4DiWljm6AeLMss1ObDb+bzutQAOz+X+J2Sw+H+A2ivp8ruAvHAF9yJldCbaWG44zHwgWLMywQ3H8V2MRBkd85v8HojPZ/B1xM7T4SJrdThtiYmbQHfakGTCKDYAjDhsLVlnNjgw3LJa1iKYtdp9JjBTiEG2Ftv2YUDYSMS7D7Oo3tOaInRduAzvUprQkmFM0OiB50o51znpcGY/GN8HRQ6L1HvH4IXCx2zRgUS9EOu+DU9s55NAYKOuDDyE4r6ZTvKHFbgwtekxY3GCBtwYarAsuyELzxXRouPgoMxGcsUKf4S1qk8vzcoo2pp4p5DGZHUIM1+tVyVvd5hOF0IjoEBTN8YZatKiAMDjEx+MxxcVvDlhVa9ImhOmSnpfUT8qN+WYtF8Va7SPwr5SGlNLzcY1RLSfuJuaYTiOuYUj9VchRM9yWqmqF2IYXAeNK6c7czotmtShjpL6nExot7OnO3I5TvEQtYltymRfDFR2qoWarffyPmXGJ6W+EdlIYoJhguL6chjSuuPurSGbLwUJBkfkFwRwqBBN66CObzYZvwq0UsEgqn4YLwwdCnxf0NjPVWmcjiUzo9wt6fWK3Y7Z7k1qYfbgRGEV7f38+RvJ7ILdrx1rqffgxsl5jetynG2uezqI3mM1Qi9o+vLDduO7T9IM8wD+vQU61KZ5mrEJxFOpTP8VpZNUufdCasAHPt2sgu2fq7/RtIGq2G8pJ4h3ZLeh+ml5Hjnc6y/WzKbfkNhXPmxo+kNfyLV21EpavVwS/joo+E/VIXqevfHVtMcMst1APLNkvpkXFezG7xozUL3KY05CPJ9J/Y7nLzI5qLwlOaBEdPzDWb2i32cwx6lxA7Z7G7Laix+GrK/os1YCvDDF8QSNzX8xuLfp6WanheSG4xixovjRY8QU9pp5itRnoHCsnl2y8Ue1euCs+c8Nns+ExCvVFakr6WTxXkL1W6kA1hTR7fz7T5enLGQZzAyjUZLmgcZ29lSzZZM7lV70O042cJuzzzZW6Klh57ebG5FXB/wcvhchuz2PKPHc1aPrjQuC34Cr9nOExCqR1zegQXx93LJ/elnoTaW+p4WPNcldEOLpwrN44BWb12q3c1r7G1+46Hv80RxdubQ70NJd8lg0Iu+7nvPYlpsJMfaZWcJfhPuQKVujHGMuDq1XL2fbc90N50hF0l90WdtxDiI0oWhpvdIwUt+kWIOkzcRmro77JI5LPm2gjZroq83rC8nnW0KG6PtbNB2wZ0SRBTO2VxWi6rNE5++rMRp9qsugyEcumUB3sJA91ApfhyHBhb+j4dQdJN94B2h+M8gAouucXE34abJvt5mukMxrg1nlWT8hHHbrOmFbL9QVTfjrY91pjYCnnmXnfC9U69rueTcz6WWz329aHZ7FDD7CaW7uxc7QOP0aqy0fwcPAlcM0Mx/HdZx5gP/l4+8f1G4aBBBKu7ZduAAAAAElFTkSuQmCC",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAABgAgMAAACMId9fAAAADFBMVEXNamL/7anIdWLyypFC2amZAAAABHRSTlMBMgoeLCDl6AAAAq9JREFUSMftVj1r3EAQFVsN9yuWqS4KIb9GOXCR9E4dDBdwxFbD9u7NgkGMiFO5ORPcp7+fEDAq0qUxOM7sSjrNShfXCUTcnUBPb/fNx765ovh//c0Xov0DQkUB9VEECgpE5I5ANSEQFWAXTABLoQxUF8sNLZGnJgAZmCMOsWFmNHOWMYBcCnRJMFcC6JHjhdbmK9qaQkJ4yUJcM7d3v7pAIlZvBU6Wa79W1ZmsmEdW49rzl0qu88blSwJ55p8Rqu4pY8VUcJuQ6gQRNebQ8/ceetNYnSwAX/K+h6ouYxmR/npAqi1ZxbKI/HmE3uqiGSNR3YzQpiHUGUS+GKHq3mUCmQ9IdWpVaJZ8O0EnQafQTypEh1Zv1hqSoA8lM9ZPAkViUA0pLA01CsE+TVKvTXzlm6oZUBOh7vHsId7vg1LIidVJpfd9YFNcPkX8wNe7FLMKbFWmiLdtX8+t2ksSlR517W1fFlWU4W3u+vt6wqBP4XZ3PbCm3Lt+rxMe2Dq/mB59vN4NLDq0APDAaoe9apWqXuGPQUaYDguMCgcZ2iYgJUpY6X7aTAuaVVrwPd/2uUR9+sr06Olpl+7B6vTGXnvcV58u0mExiuWlhBthbD7Il4Pu7DJrANQsd6U6KigWWHyl+lBpjy2gu9dn4t1K9Xy4zA6z3x8g8Y6plEbabTpfjDPjmE4le51esZuXI3Qe1jOTKg8O0ATtRda61c24FdW53wC+GKJqiHJHdOOKHWcBi3qR3zsbB7Q2N1g56rLbu47LrFo9WPLdUyekuWmDhBYtW0gyI/LNrAwBQYK40NyYnbgRysCZRRWDFosQ2w6IYBYDpxbbBm/rejnFDMgMc/F3McBAMmLi/IIjg8+CdWCWA8zEj2xzdF7KUgaPz1jz3GgW3XB8ONvnaGD/pf8fvwHySI4x2z+JLgAAAABJRU5ErkJggg==",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEMAAABCCAMAAAA7SJvkAAAAP1BMVEVHcEz/8ZP/8JP/8JP/8JP/8JX/8ZL874n/8pb/8ZP/8JP/8ZP/8pP/8JP/8JP/8JP/8ZP/8JP///7//67//9t12x/6AAAAEnRSTlMANm+DKRMcAgYNUENel6u/89pcrDLXAAACC0lEQVRYw+2X27KDIAxF5aYiCCr+/7eeJKD0TDtVoG8t767JTnYudt3vfekbugFeGyK9DyAaIPDtiK8BEhFaa8K0IYhSB0GE1kr1SgGkgaH6XvZIqYKgFEBIJqXsiTHUMAjBDGMJUiNFK8mMmSYDkDoGKmFmshYgUiooTU0YoGSynHM7USDFECgKZMNYLoRACGWkLgwu5nkWHNT0qjQjMRugZHYOIKimsDRDVuL86t3MrWFl9U0ICEPMflkWj2owrfch5Ay0BipZQwirj2puQ06PE8KHsIdldQAx7K7nU6cRApSsYd92CMQJfhuSEVhWty5h27Z9KYKcQh4QG6rBvBJEX0FSGBmxb48Q7D51MdQe8ykygiDkEiyOGt8GcmZjOvK5nZD1cMlVIN3BsE+MxR19876DaZKfWvxrLVdGy2LIYGvOqUebWRxGl4sCkwpNjxnJkIS4WdtYGZijB4QMgogyoxIk1QZabt9Lvf5U4CWQEkTIO0JeQLD3sW1zLrp7E2TokuMtGf50V+FojwuKUuIfx1jRUB5xrsfWm4U4xmlXN9hhv8AgNLQty/ccTnaEcOx5CKNh30KXTJVLO+0HWPtTnBpVR8xInjcGnFF5O0BGYvexiBgbbinZcEudNx081XJcamzhdFtWMoZ0445j9bWdLuWxAfHv6P/Az8cHfoIaf8bwb+z3T/q17w+IWSmrtuF4CQAAAABJRU5ErkJggg==",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAhFBMVEX//5D//5j//5T//5b//5n//6H//4D///9HcEz//5T//5f//5n//5P/+Jb/+Zb/+Zb/+5f//Jf/+pX/+6D//5b//Jj//sj/+5b//Jz/+5b//J//+pf//Jb/+5f/+5r/+5f//Jn/+pf//Jb//KD/+5f//cH//bf//Kr//cb//MD//KT//tXPjNz7AAAAK3RSTlMCER0UBQYEAQAJDQ8aJCgrO08yjhdH/EDU5/o2VnqDssBnXG+k4fia6cLwsSZFFQAAAUdJREFUKM99k+eSgzAMhMGUHOAOBhN6S33/9zvZSZzkZo7ln79ZWVoL7+elg5M78hzxnBz3ngzO4tAqtvgNgcVhlDwVAX9QA8EWA0ozH5SlgMF9eEDwgS31gwIjhIvAT8FsvZ6tGSVZgBGhIIJwkBkvUICWFYiwhnPeSEZQ8aAWhkkaICor0c5zq7gkKEiT0EDoJkp8TBqx5Odz3k2ikgT7SQQ9wRcbI1P9dbtsesgXwZmxxhaGcCPhy7W838uTHvNJSQK3hk/oY6ry7Q4qb3ro2oZCXQcRE+eLhcd67GdO0TfMN1sWYP4HYqa68VQCM86Wf5aFhqpp1bcjML12onk3ZEeRoh90Xdd66OfqYxQbAuVtvw7jsPZmklcILj4upq7vllZJ6uJzwUO4Sqiq+Q7+/WQM9P1ku4+9vyb7C7a/mvtL/c/v8AvtECIEMIFCNwAAAABJRU5ErkJggg=="
+    ]
+  };
+
+  const FREE = [];
+  for(let i = 0; i < 10; i++) {
+    let controller = new karas.animate.Controller();
+    let dom = karas.parse(CLICK, {
+      controller,
+      autoPlay: false,
+    });
+    FREE.push({
+      dom,
+      controller,
+    });
+  }
+
+  function playBoom(x, y) {
+    if(FREE.length) {
+      let o = FREE.pop();
+      o.dom.updateStyle({
+        left: x - 120,
+        top: y - 110,
+        visibility: 'visible',
+      });
+      o.controller.play();
+      o.controller.on('finish', function() {
+        o.dom.updateStyle({
+          visibility: 'hidden',
+        });
+        FREE.push(o);
+      });
+    }
+  }
+
+  let root = karas.render(
+    <canvas width={W} height={H}>
+      <img ref="bottom_bg" style={{
+        position: 'absolute',
+        bottom: 0,
+        left:0,
+        right:0,
+      }} src={'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*TjMYR5XcIIcAAAAAAAAAAAAADgKIAQ/original'}/>
+      <img ref="counter_bg" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '8%',
+        translateX: '-50%',
+      }} src={'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*VWdtSrKvZ0AAAAAAAAAAAAAADgKIAQ/original'}/>
+      <img ref="counter" style={{
+        position: 'absolute',
+        left: '50%',
+        top: '30%',
+        translateX: '-50%',
+      }} src={'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*rAQWRKURjlkAAAAAAAAAAAAADgKIAQ/original'}/>
+      <div ref="remain" style={{
+        position: 'absolute',
+        width: '100%',
+        left: '50%',
+        top: '20%',
+        display: 'none',
+        translateX: '-50%',
+        color: '#FFF',
+        fontSize: 28,
+        lineHeight: 1.5,
+        textAlign: 'center',
+        zIndex: 9999,
+        pointerEvents:'none'
+      }}>
+        <p style={{fontSize:"4vw", whiteSpace: "nowrap"}}>剩余时间</p>
+        <p style={{fontSize:"10vw", fontWeight: 'bold', whiteSpace: "nowrap"}}>00:10</p>
+      </div>
+      <div ref="list" style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+      }} onTouchMove={e => {
+        e.preventDefault();
+        let x = e.x, y = e.y;
+        let children = root.ref.list.children;
+        for(let i = children.length - 1; i >= 0; i--) {
+          let item = children[i];
+          if(!item.isDestroyed) {
+            let box = item.getBoundingClientRect();
+            if(x > box.left && y > box.top
+              && x < box.left + item.offsetWidth
+              && y < box.top + item.offsetHeight) {
+              item.remove();
+              playBoom(x, y);
+            }
+          }
+        }
+      }} onTouchStart={e => {
+        e.preventDefault();
+        let x = e.x, y = e.y;
+        let children = root.ref.list.children;
+        for(let i = children.length - 1; i >= 0; i--) {
+          let item = children[i];
+          if(!item.isDestroyed) {
+            let box = item.getBoundingClientRect();
+            if(x > box.left && y > box.top
+              && x < box.left + item.offsetWidth
+              && y < box.top + item.offsetHeight) {
+              item.remove();
+              playBoom(x, y);
+            }
+          }
+        }
+      }}/>
+      <div ref="boom" style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+      }}>
+        {
+          FREE.map(item => {
+            return item.dom;
+          })
+        }
+      </div>
+    </canvas>,
+    '#test'
+  );
+
+  let counter = root.ref.counter;
+  let counter_bg = root.ref.counter_bg;
+  let count = 2000;
+  let remain = root.ref.remain;
+  function c321(diff) {
+    count -= diff;
+    if(count <= 0) {
+      counter.remove();
+      counter_bg.remove();
+      karas.animate.frame.offFrame(c321);
+      karas.animate.frame.onFrame(fall);
+      remain.updateStyle({display: 'block'});
+      count = 0;
+    }
+    else if(count <= 1000) {
+      counter.src = 'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*6WHPT4YsElYAAAAAAAAAAAAADgKIAQ/original';
+    }
+  }
+
+  karas.animate.frame.onFrame(c321);
+
+  const IMGS = [
+    'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*odFcTotBbaMAAAAAAAAAAAAADgKIAQ/original',
+    'https://mdn.alipayobjects.com/huamei_p2sgyr/afts/img/A*mAjUQ5L2dW8AAAAAAAAAAAAADgKIAQ/original',
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACeCAMAAAB6gQo1AAADAFBMVEVMaXGUAACaAQGdAgHBDQv/DAuoAQH/AAD/gHWqGRibAACZAQGeAwKcAwOZAQGfAwLGemXmf2iYAwKaBAOYAgLQKBugAwKYBAOaBwbiknqaBAOAAACWBAOeAgKVAwLFW0jHW0jVYEzdiW2dCwnKYEvMXUXGXUnGV0KZBQTCWkfHXkmdDwzRZE3/nnubBgXbmnOZBwacBwXMZE2eDwyeDwyaCAfBVkPghmrEWEXCVkXFYUvCVEHbgWbWfmSfEA+9SzvAUECuMimsLye/TTzAVkTLbFbEXkrBRjTIZ1HBWEfIaFPDXUqgFxWgDw7PeF7Rc1u+TD3bfGKgFRPOdl6oJyDASTzPdFuvNi3/8bmjHBe9VEXHb1/8t3n867i4TULYm4iaERPnvZ/ooXPShW+0QDjPhn762KPRe1//887grJOyOTL/6K3bjGntyaT4u4L936bw0arKaFDelXK2RzutMi356Lz13K/0qWbjoX73r23v1s3uuIr24rf78+L9tGWhJCOuNjHhjVLzzZ3988zxsnr6woj47NXmtJD/++D8+fL14MGtMCf/2Zn/3J3/15f/35//2Zr/3Z//r1v/////2pv/1ZP/1pX/4aL/3Jr/r1n/slz/5Kf/3p3/36H/tWD/0ZH/rGD/2JX/xHD/qWX/663/u2j/uGP/zn3/y4z/zof/y4P/6Kv/1I//0Y7/0Yr/0YL/6Kj/x3X/zo7/nDf/yIn/wG3/ynn/xHr/v2n/yH//wHX/14jrnmT/7rD/24/+woL/q1fuomf/qlP/tWX//9D//sX/yGD/+b35p2n/ulb/tVH/qDvyp2v/smz/4JX/9K//r0r/66D/wWH+hCP/wln/r2D/5pr/5aL/qkP///P//+v/pEv/unH/kCn//9r/3nf/n0P9kDH/vkz//+PomF7///r/1Wr/+Lf/0WL/22//8or/y2z/8Kj/6H//sFT/0nX/6Lb/tkH1o2X+4bL/y1T/6sP8eRr/53L8z5v/+Z/1rXD/5IvkVQyzOAaaJQHwkkUdcZubAAAA83RSTlMABgkWBAIHAQIDExAMBQ4LBAYfKhwGGCUxCC4CIxohMREJC0QdCyYONyIsSxgDKAU0OxVPSD9MDjw2QUEXEzhZR4B7U1YxSwg9UjdGQy4gKE4cPSR2Fi2G/nRfaPnrj31Vm718O2rumP+NKveoreL3uHmSZULezNGp4rLI1PLzWFH63fHS9eO3/e/Fb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////72mXc+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAdtklEQVR4nNXcCVRTd74H8KpBSgUVFXFsFR33pZa68Fymikq1Vp2hVp9UVNz3pbZq1+m+zTvJTcLcLHIJUUwgISwhCQSiEASXAqIoq4AWXFDrUpfaOu3Me+/8/v+7JgEiam1/54ztqGfmc758///7vzcXnnrK6/Hl5qnf8/j6Pu0yPj4+T/0ex8cVyoF9/yBSPD4+v59O+Dzd5vxeuD5tUxnuE/c+7fU88XR9vLc+6XB9H4SKd7InpfV9oFi5cJ96EtYHpz4hrW97YmW1vr8ttX2xPgGtr1usz/Pn6d+R1lcYq8DpJdjnN9L6CmIVALvj8Qbs81to0SnVldrd07TB9XnsWnyiFlDB9QJ/XMBPTOvrQuUxAwMDAz2CW+b6PM5bCUGsrDTQbVy8opa4Po8vWvqmiv4/wl/7wMAXAgP/xBsBmMdtQfvs49EyN4A8auALAqebmMcVtcB9PNEKrH44VU735z//2aMX/hajFf1WRWBvrEHqJ+re/YXAFxily7hxA1nu07/JGuNZ/fwgVhQqw/svNJ7IQq5I5OdB+4ix3AMLTA0MDPzTQB5TMPC7PC/mBraifaTR8h6u+Pn5+T0vCgpCVA9Q1ovMAwf+macNbFH76LA86rN+fn4iUVDgQPj6I9VLeP7y0l/of3vppZd45CEDBw4cyG1m3bHW77FFK6T6iUSBQQOxFDNdBnsHCLkDGe3znrWPCCssgF+QKCho4ECgenDSMxaDBwxoRfu0hx48tFZIFYlEQbOHDBnGSl/D81f6n6+99hrtHYu5w4A7RMBFWrdoHwFWQBWJRKLONJV1/tVl4PdGjx7NeBF3CBNuEKN1L8JDY11TDegwe/aQYQNoKtBed5m/vk6LwTt67NixLw0A7jAm26DZgPWkfdjSMlQfnGpAh86zhwwbNmAsLX399b+5DxLjgEePHg3cAcAdNgRz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',
+  ];
+  let time = 10000;
+  let gen_time = 250; // 每多少ms生成一个
+  function fall(diff) {
+    if(root.isDestroyed) {
+      karas.animate.frame.offFrame(fall);
+      return;
+    }
+    count += diff;
+    time -= diff;
+    if(time <= 0) {
+      karas.animate.frame.offFrame(fall);
+      return;
+    }
+    remain.children[1].children[0].content = format(time);
+    if(count >= gen_time) {
+      count -= gen_time;
+      let width = Math.floor(Math.random() * 100) + 100;
+      let item = <img style={{
+        position: 'absolute',
+        left: 0,
+        bottom: '100%',
+        width,
+        padding: 50,
+        translateX: Math.max(0, Math.random() * W - width),
+        rotateZ: Math.random() * 360,
+        pointerEvents: "none"
+      }} src={IMGS[Math.floor(Math.random() * IMGS.length)]}/>;
+      root.ref.list.appendChild(item, function() {
+        let a = item.animate([
+          {},
+          {
+            translateY: H + 200,
+          }
+        ], {
+          duration: 2000 + Math.random() * 1000,
+          iterations: 1,
+          fill: 'forwards',
+        });
+        a.on('finish', function() {
+          item.remove();
+        });
+      });
+    }
+  }
+
+  function format(t) {
+    let s = Math.floor(t / 1000) + '';
+    return '00:' + (s.length > 1 ? s : '0' + s);
+  }
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/karas/0.85.14/index.min.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    // var text = document.createTextNode(source);
+    // code.appendChild(text);
+    // jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
