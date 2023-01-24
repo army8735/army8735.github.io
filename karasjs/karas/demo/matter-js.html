@@ -112,32 +112,44 @@
       text: '2',
     },
     {
-      radius: 50,
+      radius: 45,
       mass: 3,
       color: '#0F0',
       text: '4',
     },
     {
-      radius: 60,
+      radius: 50,
       mass: 4,
       color: '#00F',
       text: '8',
     },
     {
-      radius: 70,
+      radius: 55,
       mass: 5,
-      color: '#00F',
+      color: '#FF0',
       text: '16',
     },
     {
-      radius: 80,
+      radius: 60,
       mass: 6,
-      color: '#00F',
+      color: '#F0F',
       text: '32',
+    },
+    {
+      radius: 65,
+      mass: 7,
+      color: '#0FF',
+      text: '64',
+    },
+    {
+      radius: 70,
+      mass: 8,
+      color: '#FFF',
+      text: '128',
     },
   ];
 
-  let count = 3000;
+  let count = 1000;
   karas.animate.frame.onFrame(diff => {
     // 更新每个球的位置
     Runner.tick(runner, engine, diff);
@@ -149,11 +161,11 @@
       });
     }
     count += diff;
-    // 每3s出个球
-    if(count < 3000) {
+    // 每1s出个球
+    if(count < 1000) {
       return;
     }
-    count -= 3000;
+    count -= 1000;
     let first = BALL_TYPES[0];
     let x = Math.random() * (W - (first.radius << 1));
     let ball = Bodies.circle(x, 0, first.radius, { mass: first.mass });
