@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>temp</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    #test canvas {
+      /*width: 360px;*/
+      /*height: 360px;*/
+      width: 400px;
+      height: 300px;
+      /*background: #000;*/
+      /*font-kerning: none;*/
+      /*letter-spacing: 10px;*/
+    }
+    #test {
+      display:block;
+      width:auto;
+      height:auto;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<div id="fps"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  karas.debug = 1;
+
+  let root = karas.render(
+    <canvas width={800} height={600}>
+      <$line style={{
+        position: 'absolute',
+        left: 0,
+        top: 580,
+        width: 800,
+        height: 1,
+        stroke: '#000'
+      }}/>
+    </canvas>,
+    '#test'
+  );
+
+  let a = <$circle style={{
+    position: 'absolute',
+    left: 400 - 80,
+    top: 200 - 80,
+    width: 160,
+    height: 160,
+    fill: '#F00',
+  }}/>;
+  let b = <$circle style={{
+    position: 'absolute',
+    left: 450 - 80,
+    top: 20 - 80,
+    width: 160,
+    height: 160,
+    fill: '#00F',
+  }}/>;
+
+  root.appendChild(a);
+  root.appendChild(b);
+
+  // module aliases
+  var Engine = Matter.Engine,
+    Render = Matter.Render,
+    Runner = Matter.Runner,
+    Bodies = Matter.Bodies,
+    Events = Matter.Events,
+    Composite = Matter.Composite;
+
+  // create an engine
+  var engine = Engine.create();
+
+  // create a renderer
+  var render = Render.create({
+    element: document.querySelector('#test'),
+    engine: engine
+  });
+
+  // create two boxes and a ground
+  var ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+  var boxA = Bodies.circle(400, 200, 80);
+  boxA.karas = a;
+  var boxB = Bodies.circle(450, 20, 80);
+  boxB.karas = b;
+
+  // add all of the bodies to the world
+  Composite.add(engine.world, ground);
+  Composite.add(engine.world, [boxA, boxB]);
+
+  // run the renderer
+  Render.run(render);
+
+  // create runner
+  var runner = Runner.create();
+
+  // run the engine
+
+  // Runner.run(runner, engine);
+
+  Events.on(engine, 'collisionStart', function(event) {
+    var pairs = event.pairs;
+    // console.log(pairs.slice(0));
+
+    // change object colours to show those starting a collision
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i];
+      var { bodyA, bodyB } = pair;
+      if(bodyA.id !== 1) {
+        Composite.remove(engine.world, pair.bodyB);
+        bodyA.karas.updateStyle({
+          fill: '#FFF',
+        });
+        bodyB.karas.remove();
+      }
+    }
+  });
+
+  let pa = {
+    x: boxA.position.x,
+    y: boxA.position.y,
+  };
+  let pb = {
+    x: boxB.position.x,
+    y: boxB.position.y,
+  };
+
+  karas.animate.frame.onFrame(diff => {
+    Runner.tick(runner, engine, diff);
+    a.updateStyle({
+      translateX: boxA.position.x - pa.x,
+      translateY: boxA.position.y - pa.y,
+    });
+    b.updateStyle({
+      translateX: boxB.position.x - pb.x,
+      translateY: boxB.position.y - pb.y,
+    });
+  });
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/karas/0.85.14/index.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/matter-js/0.18.0/build/matter.min.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    var text = document.createTextNode(source);
+    code.appendChild(text);
+    jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
