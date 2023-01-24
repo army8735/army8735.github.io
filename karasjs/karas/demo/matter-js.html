@@ -77,8 +77,6 @@
 
   Events.on(engine, 'collisionStart', function(event) {
     var pairs = event.pairs;
-    // console.log(pairs.slice(0));
-    // return;
 
     // change object colours to show those starting a collision
     for (var i = 0; i < pairs.length; i++) {
@@ -90,6 +88,10 @@
         let ball = Bodies.circle(bodyA.position.x, bodyA.position.y, type.radius, { mass: type.mass });
         ball.gameType = t;
         ballList.push(ball);
+        let j = ballList.indexOf(bodyA);
+        if(j > -1) {
+          ballList.splice(j, 1);
+        }
         Composite.add(engine.world, ball);
         Composite.remove(engine.world, pair.bodyA);
         Composite.remove(engine.world, pair.bodyB);
