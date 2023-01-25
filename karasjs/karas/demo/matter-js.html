@@ -92,12 +92,17 @@
         if(j > -1) {
           ballList.splice(j, 1);
         }
+        j = ballList.indexOf(bodyB);
+        if(j > -1) {
+          ballList.splice(j, 1);
+        }
         Composite.add(engine.world, ball);
         Composite.remove(engine.world, pair.bodyA);
         Composite.remove(engine.world, pair.bodyB);
         bodyA.karas.children[0].updateStyle({
           width: type.radius << 1,
           height: type.radius << 1,
+          fill: type.color,
         });
         bodyA.karas.children[1].children[0].content = type.text;
         ball.karas = bodyA.karas;
