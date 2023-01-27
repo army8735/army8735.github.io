@@ -86,7 +86,7 @@
       if(bodyA.id > 4 && bodyB.id > 4 && bodyA.gameType === bodyB.gameType && !bodyA.hasDeleted && !bodyB.hasDeleted) {
         bodyA.hasDeleted = bodyB.hasDeleted = true;
         let t = ++bodyA.gameType, type = BALL_TYPES[t];
-        let ball = Bodies.circle(bodyA.position.x, bodyA.position.y, type.radius, { mass: type.mass });
+        let ball = Bodies.circle(bodyA.position.x, bodyA.position.y, type.radius, { mass: type.mass, restitution: 0.2 });
         ball.gameType = t;
         ballList.push(ball);
         let j = ballList.indexOf(bodyA);
@@ -195,7 +195,7 @@
     let first = BALL_TYPES[0];
     let x = first.radius + Math.random() * (W - first.radius);
     let y = first.radius;
-    let ball = Bodies.circle(x, y, first.radius, { mass: first.mass });
+    let ball = Bodies.circle(x, y, first.radius, { mass: first.mass, restitution: 0.2 });
     ball.gameType = 0;
     ballList.push(ball);
     Composite.add(engine.world, ball);
