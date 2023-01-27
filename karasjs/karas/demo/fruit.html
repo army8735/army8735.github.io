@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>fruit</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body, #test, canvas {
+      display:block;
+      margin:0;
+      width:100%;
+      height:100%;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  const W = window.innerWidth, H = window.innerHeight;
+
+  var Engine = Matter.Engine,
+    Render = Matter.Render,
+    Runner = Matter.Runner,
+    Bodies = Matter.Bodies,
+    Events = Matter.Events,
+    Composite = Matter.Composite;
+
+  // create an engine
+  var engine = Engine.create();
+
+  var ground = Bodies.rectangle(W * 0.5, H - 10, W, 20, { isStatic: true });
+  var top = Bodies.rectangle(W * 0.5, -20, W, 20, { isStatic: true });
+  var left = Bodies.rectangle(-8, H * 0.5, 20, H, { isStatic: true });
+  var right = Bodies.rectangle(W + 8, H * 0.5, 20, H, { isStatic: true });
+  // add all of the bodies to the world
+  Composite.add(engine.world, [ground, top, left, right]);
+
+  // create runner
+  var runner = Runner.create();
+
+  const FRUITS = [
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*qIE6R5_eq3gAAAAAAAAAAAAADv55AQ/original',
+      radius: 52/2,
+      mess: 1,
+      fruitType: 0,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*_2ZOTLG8udkAAAAAAAAAAAAADv55AQ/original',
+      radius: 80/2,
+      mess: 2,
+      fruitType: 1,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*OHhnS7ApSsoAAAAAAAAAAAAADv55AQ/original',
+      radius: 108/2,
+      mess: 3,
+      fruitType: 2,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*wdQJQLLzdJgAAAAAAAAAAAAADv55AQ/original',
+      radius: 118/2,
+      mess: 3,
+      fruitType: 3,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*cxi_RrYoXcIAAAAAAAAAAAAADv55AQ/original',
+      radius: 152/2,
+      mess: 4,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*a6nDQZtGIn4AAAAAAAAAAAAADv55AQ/original',
+      radius: 184/2,
+      mess: 4,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*umRdTYb_4bgAAAAAAAAAAAAADv55AQ/original',
+      radius: 194/2,
+      mess:4,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*umRdTYb_4bgAAAAAAAAAAAAADv55AQ/original',
+      radius: 258/2,
+      mess: 5,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*qb5hRp2sZP8AAAAAAAAAAAAADv55AQ/original',
+      radius: 308/2,
+      mess: 6,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*837nSJFOPLwAAAAAAAAAAAAADv55AQ/original',
+      radius: 310/2,
+      mess: 7,
+    },
+    {
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*6qaUTZ71i0AAAAAAAAAAAAAADv55AQ/original',
+      radius: 408/2,
+      mess: 8,
+    },
+  ];
+  let existFruits = [];
+
+  //创建pixi应用
+  const app = new PIXI.Application(
+    {
+      width: W,         // default: 800
+      height: H,        // default: 600
+      antialias: true,    // default: false
+      transparent: true, // default: false
+    }
+  );
+  document.querySelector('#test').appendChild(app.view);
+
+  let count = 1000;
+
+  let lastTime = Date.now();
+  function onFrame() {
+    requestAnimationFrame(function() {
+      onFrame();
+      // 更新列表中每个水果的位置
+      for(let i = 0, len = existFruits.length; i < len; i++) {
+        let fruit = existFruits[i], position = fruit.position;
+        fruit.pixiSprite.x = position.x;
+        fruit.pixiSprite.y = position.y;
+      }
+      // 每帧时间差
+      let now = Date.now(), diff = now - lastTime;
+      lastTime = now;
+      // 物理引擎更新时间状态
+      Runner.tick(runner, engine, diff);
+      // 每1s出个球
+      count += diff;
+      if(count < 1000) {
+        return;
+      }
+      count -= 1000;
+      // 新建水果
+      let first = FRUITS[0];
+      let x = first.radius + Math.random() * (W - first.radius);
+      let y = first.radius;
+      let newFruit = Bodies.circle(x, y, first.radius, {
+        mass: first.mass,
+        restitution: 0.2,
+      });
+      newFruit.fruitType = first.fruitType;
+      existFruits.push(newFruit);
+      Composite.add(engine.world, newFruit);
+      // 关联pixi
+      const sprite = PIXI.Sprite.from(first.image);
+      sprite.x = x;
+      sprite.y = y;
+      sprite.anchor.set(0.5);
+      app.stage.addChild(sprite);
+      newFruit.pixiSprite = sprite;
+    });
+  }
+  onFrame();
+
+  Events.on(engine, 'collisionStart', function(event) {
+    let pairs = event.pairs;
+
+    for (let i = 0; i < pairs.length; i++) {
+      let pair = pairs[i];
+      let { bodyA, bodyB } = pair;
+      // 相同类型，删除2个并新建
+      if(bodyA.fruitType !== undefined && bodyA.fruitType === bodyB.fruitType &&!bodyA.hasDeleted && !bodyB.hasDeleted) {
+        bodyA.hasDeleted = bodyB.hasDeleted = true;
+        let fruitType = ++bodyA.fruitType, type = FRUITS[fruitType];
+        let newFruit = Bodies.circle(bodyA.position.x, bodyA.position.y, type.radius,
+          { mass: type.mass, restitution: 0.2 });
+        newFruit.fruitType = fruitType;
+        existFruits.push(newFruit);
+        // 添加新的大的删2个小的
+        Composite.remove(engine.world, bodyA);
+        Composite.remove(engine.world, bodyB);
+        Composite.add(engine.world, newFruit);
+        // pixi也要删掉2个，并原本bodyA位置展示pixi的新水果
+        app.stage.removeChild(bodyA.pixiSprite);
+        app.stage.removeChild(bodyB.pixiSprite);
+        const sprite = PIXI.Sprite.from(type.image);
+        sprite.x = newFruit.position.x;
+        sprite.y = newFruit.position.y;
+        sprite.anchor.set(0.5);
+        app.stage.addChild(sprite);
+        newFruit.pixiSprite = sprite;
+        // 列表也要移除
+        let j = existFruits.indexOf(bodyA);
+        if(j > -1) {
+          existFruits.splice(j, 1);
+        }
+        j = existFruits.indexOf(bodyB);
+        if(j > -1) {
+          existFruits.splice(j, 1);
+        }
+      }
+    }
+  });
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/pixi.js/7.1.1/dist/pixi.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/matter-js/0.18.0/build/matter.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    // var text = document.createTextNode(source);
+    // code.appendChild(text);
+    // jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
