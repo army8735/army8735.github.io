@@ -81,7 +81,7 @@
       mess:4,
     },
     {
-      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*umRdTYb_4bgAAAAAAAAAAAAADv55AQ/original',
+      image: 'https://mdn.alipayobjects.com/huamei_vtyjk6/afts/img/A*paFyTYl320MAAAAAAAAAAAAADv55AQ/original',
       radius: 258/2,
       mess: 5,
     },
@@ -114,7 +114,7 @@
   );
   document.querySelector('#test').appendChild(app.view);
 
-  let count = 1000;
+  let count = 200;
 
   let lastTime = Date.now();
   function onFrame() {
@@ -133,10 +133,10 @@
       Runner.tick(runner, engine, diff);
       // 每1s出个球
       count += diff;
-      if(count < 1000) {
+      if(count < 200) {
         return;
       }
-      count -= 1000;
+      count -= 200;
       // 新建水果
       let first = FRUITS[0];
       let x = first.radius + Math.random() * (W - first.radius);
