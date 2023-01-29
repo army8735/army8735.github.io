@@ -110,7 +110,7 @@
       height: H,        // default: 600
       antialias: true,    // default: false
       transparent: true, // default: false
-      backgroundColor: '#ffe89d'
+      backgroundColor: '#ffe89d',
     }
   );
   document.querySelector('#test').appendChild(app.view);
@@ -132,7 +132,7 @@
       lastTime = now;
       // 物理引擎更新时间状态
       Runner.tick(runner, engine, diff);
-      // 每1s出个球
+      // 每200ms出个球
       count += diff;
       if(count < 200) {
         return;
