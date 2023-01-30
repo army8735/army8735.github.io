@@ -52,14 +52,14 @@
   var engine = Engine.create();
 
   // create a renderer
-  var render = Render.create({
-    element: document.querySelector('#test'),
-    engine: engine,
-    options: {
-      width: W,
-      height: H,
-    },
-  });
+  // var render = Render.create({
+  //   element: document.querySelector('#test'),
+  //   engine: engine,
+  //   options: {
+  //     width: W,
+  //     height: H,
+  //   },
+  // });
 
   // create two boxes and a ground
   var ground = Bodies.rectangle(W * 0.5, H - 20, W, 20, { isStatic: true });
@@ -70,7 +70,7 @@
   Composite.add(engine.world, [ground, top, left, right]);
 
   // run the renderer
-  Render.run(render);
+  // Render.run(render);
 
   // create runner
   var runner = Runner.create();
