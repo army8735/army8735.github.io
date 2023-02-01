@@ -16,9 +16,6 @@
 <body>
 <canvas width="360" height="360" id="canvas"></canvas>
 <script>
-  let canvas = document.querySelector('#canvas');
-  let ctx = canvas.getContext('2d');
-
   // 贝塞尔曲线计算库
   const Easing = (function() {
     /**
@@ -168,6 +165,9 @@
       },
     };
   })();
+
+  let canvas = document.querySelector('#canvas');
+  let ctx = canvas.getContext('2d');
 
   // 得到一个从from到to的随机数
   function rand(from, to) {
