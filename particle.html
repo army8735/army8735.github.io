@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>particle</title>
+  <style>
+    #canvas{
+      display:block;
+      width:360px;
+      height:360px;
+      background:#000;
+    }
+  </style>
+</head>
+<body>
+<canvas width="360" height="360" id="canvas"></canvas>
+<script>
+  let canvas = document.querySelector('#canvas');
+  let ctx = canvas.getContext('2d');
+
+  // 贝塞尔曲线计算库
+  const Easing = (function() {
+    /**
+     * https://github.com/gre/bezier-easing
+     * BezierEasing - use bezier curve for transition easing function
+     * by Gaëtan Renaudeau 2014 - 2015 – MIT License
+     */
+
+    // These values are established by empiricism with tests (tradeoff: performance VS precision)
+    let NEWTON_ITERATIONS = 4;
+    let NEWTON_MIN_SLOPE = 0.001;
+    let SUBDIVISION_PRECISION = 0.0000001;
+    let SUBDIVISION_MAX_ITERATIONS = 10;
+
+    let kSplineTableSize = 11;
+    let kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
+
+    let float32ArraySupported = typeof Float32Array === 'function';
+
+    function A(aA1, aA2) {
+      return 1.0 - 3.0 * aA2 + 3.0 * aA1;
+    }
+
+    function B(aA1, aA2) {
+      return 3.0 * aA2 - 6.0 * aA1;
+    }
+
+    function C(aA1) {
+      return 3.0 * aA1;
+    }
+
+    // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+    function calcBezier(aT, aA1, aA2) {
+      return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+    }
+
+    // Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+    function getSlope(aT, aA1, aA2) {
+      return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
+    }
+
+    function binarySubdivide(aX, aA, aB, mX1, mX2) {
+      let currentX, currentT, i = 0;
+      do {
+        currentT = aA + (aB - aA) / 2.0;
+        currentX = calcBezier(currentT, mX1, mX2) - aX;
+        if(currentX > 0.0) {
+          aB = currentT;
+        } else {
+          aA = currentT;
+        }
+      } while(Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
+      return currentT;
+    }
+
+    function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
+      for(let i = 0; i < NEWTON_ITERATIONS; ++i) {
+        let currentSlope = getSlope(aGuessT, mX1, mX2);
+        if(currentSlope === 0.0) {
+          return aGuessT;
+        }
+        let currentX = calcBezier(aGuessT, mX1, mX2) - aX;
+        aGuessT -= currentX / currentSlope;
+      }
+      return aGuessT;
+    }
+
+    function LinearEasing(x) {
+      return x;
+    }
+
+    function bezier(mX1, mY1, mX2, mY2) {
+      if(!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
+        throw new Error('bezier x values must be in [0, 1] range');
+      }
+
+      if(mX1 === mY1 && mX2 === mY2) {
+        return LinearEasing;
+      }
+
+      // Precompute samples table
+      let sampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
+      for(let i = 0; i < kSplineTableSize; ++i) {
+        sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
+      }
+
+      function getTForX(aX) {
+        let intervalStart = 0.0;
+        let currentSample = 1;
+        let lastSample = kSplineTableSize - 1;
+
+        for(; currentSample !== lastSample && sampleValues[currentSample] <= aX; ++currentSample) {
+          intervalStart += kSampleStepSize;
+        }
+        --currentSample;
+
+        // Interpolate to provide an initial guess for t
+        let dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
+        let guessForT = intervalStart + dist * kSampleStepSize;
+
+        let initialSlope = getSlope(guessForT, mX1, mX2);
+        if(initialSlope >= NEWTON_MIN_SLOPE) {
+          return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+        } else if(initialSlope === 0.0) {
+          return guessForT;
+        } else {
+          return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
+        }
+      }
+
+      return function BezierEasing(x) {
+        // Because JavaScript number are imprecise, we should guarantee the extremes are right.
+        if(x === 0 || x === 1) {
+          return x;
+        }
+        return calcBezier(getTForX(x), mY1, mY2);
+      };
+    }
+
+    return {
+      linear: bezier(1, 1, 0, 0),
+      easeIn: bezier(0.42, 0, 1, 1),
+      easeOut: bezier(0, 0, 0.58, 1),
+      ease: bezier(0.25, 0.1, 0.25, 1),
+      easeInOut: bezier(0.42, 0, 0.58, 1),
+      cubicBezier: bezier,
+      getEasing(v, v1, v2, v3) {
+        if(arguments.length === 4) {
+          return bezier(v, v1, v2, v3);
+        }
+        else if(Array.isArray(v) && v.length === 4) {
+          return bezier(v[0], v[1], v[2], v[3]);
+        }
+        else if(v) {
+          v = v.toString();
+          let timingFunction;
+          if(/^\s*(?:cubic-bezier\s*)?\(\s*[\d.]+\s*,\s*[-\d.]+\s*,\s*[\d.]+\s*,\s*[-\d.]+\s*\)\s*$/i.test(v)) {
+            v = v.match(/[\d.]+/g);
+            timingFunction = bezier(parseFloat(v[0]), parseFloat(v[1]), parseFloat(v[2]), parseFloat(v[3]));
+          }
+          // 防御一下
+          else if(v !== 'getEasing' && v !== 'cubicBezier') {
+            timingFunction = this[v];
+          }
+          return timingFunction;
+        }
+      },
+    };
+  })();
+
+  // 得到一个从from到to的随机数
+  function rand(from, to) {
+    return from + Math.random() * (to - from);
+  }
+
+  // 角度值转弧度值
+  function d2r(n) {
+    return n * Math.PI / 180;
+  }
+
+  function genItem(x, y, r, deg, distance, fromOpacity, toOpacity, duration, easing, blink) {
+    let o = {
+      x,
+      y,
+      r,
+      fromOpacity,
+      toOpacity,
+      dOpacity: toOpacity - fromOpacity,
+      duration,
+      easing,
+      time: 0,
+      blink: {
+        from: blink.from,
+        to: blink.to,
+        d: blink.to - blink.from,
+        duration: blink.duration,
+        time: 0,
+      },
+    };
+    // 分4个象限根据deg和distance求出目标位置tx/ty
+    if(deg >= 270) {
+      deg = d2r(360 - deg);
+      o.tx = x + distance * Math.cos(deg);
+      o.ty = y - distance * Math.sin(deg);
+    }
+    else if(deg >= 180) {
+      deg = d2r(deg - 180);
+      o.tx = x - distance * Math.cos(deg);
+      o.ty = y - distance * Math.sin(deg);
+    }
+    else if(deg >= 90) {
+      deg = d2r(180 - deg);
+      o.tx = x - distance * Math.cos(deg);
+      o.ty = y + distance * Math.sin(deg);
+    }
+    else {
+      deg = d2r(deg);
+      o.tx = x + distance * Math.cos(deg);
+      o.ty = y + distance * Math.sin(deg);
+    }
+    // 原始距离和目标距离的差值
+    o.dx = o.tx - o.x;
+    o.dy = o.ty - o.y;
+    return o;
+  }
+
+  const LIST = [];
+  let lastTime = Date.now();
+
+  function loop() {
+    requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, 360, 360);
+    let now = Date.now(), diff = now - lastTime;
+    lastTime = now;
+
+    // 遍历已存在的点，根据时间差运行动画
+    for(let i = 0, len = LIST.length; i < len; i++) {
+      let item = LIST[i];
+      item.time += diff;
+      // 超过播放时间移除
+      if(item.time >= item.duration) {
+        LIST.splice(i--, 1);
+        len--;
+        continue;
+      }
+      // 当前进度百分比，先根据时间算出线性的结果，然后用easing求得缓动效果对应的时间
+      let percent = item.time / item.duration;
+      percent = item.easing(percent);
+      // 用百分比根据位置差求得当前位置
+      let x = item.x + percent * item.dx;
+      let y = item.y + percent * item.dy;
+      // 闪烁需要先考虑基础opacity，然后乘以闪烁造成的opacity
+      let opacity = item.fromOpacity + percent * item.dOpacity;
+      let blink = item.blink;
+      let opacityTime = blink.time += diff;
+      let count = Math.floor(opacityTime / blink.duration); // 求出当前循环到第几次
+      let time = opacityTime - blink.duration * count; // 去除循环时间后当前轮次的时间差
+      let percent2 = time / blink.duration;
+      // 根据循环奇偶判断播放是正向还是逆向，偶数正向
+      if(count % 2 === 0) {
+        opacity *= blink.from + percent2 * blink.d;
+      }
+      else {
+        opacity *= blink.to - percent2 * blink.d;
+      }
+      // 绘制
+      ctx.beginPath();
+      ctx.fillStyle = '#FFF';
+      ctx.globalAlpha = opacity;
+      ctx.arc(x, y, item.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    // 生成一个在中心位置随机0~360°的点
+    let item = genItem(180, 180, rand(2, 4), rand(0, 360), rand(160, 200), rand(0.8, 1), rand(0, 0.2),
+      Math.floor(rand(2000, 2500)), Easing.easeOut, {
+        from: 0.8,
+        to: 0.5,
+        duration: Math.floor(rand(200, 300)),
+      });
+    LIST.push(item);
+  }
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
