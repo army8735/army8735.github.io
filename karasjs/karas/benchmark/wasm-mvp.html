@@ -56,12 +56,7 @@
     list.forEach(i => {
       let node = root.ref[i];
       node.animate([
-        {
-          translateX: 0,
-          translateY: 0,
-          rotateZ: 0,
-          scale: 1,
-        },
+        {},
         {
           translateX: -180 + Math.random() * 360,
           translateY: -180 + Math.random() * 360,
@@ -75,6 +70,8 @@
       });
     });
   });
+
+  // fps显示
   let fps = document.querySelector('#fps');
   let arr = [];
   karas.animate.frame.onFrame(function(diff) {
