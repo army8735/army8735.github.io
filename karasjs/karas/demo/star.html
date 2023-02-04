@@ -118,6 +118,19 @@
       iterations: Infinity,
     });
   }
+  ['t1', 't2'].forEach(k => {
+    root.ref[k].animate([
+      {},
+      {
+        scale: 1.005,
+        rotateZ: 0.3,
+      },
+    ], {
+      duration: Math.random() * 100 + 100,
+      iterations: Infinity,
+      direction: 'alternate',
+    });
+  });
   function go(i) {
     if(i === 1) {
       root.ref.t1.children[0].updateContent('一');
