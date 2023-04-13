@@ -1,0 +1,356 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: arial, sans-serif;
+  background: #FFF;
+}
+
+.wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.menu {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  width: 100%;
+  height: 50px;
+  background: #413B3D;
+  z-index: 10;
+}
+
+.container {
+  position: absolute;
+  left: 0;
+  top: 50px;
+  bottom: 0;
+  display: flex;
+  width: 100%;
+}
+
+.list {
+  position: relative;
+  width: 250px;
+  height: 100%;
+  background: #EEE8EA;
+}
+
+.page {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 5px 8px;
+  width: 100%;
+  height: 150px;
+  border-bottom: 1px solid #CCC;
+  overflow-y: scroll;
+  list-style: none;
+}
+
+.page li {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  height: 24px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: default;
+}
+
+.page li.current {
+  background: #FA8;
+}
+
+.tree {
+  position: absolute;
+  left: 0;
+  top: 150px;
+  bottom: 0;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  width: 100%;
+  overflow-y: scroll;
+  font-size: 14px;
+}
+
+.tree ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree ol ol {
+  margin-left: 16px;
+}
+
+.tree div {
+  display: flex;
+  padding: 0 4px;
+  height: 24px;
+  align-items: center;
+  border-radius: 5px;
+}
+
+.tree .type {
+  width: 16px;
+  font-family: Menlo, "Courier New";
+  font-size: 14px;
+  color: #999;
+  cursor: default;
+  user-select: none;
+}
+
+.tree .name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.tree .visible {
+  font-size: 12px;
+  color: #999;
+  cursor: default;
+  user-select: none;
+}
+
+.tree .visible:hover {
+  color: #F99;
+}
+
+.tree .hover>div {
+  box-shadow: 0 0 2px #000;
+}
+
+.tree .select>div {
+  background: #FA8;
+}
+
+.main {
+  flex: 1;
+  position: relative;
+}
+
+.side {
+  width: 300px;
+  background: #FFF;
+  border-left: 1px solid #DDD;
+}
+
+.canvas-c {
+  width: 100%;
+  height: 100%;
+  background: #F3F3F3;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overlap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.overlap.space {
+  cursor: grab;
+}
+.overlap.space.down {
+  cursor: grabbing;
+}
+.overlap.t {
+  cursor: ns-resize;
+}
+.overlap.r {
+  cursor: ew-resize;
+}
+.overlap.b {
+  cursor: ns-resize;
+}
+.overlap.l {
+  cursor: ew-resize;
+}
+.overlap.tl {
+  cursor: nwse-resize;
+}
+.overlap.tr {
+  cursor: nesw-resize;
+}
+.overlap.br {
+  cursor: nwse-resize;
+}
+.overlap.bl {
+  cursor: nesw-resize;
+}
+
+.overlap .hover {
+  position: absolute;
+  border: 1px solid #F43;
+  visibility: hidden;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-1px, -1px);
+}
+
+.overlap .selection {
+  position: absolute;
+  visibility: hidden;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.overlap .selection span, .selection b {
+  pointer-events: auto;
+}
+
+.overlap .t {
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 100%;
+  height: 8px;
+  transform: scaleY(0.5);
+  cursor: ns-resize;
+}
+
+.overlap .t b {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 100%;
+  height: 100%;
+  border-top: 1px solid #34F;
+  pointer-events: none;
+}
+
+.overlap .r {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  transform: scaleX(0.5);
+  cursor: ew-resize;
+}
+
+.overlap .r b {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-right: 1px solid #34F;
+  pointer-events: none;
+}
+
+.overlap .b {
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 8px;
+  transform: scaleY(0.5);
+  cursor: ns-resize;
+}
+
+.overlap .b b {
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 100%;
+  height: 100%;
+  border-bottom: 1px solid #34F;
+  pointer-events: none;
+}
+
+.overlap .l {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  transform: scaleX(0.5);
+  cursor: ew-resize;
+}
+
+.overlap .l b {
+  position: absolute;
+  left: 2px;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-left: 1px solid #34F;
+  pointer-events: none;
+}
+
+.overlap .tl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  background: #FFF;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transform: translate(-8px, -8px) scale(0.5);
+  cursor: nwse-resize;
+}
+
+.overlap .tr {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  background: #FFF;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transform: translate(8px, -8px) scale(0.5);
+  cursor: nesw-resize;
+}
+
+.overlap .br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  background: #FFF;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transform: translate(8px, 8px) scale(0.5);
+  cursor: nwse-resize;
+}
+
+.overlap .bl {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  background: #FFF;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transform: translate(-8px, 8px) scale(0.5);
+  cursor: nesw-resize;
+}
+
+.show {
+  visibility: visible !important;
+}

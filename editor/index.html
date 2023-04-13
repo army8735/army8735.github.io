@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>editor</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+</head>
+<body>
+<div class="wrap">
+  <div class="menu">
+    <input type="file" id="file" accept=".sketch"/>
+  </div>
+  <div class="container">
+    <div class="list">
+      <ul class="page" id="page"></ul>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="main" id="main">
+      <div class="canvas-c" id="canvasC"></div>
+      <div class="overlap" id="overlap">
+        <div class="hover" id="hover"></div>
+        <div class="selection" id="selection">
+          <span class="l" id="l"><b></b></span>
+          <span class="t" id="t"><b></b></span>
+          <span class="r" id="r"><b></b></span>
+          <span class="b" id="b"><b></b></span>
+          <span class="tl" id="tl"></span>
+          <span class="tr" id="tr"></span>
+          <span class="br" id="br"></span>
+          <span class="bl" id="bl"></span>
+        </div>
+      </div>
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+</div>
+<script src="index.min.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
