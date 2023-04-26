@@ -104,11 +104,26 @@ html, body {
 
 .tree .type {
   width: 16px;
+  height: 16px;
   font-family: Menlo, "Courier New";
   font-size: 14px;
   color: #999;
   cursor: default;
   user-select: none;
+}
+
+.tree .type b {
+  display: block;
+  position: relative;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  transform-origin: 0 0;
+}
+
+.tree .type svg {
+  display: block;
+  overflow: visible;
 }
 
 .tree .name {
@@ -117,6 +132,10 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
+}
+
+.tree .mask .name {
+  text-decoration: underline;
 }
 
 .tree .visible {

@@ -110,7 +110,7 @@ $input.onchange = function(e) {
           ol.prependChild(li);
         }
         else {
-          ol.insertBefore(node, abHash[node.prev.props.uuid]);
+          ol.insertBefore(node, li);
         }
       });
 
@@ -120,9 +120,27 @@ $input.onchange = function(e) {
 }
 
 function genNodeTree(node, abHash) {
-  const type = getNodeType(node);
+  let type = getNodeType(node);
+  if (node instanceof editor.node.Geom || node instanceof editor.node.ShapeGroup) {
+    const { width, height } = node;
+    let scale, x = 0, y = 0;
+    if (width >= height) {
+      scale = 14 / width;
+      y = (14 - height * scale) * 0.5;
+    }
+    else {
+      scale = 14 / height;
+      x = (14 - width * scale) * 0.5;
+    }
+    type = `<b style="transform:translate(${x}px, ${y}px) scale(${scale})">` + node.toSvg(scale) + '</b>';
+  }
   const li = document.createElement('li');
-  li.className = 'layer';
+  if (node.computedStyle.maskMode) {
+    li.className = 'layer mask';
+  }
+  else {
+    li.className = 'layer';
+  }
   li.setAttribute('uuid', node.props.uuid);
   abHash[node.props.uuid] = li;
   let s = `<div>
@@ -161,6 +179,9 @@ function getNodeType(node) {
     type = '🔤';
   }
   else if (node instanceof editor.node.Geom) {
+    type = '📏';
+  }
+  else if (node instanceof editor.node.ShapeGroup) {
     type = '📐';
   }
   else {
@@ -561,7 +582,7 @@ document.addEventListener('mousemove', function(e) {
   e.preventDefault();
   const target = e.target;
   let isOnControl = false;
-  if (target === $selection || target.parentElement === $selection || target.parentElement.parentElement === $selection) {
+  if (target === $selection || target.parentElement === $selection || target.parentElement && target.parentElement.parentElement === $selection) {
     isOnControl = true;
   }
   onMove(e.pageX, e.pageY, isOnControl);
@@ -648,37 +669,43 @@ $main.addEventListener('wheel', function(e) {
   if (metaKey) {
     let sc = 1;
     if(e.deltaY < 0) {
-      if(e.deltaY < -200) {
+      if(e.deltaY < -300) {
         sc = 0.125;
       }
-      else if(e.deltaY < -100) {
+      else if(e.deltaY < -200) {
         sc = 0.25;
       }
-      else if(e.deltaY < -50) {
+      else if(e.deltaY < -100) {
         sc = 0.5;
       }
-      else if(e.deltaY < -20) {
+      else if(e.deltaY < -50) {
         sc = 0.75;
       }
-      else {
+      else if(e.deltaY < -20) {
         sc = 0.875;
+      }
+      else {
+        sc = 0.9375;
       }
     }
     else if(e.deltaY > 0) {
-      if(e.deltaY > 200) {
+      if(e.deltaY > 300) {
         sc = 2;
       }
-      else if(e.deltaY > 100) {
+      else if(e.deltaY > 200) {
         sc = 1.75;
       }
-      else if(e.deltaY > 50) {
+      else if(e.deltaY > 100) {
         sc = 1.5;
       }
-      else if(e.deltaY > 20) {
+      else if(e.deltaY > 50) {
         sc = 1.25;
       }
-      else {
+      else if(e.deltaY > 20) {
         sc = 1.125;
+      }
+      else {
+        sc = 1.0625;
       }
     }
     const x = lastX - originX;
@@ -692,11 +719,11 @@ $main.addEventListener('wheel', function(e) {
     // 求出鼠标屏幕坐标在画布内相对page的坐标
     const pt1 = editor.math.matrix.calPoint(pt, inverse);
     let scale = scaleX * sc;
-    if(scale > 10) {
-      scale = 10;
+    if(scale > 32) {
+      scale = 32;
     }
-    else if(scale < 0.1) {
-      scale = 0.1;
+    else if(scale < 0.03125) {
+      scale = 0.03125;
     }
     const style = editor.style.css.normalize({
       translateX,
