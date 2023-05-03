@@ -98,6 +98,16 @@ $input.onchange = function(e) {
         $tree.appendChild(ol);
       });
 
+      root.on(editor.util.Event.ADD_NEW_PAGE, function(newPage) {
+        const uuid = newPage.props.uuid;
+        const li = document.createElement('li');
+        li.setAttribute('uuid', uuid);
+        li.innerHTML = '🗒 ' + newPage.props.name;
+        li.title = newPage.props.name;
+        pageHash[uuid] = li;
+        $page.appendChild(li);
+      });
+
       root.on(editor.util.Event.DID_ADD_DOM, function(node) {
         const li = genNodeTree(node, abHash);
         const parent = node.parent, children = parent.children, uuid = parent.props.uuid;
@@ -112,6 +122,11 @@ $input.onchange = function(e) {
         else {
           ol.insertBefore(node, li);
         }
+      });
+
+      root.on(editor.util.Event.WILL_REMOVE_DOM, function(node) {
+        const li = abHash[node.props.uuid];
+        li.parentElement.removeChild(li);
       });
 
       root.setPageIndex(0);
@@ -147,7 +162,7 @@ function genNodeTree(node, abHash) {
 <span class="type">${type}</span>
 <span class="name">${node.props.name}</span>`
   if (!(node instanceof editor.node.ArtBoard)) {
-    s += `<span class="visible ${node.computedStyle.visible ? 't' : ''}">可见</span>`;
+    s += `<span class="visible ${node.computedStyle.visible ? 't' : ''}">${node.computedStyle.visible ? '可见' : '隐藏'}</span>`;
   }
   s += '</div>';
   li.innerHTML = s;
@@ -272,9 +287,9 @@ function updateHover() {
 
 function hideHover() {
   if (hoverNode) {
-    hoverNode = null;
     $hover.classList.remove('show');
     hoverTree.classList.remove('hover');
+    hoverNode = null;
     hoverTree = null;
   }
 }
@@ -341,9 +356,9 @@ function showSelect(node) {
 
 function hideSelect() {
   if (selectNode) {
-    selectNode = null;
     $selection.classList.remove('show');
     selectTree.classList.remove('select');
+    selectNode = null;
     selectTree = null;
   }
 }
@@ -636,7 +651,12 @@ document.addEventListener('keydown', function(e) {
   if (m !== e.metaKey) {
     onMove(lastX, lastY);
   }
-  if (e.keyCode === 32) {
+  if (e.keyCode === 8) {
+    selectNode && selectNode.remove();
+    updateHover();
+    hideSelect();
+  }
+  else if (e.keyCode === 32) {
     spaceKey = true;
     $overlap.classList.add('space');
   }

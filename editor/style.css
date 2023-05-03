@@ -135,7 +135,7 @@ html, body {
 }
 
 .tree .mask .name {
-  text-decoration: underline;
+  font-style: italic;
 }
 
 .tree .visible {
