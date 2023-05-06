@@ -90,7 +90,9 @@ $input.onchange = function(e) {
         pageHash[curPage.props.uuid].classList.add('current');
         $tree.innerHTML = '';
         const ol = document.createElement('ol');
-        abHash = {};
+        abHash = {
+          [curPage.props.uuid]: $tree,
+        };
         const children = curPage.children;
         for(let i = children.length - 1; i >= 0; i--) {
           ol.appendChild(genNodeTree(children[i], abHash));
@@ -98,7 +100,7 @@ $input.onchange = function(e) {
         $tree.appendChild(ol);
       });
 
-      root.on(editor.util.Event.ADD_NEW_PAGE, function(newPage) {
+      root.on(editor.util.Event.DID_ADD_PAGE, function(newPage) {
         const uuid = newPage.props.uuid;
         const li = document.createElement('li');
         li.setAttribute('uuid', uuid);
@@ -114,19 +116,20 @@ $input.onchange = function(e) {
         const i = children.indexOf(node);
         const ol = abHash[uuid].querySelector('ol');
         if (i === children.length - 1) {
-          ol.appendChild(li);
+          ol.insertBefore(li, ol.children[i - 1]);
         }
         else if (i === 0) {
-          ol.prependChild(li);
+          ol.appendChild(li);
         }
         else {
-          ol.insertBefore(node, li);
+          ol.insertBefore(li, ol.children[ol.children.length - i]);
         }
       });
 
       root.on(editor.util.Event.WILL_REMOVE_DOM, function(node) {
         const li = abHash[node.props.uuid];
         li.parentElement.removeChild(li);
+        delete abHash[node.props.uuid];
       });
 
       root.setPageIndex(0);
