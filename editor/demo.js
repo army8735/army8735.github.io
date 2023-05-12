@@ -484,6 +484,7 @@ function onMove(x, y, isOnControl) {
           });
         }
       }
+      selectNode.checkChangeAsShape();
       updateSelect();
     }
     // 拖拽节点本身
@@ -495,6 +496,7 @@ function onMove(x, y, isOnControl) {
           translateX: computedStyle.translateX + dx2,
           translateY: computedStyle.translateY + dy2,
         });
+        selectNode.checkChangeAsShape();
         updateSelect();
       }
     }
@@ -547,9 +549,7 @@ $overlap.addEventListener('mousedown', function(e) {
       if (target.tagName === 'SPAN') {
         isControl = true;
         // 通知引擎开始拖拽，如果是固定尺寸中心点对齐的要内部转换下，防止拖尺寸时以自身中心点扩展
-        selectNode.startSizeChange();
-        // 再更新下，防止重复拖拽数据不及时
-        computedStyle = selectNode.getComputedStyle();
+        computedStyle = selectNode.startSizeChange();
         const classList = target.classList;
         if (classList.contains('tl')) {
           controlType = 'tl';
@@ -621,7 +621,7 @@ document.addEventListener('mouseup', function(e) {
         const dx = lastX - startX, dy = lastY - startY;
         // 发生了拖动位置变化，结束时需转换过程中translate为布局约束（如有）
         if(dx || dy) {
-          selectNode.checkPosChange(selectNode);
+          selectNode.checkPosChange();
         }
       }
     }
