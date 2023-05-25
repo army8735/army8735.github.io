@@ -2,10 +2,19 @@ const $input = document.querySelector('#file');
 const $page = document.querySelector('#page');
 const $tree = document.querySelector('#tree');
 const $main = document.querySelector('#main');
-const $canvasC = document.querySelector('#canvasC');
-const $overlap = document.querySelector('#overlap');
-const $hover = document.querySelector('#hover');
+const $canvasC = $main.querySelector('#canvasC');
+const $overlap = $main.querySelector('#overlap');
+const $hover = $main.querySelector('#hover');
 const $selection = $main.querySelector('#selection');
+const $inputContainer = $main.querySelector('#input-container');
+const $inputText = $inputContainer.querySelector('input');
+const $side = document.querySelector('#side');
+const $basic = $side.querySelector('#basic');
+const $x = $side.querySelector('#x');
+const $y = $side.querySelector('#y');
+const $r = $side.querySelector('#r');
+const $w = $side.querySelector('#w');
+const $h = $side.querySelector('#h');
 
 matchMedia(
   `(resolution: ${window.devicePixelRatio}dppx)`
@@ -14,7 +23,7 @@ matchMedia(
 
 let root;
 let originX, originY;
-let isDown, isMove, isControl, controlType;
+let isMouseDown, isMouseMove, isControl, controlType;
 let startX, startY, lastX, lastY;
 let hoverNode, selectNode;
 let metaKey, shiftKey, ctrlKey, altKey, spaceKey;
@@ -25,6 +34,57 @@ let structs = [];
 let abHash = {}, pageHash = {};
 let hoverTree, selectTree;
 let zoom = 1;
+let isEditText;
+
+async function initFonts() {
+  try {
+    const status = await navigator.permissions.query({
+      name: 'local-fonts',
+    });
+    if(status.state !== 'granted') {
+      console.error('No Permission.');
+      return;
+    }
+    const fonts = await window.queryLocalFonts();
+    editor.style.font.registerLocalFonts(fonts);
+  } catch(err) {
+    console.error(err.message);
+  }
+}
+
+initFonts();
+
+[
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/uG6lQ6mO0XIAAAAAAAAAABAADnV5AQBr/AlibabaSans-LightItalic.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/nhktTqHzS_cAAAAAAAAAABAADnV5AQBr/AlibabaSans-Italic.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/aQutTLOY8_0AAAAAAAAAABAADnV5AQBr/AlibabaSans-HeavyItalic.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/iDvGRKYxpFMAAAAAAAAAABAADnV5AQBr/AlibabaSans-BoldItalic.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/03abTJZ_ELkAAAAAAAAAABAADnV5AQBr/AlibabaSans-MediumItalic.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/4XI7Tq31Q2MAAAAAAAAAABAADnV5AQBr/AlibabaSans-Bold.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/XQaWS7V598AAAAAAAAAAABAADnV5AQBr/AlibabaSans-Medium.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/5tY6T4gfeAAAAAAAAAAAABAADnV5AQBr/AlibabaSans-Heavy.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/yX9fSK8Vy1wAAAAAAAAAABAADnV5AQBr/AlibabaSans-Light.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/6cr-Ra-6W88AAAAAAAAAABAADnV5AQBr/AlibabaSans-Black.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/QgUFR5-393IAAAAAAAAAABAADnV5AQBr/AlibabaSans-Regular.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/AF6oQZbHeJIAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-35-Thin.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/_qOARr4eO6oAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-45-Light.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/I6y8QKLB2n8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-75-SemiBold.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/w19VS7_VQ2UAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-65-Medium.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/dNLASYAWQW8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-115-Black.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/MnqHQqrD0YgAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-95-ExtraBold.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/CY_aTqLT-vMAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-55-Regular.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/1UNUTqtQsyAAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-85-Bold.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/rg89T7ajrsYAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-105-Heavy.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/XW9NRY1ChxcAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Medium.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/NM6KQYE2VBwAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Heavy.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/sBaWS5Vr5D0AAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Regular.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/-UceTp6AhxQAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Light.ttf',
+  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/9ZVPTLIO54MAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Bold.ttf',
+].forEach(item => {
+  // editor.util.inject.loadFont(item, item, (cache, ab) => {
+  //   editor.style.font.registerAb(ab);
+  // });
+});
 
 $input.onchange = function(e) {
   const file = $input.files[0];
@@ -130,6 +190,11 @@ $input.onchange = function(e) {
         const li = abHash[node.props.uuid];
         li.parentElement.removeChild(li);
         delete abHash[node.props.uuid];
+      });
+
+      root.on(editor.util.Event.UPDATE_CURSOR, function(x, y, h) {
+        showEditText(x / dpi, y / dpi, h / dpi);
+        updateSelect();
       });
 
       root.setPageIndex(0);
@@ -342,12 +407,12 @@ function showSelect(node) {
   selectNode = node;
   style = selectNode.style;
   computedStyle = selectNode.getComputedStyle();
-  console.log('left', style.left, 'right', style.right, 'top', style.top, 'bottom', style.bottom,
-    'width', style.width, 'height', style.height, 'tx', style.translateX, 'ty', style.translateY,
-    'cleft', computedStyle.left, 'cright', computedStyle.right, 'ctop', computedStyle.top,
-    'cbttom', computedStyle.bottom, 'cwidth', computedStyle.width, 'ctx', computedStyle.translateX,
-    'cty', computedStyle.translateY, 'w', selectNode.width, 'h', selectNode.height,
-    'm', selectNode.matrix.join(','), 'mw', selectNode.matrixWorld.join(','));
+  // console.log('left', style.left, 'right', style.right, 'top', style.top, 'bottom', style.bottom,
+  //   'width', style.width, 'height', style.height, 'tx', style.translateX, 'ty', style.translateY,
+  //   'cleft', computedStyle.left, 'cright', computedStyle.right, 'ctop', computedStyle.top,
+  //   'cbttom', computedStyle.bottom, 'cwidth', computedStyle.width, 'ctx', computedStyle.translateX,
+  //   'cty', computedStyle.translateY, 'w', selectNode.width, 'h', selectNode.height,
+  //   'm', selectNode.matrix.join(','), 'mw', selectNode.matrixWorld.join(','));
   updateSelect();
   $selection.classList.add('show');
   selectTree && selectTree.classList.remove('select');
@@ -390,8 +455,8 @@ function onMove(x, y, isOnControl) {
   const dx2 = dx / zoom * dpi, dy2 = dy / zoom * dpi;
   // 空格按下拖拽画布
   if (spaceKey) {
-    if (isDown) {
-      isMove = true;
+    if (isMouseDown) {
+      isMouseMove = true;
       curPage.updateStyle({
         translateX: pageTx + dx,
         translateY: pageTy + dy,
@@ -419,7 +484,7 @@ function onMove(x, y, isOnControl) {
   else {
     // 拖拽缩放选框，一定有selectNode
     if (isControl) {
-      isMove = true;
+      isMouseMove = true;
       if (controlType === 'tl') {}
       else if (controlType === 'tr') {}
       else if (controlType === 'br') {}
@@ -488,8 +553,8 @@ function onMove(x, y, isOnControl) {
       updateSelect();
     }
     // 拖拽节点本身
-    else if (isDown) {
-      isMove = true;
+    else if (isMouseDown) {
+      isMouseMove = true;
       if(selectNode) {
         // 不变也要更新，并不知道节点的约束类型（size是否auto）
         selectNode.updateStyle({
@@ -529,8 +594,8 @@ $overlap.addEventListener('mousedown', function(e) {
   }
   // 左键
   if (e.button === 0) {
-    isDown = true;
-    isMove = false;
+    isMouseDown = true;
+    isMouseMove = false;
     startX = e.pageX;
     startY = e.pageY;
     // 空格按下移动画布
@@ -540,7 +605,7 @@ $overlap.addEventListener('mousedown', function(e) {
       pageTy = o.translateY;
       $overlap.classList.add('down');
     }
-    // 普通是选择
+    // 普通是选择或者编辑文本
     else {
       const nx = startX - originX;
       const ny = startY - originY;
@@ -582,15 +647,90 @@ $overlap.addEventListener('mousedown', function(e) {
         let node = root.getNodeFromCurPage(nx * dpi, ny * dpi, !metaKey, false, (metaKey || selectNode) ? undefined : 1);
         node = getActiveNodeWhenSelected(node);
         if(node) {
-          showSelect(node);
-          hideHover();
+          if (isEditText && node === selectNode) {
+            const { offsetX, offsetY } = e;
+            const x = $selection.offsetLeft + offsetX;
+            const y = $selection.offsetTop + offsetY;
+            const p = selectNode.getCursorByAbsCoord(x, y);
+            showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
+            // 防止触发click事件失焦
+            e.preventDefault();
+          }
+          else {
+            showSelect(node);
+            hideHover();
+            hideEditText();
+            showBasic();
+          }
         }
         else {
           hideSelect();
+          hideEditText();
+          hideBasic();
         }
       }
     }
   }
+});
+
+$overlap.addEventListener('dblclick', function(e) {
+  const { offsetX, offsetY } = e;
+  const x = $selection.offsetLeft + offsetX;
+  const y = $selection.offsetTop + offsetY;
+  if (selectNode && selectNode instanceof editor.node.Text) {
+    const p = selectNode.getCursorByAbsCoord(x, y);
+    showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
+  }
+});
+
+function showEditText(x, y, h) {
+  isEditText = true;
+  const style = $inputContainer.style;
+  style.left = x + 'px';
+  style.top = y + 'px';
+  style.height = h + 'px';
+  style.display = 'block';
+  $inputText.focus();
+}
+
+function hideEditText() {
+  if (isEditText) {
+    isEditText = false;
+    $inputContainer.style.display = 'none';
+    $inputText.blur();
+  }
+}
+
+let isIme = false;
+$inputText.addEventListener('keydown', (e) => {
+  const keyCode = e.keyCode;
+  if (keyCode === 13) {
+    // 回车等候一下让input先触发，输入法状态不会触发
+    setTimeout(() => {
+      selectNode.enter();
+    }, 1);
+  } else if (keyCode === 8) {
+    e.stopPropagation();
+    selectNode.delete();
+  } else if (keyCode >= 37 && keyCode <= 40) {
+    selectNode.moveCursor(keyCode);
+  }
+});
+$inputText.addEventListener('input', (e) => {
+  if (!isIme) {
+    const s = e.data;
+    selectNode.inputContent(s);
+    $inputText.value = '';
+  }
+});
+$inputText.addEventListener('compositionstart', (e) => {
+  isIme = true;
+});
+$inputText.addEventListener('compositionend', (e) => {
+  isIme = false;
+  const s = e.data;
+  selectNode.inputContent(s);
+  $inputText.value = '';
 });
 
 document.addEventListener('mousemove', function(e) {
@@ -617,16 +757,13 @@ document.addEventListener('mouseup', function(e) {
       updateSelect();
     }
     else {
-      if(selectNode && isMove) {
-        const dx = lastX - startX, dy = lastY - startY;
+      if(selectNode && isMouseMove) {
         // 发生了拖动位置变化，结束时需转换过程中translate为布局约束（如有）
-        if(dx || dy) {
-          selectNode.checkPosChange();
-        }
+        selectNode.checkPosChange();
       }
     }
-    isDown = false;
-    isMove = false;
+    isMouseDown = false;
+    isMouseMove = false;
     isControl = false;
     if(spaceKey) {
       $overlap.classList.remove('down');
@@ -733,14 +870,9 @@ $main.addEventListener('wheel', function(e) {
     }
     const x = lastX - originX;
     const y = lastY - originY;
-    const pt = {
-      x: x * dpi,
-      y: y * dpi,
-    };
-    const { translateX, translateY, scaleX } = curPage.getComputedStyle();
-    const inverse = editor.math.matrix.inverse(curPage.matrixWorld);
-    // 求出鼠标屏幕坐标在画布内相对page的坐标
-    const pt1 = editor.math.matrix.calPoint(pt, inverse);
+    const x1 = x * dpi / root.width;
+    const y1 = y * dpi / root.height;
+    const scaleX = curPage.computedStyle.scaleX;
     let scale = scaleX * sc;
     if(scale > 32) {
       scale = 32;
@@ -748,23 +880,7 @@ $main.addEventListener('wheel', function(e) {
     else if(scale < 0.03125) {
       scale = 0.03125;
     }
-    const style = editor.style.css.normalize({
-      translateX,
-      translateY,
-      scaleX: scale,
-      scaleY: scale,
-    });
-    const newMatrix = editor.style.transform.calMatrix(style);
-    // 新缩放尺寸，位置不动，相对page坐标在新matrix下的坐标
-    const pt2 = editor.math.matrix.calPoint(pt1, newMatrix);
-    // 差值是需要调整的距离
-    const dx = pt2.x - pt.x / dpi, dy = pt2.y - pt.y / dpi;
-    curPage.updateStyle({
-      translateX: translateX - dx,
-      translateY: translateY - dy,
-      scaleX: scale,
-      scaleY: scale,
-    });
+    root.zoomTo(scale, x1, y1);
     zoom = curPage.getZoom();
   }
   // shift+滚轮是移动
@@ -854,3 +970,23 @@ $main.addEventListener('wheel', function(e) {
   }
   updateSelect();
 });
+
+function showBasic() {
+  $basic.classList.add('show');
+  const info = selectNode.getFrameProps();
+  $basic.querySelectorAll('.num').forEach(item => {
+    item.disabled = false;
+  });
+  $x.value = editor.math.geom.toPrecision(info.x, 2);
+  $y.value = editor.math.geom.toPrecision(info.y, 2);
+  $r.value = editor.math.geom.toPrecision(info.rotation, 2);
+  $w.value = editor.math.geom.toPrecision(info.w, 2);
+  $h.value = editor.math.geom.toPrecision(info.h, 2);
+}
+
+function hideBasic() {
+  $basic.classList.remove('show');
+  $basic.querySelectorAll('.num').forEach(item => {
+    item.disabled = true;
+  });
+}
