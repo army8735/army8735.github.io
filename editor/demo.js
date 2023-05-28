@@ -80,8 +80,8 @@ initFonts();
   'https://mass-office.alipay.com/huamei_koqzbu/afts/file/sBaWS5Vr5D0AAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Regular.ttf',
   'https://mass-office.alipay.com/huamei_koqzbu/afts/file/-UceTp6AhxQAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Light.ttf',
   'https://mass-office.alipay.com/huamei_koqzbu/afts/file/9ZVPTLIO54MAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Bold.ttf',
-].forEach(item => {
-  // editor.util.inject.loadFont(item, item, (cache, ab) => {
+].forEach(url => {
+  // editor.util.inject.loadFont(url, url, (cache, ab) => {
   //   editor.style.font.registerAb(ab);
   // });
 });
@@ -737,7 +737,7 @@ document.addEventListener('mousemove', function(e) {
   if (!curPage) {
     return;
   }
-  e.preventDefault();
+  // e.preventDefault();
   const target = e.target;
   let isOnControl = false;
   if (target === $selection || target.parentElement === $selection || target.parentElement && target.parentElement.parentElement === $selection) {
@@ -989,4 +989,9 @@ function hideBasic() {
   $basic.querySelectorAll('.num').forEach(item => {
     item.disabled = true;
   });
+  $x.value = '';
+  $y.value = '';
+  $r.value = '';
+  $w.value = '';
+  $h.value = '';
 }
