@@ -12,7 +12,7 @@ const $side = document.querySelector('#side');
 const $basic = $side.querySelector('#basic');
 const $x = $side.querySelector('#x');
 const $y = $side.querySelector('#y');
-const $r = $side.querySelector('#r');
+const $rotate = $side.querySelector('#rotate');
 const $w = $side.querySelector('#w');
 const $h = $side.querySelector('#h');
 
@@ -175,7 +175,12 @@ $input.onchange = function(e) {
         const parent = node.parent, children = parent.children, uuid = parent.props.uuid;
         const i = children.indexOf(node);
         const ol = abHash[uuid].querySelector('ol');
-        if (i === children.length - 1) {
+        if (!ol) {
+          const ol = document.createElement('ol');
+          ol.appendChild(li);
+          abHash[uuid].appendChild(ol);
+        }
+        else if (i === children.length - 1) {
           ol.insertBefore(li, ol.children[i - 1]);
         }
         else if (i === 0) {
@@ -308,6 +313,7 @@ $tree.addEventListener('click', e => {
     const uuid = li.getAttribute('uuid');
     const node = root.refs[uuid];
     showSelect(node);
+    showBasic();
     selectTree && selectTree.classList.remove('select');
     selectTree = li;
     selectTree && selectTree.classList.add('select');
@@ -442,11 +448,11 @@ function updateSelect() {
   }
 }
 
-function onMove(x, y, isOnControl) {
-  lastX = x;
-  lastY = y;
-  const nx = x - originX;
-  const ny = y - originY;
+function onMove(e, isOnControl) {
+  lastX = e.pageX;
+  lastY = e.pageY;
+  const nx = lastX - originX;
+  const ny = lastY - originY;
   const inRoot = nx >= 0 && ny >= 0 && nx <= root.width && ny <= root.width;
   if (!inRoot) {
     return;
@@ -556,13 +562,20 @@ function onMove(x, y, isOnControl) {
     else if (isMouseDown) {
       isMouseMove = true;
       if(selectNode) {
+        // 处于编辑状态时，隐藏光标显示区域
+        if(isEditText && selectNode instanceof editor.node.Text) {
+          selectNode.setCursorEndByAbsCoord(nx, ny);
+          $inputContainer.style.display = 'none';
+        }
         // 不变也要更新，并不知道节点的约束类型（size是否auto）
-        selectNode.updateStyle({
-          translateX: computedStyle.translateX + dx2,
-          translateY: computedStyle.translateY + dy2,
-        });
-        selectNode.checkChangeAsShape();
-        updateSelect();
+        else {
+          selectNode.updateStyle({
+            translateX: computedStyle.translateX + dx2,
+            translateY: computedStyle.translateY + dy2,
+          });
+          selectNode.checkChangeAsShape();
+          updateSelect();
+        }
       }
     }
     else if (isOnControl) {
@@ -648,6 +661,7 @@ $overlap.addEventListener('mousedown', function(e) {
         node = getActiveNodeWhenSelected(node);
         if(node) {
           if (isEditText && node === selectNode) {
+            selectNode.hideSelectArea();
             const { offsetX, offsetY } = e;
             const x = $selection.offsetLeft + offsetX;
             const y = $selection.offsetTop + offsetY;
@@ -657,15 +671,15 @@ $overlap.addEventListener('mousedown', function(e) {
             e.preventDefault();
           }
           else {
+            hideEditText();
             showSelect(node);
             hideHover();
-            hideEditText();
             showBasic();
           }
         }
         else {
-          hideSelect();
           hideEditText();
+          hideSelect();
           hideBasic();
         }
       }
@@ -695,6 +709,9 @@ function showEditText(x, y, h) {
 
 function hideEditText() {
   if (isEditText) {
+    if (selectNode && selectNode instanceof editor.node.Text) {
+      selectNode.hideSelectArea();
+    }
     isEditText = false;
     $inputContainer.style.display = 'none';
     $inputText.blur();
@@ -743,7 +760,7 @@ document.addEventListener('mousemove', function(e) {
   if (target === $selection || target.parentElement === $selection || target.parentElement && target.parentElement.parentElement === $selection) {
     isOnControl = true;
   }
-  onMove(e.pageX, e.pageY, isOnControl);
+  onMove(e, isOnControl);
 });
 
 document.addEventListener('mouseup', function(e) {
@@ -789,7 +806,7 @@ document.addEventListener('keydown', function(e) {
     return;
   }
   if (m !== e.metaKey) {
-    onMove(lastX, lastY);
+    // onMove(lastX, lastY);
   }
   if (e.keyCode === 8) {
     selectNode && selectNode.remove();
@@ -812,7 +829,7 @@ document.addEventListener('keyup', function(e) {
     return;
   }
   if (m !== e.metaKey) {
-    onMove(lastX, lastY);
+    // onMove(lastX, lastY);
   }
   if (e.keyCode === 32) {
     spaceKey = false;
@@ -979,7 +996,7 @@ function showBasic() {
   });
   $x.value = editor.math.geom.toPrecision(info.x, 2);
   $y.value = editor.math.geom.toPrecision(info.y, 2);
-  $r.value = editor.math.geom.toPrecision(info.rotation, 2);
+  $rotate.value = editor.math.geom.toPrecision(info.rotation, 2);
   $w.value = editor.math.geom.toPrecision(info.w, 2);
   $h.value = editor.math.geom.toPrecision(info.h, 2);
 }
@@ -991,7 +1008,7 @@ function hideBasic() {
   });
   $x.value = '';
   $y.value = '';
-  $r.value = '';
+  $rotate.value = '';
   $w.value = '';
   $h.value = '';
 }
