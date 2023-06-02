@@ -15,6 +15,13 @@ const $y = $side.querySelector('#y');
 const $rotate = $side.querySelector('#rotate');
 const $w = $side.querySelector('#w');
 const $h = $side.querySelector('#h');
+const $text = $side.querySelector('#text');
+const $family = $text.querySelector('#family');
+const $family2 = $text.querySelector('#family2');
+const $style = $text.querySelector('#style');
+const $style2 = $text.querySelector('#style2');
+const $color = $text.querySelector('#color');
+const $color2 = $text.querySelector('#color2');
 
 matchMedia(
   `(resolution: ${window.devicePixelRatio}dppx)`
@@ -46,7 +53,7 @@ async function initFonts() {
       return;
     }
     const fonts = await window.queryLocalFonts();
-    editor.style.font.registerLocalFonts(fonts);
+    // editor.style.font.registerLocalFonts(fonts);
   } catch(err) {
     console.error(err.message);
   }
@@ -54,37 +61,155 @@ async function initFonts() {
 
 initFonts();
 
-[
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/uG6lQ6mO0XIAAAAAAAAAABAADnV5AQBr/AlibabaSans-LightItalic.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/nhktTqHzS_cAAAAAAAAAABAADnV5AQBr/AlibabaSans-Italic.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/aQutTLOY8_0AAAAAAAAAABAADnV5AQBr/AlibabaSans-HeavyItalic.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/iDvGRKYxpFMAAAAAAAAAABAADnV5AQBr/AlibabaSans-BoldItalic.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/03abTJZ_ELkAAAAAAAAAABAADnV5AQBr/AlibabaSans-MediumItalic.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/4XI7Tq31Q2MAAAAAAAAAABAADnV5AQBr/AlibabaSans-Bold.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/XQaWS7V598AAAAAAAAAAABAADnV5AQBr/AlibabaSans-Medium.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/5tY6T4gfeAAAAAAAAAAAABAADnV5AQBr/AlibabaSans-Heavy.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/yX9fSK8Vy1wAAAAAAAAAABAADnV5AQBr/AlibabaSans-Light.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/6cr-Ra-6W88AAAAAAAAAABAADnV5AQBr/AlibabaSans-Black.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/QgUFR5-393IAAAAAAAAAABAADnV5AQBr/AlibabaSans-Regular.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/AF6oQZbHeJIAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-35-Thin.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/_qOARr4eO6oAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-45-Light.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/I6y8QKLB2n8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-75-SemiBold.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/w19VS7_VQ2UAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-65-Medium.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/dNLASYAWQW8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-115-Black.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/MnqHQqrD0YgAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-95-ExtraBold.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/CY_aTqLT-vMAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-55-Regular.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/1UNUTqtQsyAAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-85-Bold.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/rg89T7ajrsYAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-105-Heavy.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/XW9NRY1ChxcAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Medium.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/NM6KQYE2VBwAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Heavy.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/sBaWS5Vr5D0AAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Regular.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/-UceTp6AhxQAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Light.ttf',
-  'https://mass-office.alipay.com/huamei_koqzbu/afts/file/9ZVPTLIO54MAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Bold.ttf',
-].forEach(url => {
-  // editor.util.inject.loadFont(url, url, (cache, ab) => {
-  //   editor.style.font.registerAb(ab);
-  // });
-});
+const defaultFont = {
+  "alibaba sans": {
+    "family": "Alibaba Sans",
+    "name": "Alibaba Sans",
+    "blr": 1.189,
+    "lgr": 0,
+    "lhr": 1.551,
+    "list": [
+      {
+        "style": "Light",
+        "postscriptName": "alibabasans-light",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/yX9fSK8Vy1wAAAAAAAAAABAADnV5AQBr/AlibabaSans-Light.ttf"
+      },
+      {
+        "style": "Regular",
+        "postscriptName": "alibabasans-regular",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/QgUFR5-393IAAAAAAAAAABAADnV5AQBr/AlibabaSans-Regular.ttf"
+      },
+      {
+        "style": "Medium",
+        "postscriptName": "alibabasans-medium",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/XQaWS7V598AAAAAAAAAAABAADnV5AQBr/AlibabaSans-Medium.ttf"
+      },
+      {
+        "style": "Bold",
+        "postscriptName": "alibabasans-bold",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/4XI7Tq31Q2MAAAAAAAAAABAADnV5AQBr/AlibabaSans-Bold.ttf"
+      },
+      {
+        "style": "Heavy",
+        "postscriptName": "alibabasans-heavy",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/5tY6T4gfeAAAAAAAAAAAABAADnV5AQBr/AlibabaSans-Heavy.ttf"
+      },
+      {
+        "style": "Black",
+        "postscriptName": "alibabasans-black",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/6cr-Ra-6W88AAAAAAAAAABAADnV5AQBr/AlibabaSans-Black.ttf"
+      },
+      {
+        "style": "Light Italic",
+        "postscriptName": "alibabasans-lightitalic",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/uG6lQ6mO0XIAAAAAAAAAABAADnV5AQBr/AlibabaSans-LightItalic.ttf"
+      },
+      {
+        "style": "Italic",
+        "postscriptName": "alibabasans-italic",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/nhktTqHzS_cAAAAAAAAAABAADnV5AQBr/AlibabaSans-Italic.ttf"
+      },
+      {
+        "style": "Medium Italic",
+        "postscriptName": "alibabasans-mediumitalic",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/03abTJZ_ELkAAAAAAAAAABAADnV5AQBr/AlibabaSans-MediumItalic.ttf"
+      },
+      {
+        "style": "Bold Italic",
+        "postscriptName": "alibabasans-bolditalic",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/iDvGRKYxpFMAAAAAAAAAABAADnV5AQBr/AlibabaSans-BoldItalic.ttf"
+      }
+    ]
+  },
+  "alibaba puhuiti": {
+    "family": "Alibaba PuHuiTi",
+    "name": "阿里巴巴普惠体",
+    "blr": 1.05,
+    "lgr": 0,
+    "lhr": 1.372,
+    "list": [
+      {
+        "style": "Light",
+        "postscriptName": "alibabapuhuiti-light",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/-UceTp6AhxQAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Light.ttf"
+      },
+      {
+        "style": "Regular",
+        "postscriptName": "alibabapuhuiti-regular",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/sBaWS5Vr5D0AAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Regular.ttf"
+      },
+      {
+        "style": "Medium",
+        "postscriptName": "alibabapuhuiti-medium",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/XW9NRY1ChxcAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Medium.ttf"
+      },
+      {
+        "style": "Bold",
+        "postscriptName": "alibabapuhuiti-bold",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/9ZVPTLIO54MAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Bold.ttf"
+      },
+      {
+        "style": "Heavy",
+        "postscriptName": "alibabapuhuiti-heavy",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/NM6KQYE2VBwAAAAAAAAAABAADnV5AQBr/Alibaba-PuHuiTi-Heavy.ttf"
+      }
+    ]
+  },
+  "alibaba puhuiti 2.0": {
+    "family": "Alibaba PuHuiTi 2.0",
+    "name": "阿里巴巴普惠体 2.0",
+    "blr": 1.06,
+    "lgr": 0,
+    "lhr": 1.4,
+    "list": [
+      {
+        "style": "35 Thin",
+        "postscriptName": "alibabapuhuiti_2_35_thin",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/AF6oQZbHeJIAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-35-Thin.ttf"
+      },
+      {
+        "style": "45 Light",
+        "postscriptName": "alibabapuhuiti_2_45_light",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/_qOARr4eO6oAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-45-Light.ttf"
+      },
+      {
+        "style": "65 Medium",
+        "postscriptName": "alibabapuhuiti_2_65_medium",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/w19VS7_VQ2UAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-65-Medium.ttf"
+      },
+      {
+        "style": "75 Semibold",
+        "postscriptName": "alibabapuhuiti_2_75_semibold",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/I6y8QKLB2n8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-75-SemiBold.ttf"
+      },
+      {
+        "style": "85 Bold",
+        "postscriptName": "alibabapuhuiti_2_85_bold",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/1UNUTqtQsyAAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-85-Bold.ttf"
+      },
+      {
+        "style": "95 Extrabold",
+        "postscriptName": "alibabapuhuiti_2_95_extrabold",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/MnqHQqrD0YgAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-95-ExtraBold.ttf"
+      },
+      {
+        "style": "105 Heavy",
+        "postscriptName": "alibabapuhuiti_2_105_heavy",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/rg89T7ajrsYAAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-105-Heavy.ttf"
+      },
+      {
+        "style": "115 Black",
+        "postscriptName": "alibabapuhuiti_2_115_black",
+        "url": "https://mass-office.alipay.com/huamei_koqzbu/afts/file/dNLASYAWQW8AAAAAAAAAABAADnV5AQBr/AlibabaPuHuiTi-2-115-Black.ttf"
+      }
+    ]
+  }
+}
+for (let k in defaultFont) {
+  if (defaultFont.hasOwnProperty(k)) {
+    editor.style.font.registerData(defaultFont[k]);
+  }
+}
 
 $input.onchange = function(e) {
   const file = $input.files[0];
@@ -199,6 +324,7 @@ $input.onchange = function(e) {
 
       root.on(editor.util.Event.UPDATE_CURSOR, function(x, y, h) {
         showEditText(x / dpi, y / dpi, h / dpi);
+        setFontPanel(selectNode);
         updateSelect();
       });
 
@@ -426,6 +552,10 @@ function showSelect(node) {
   li.scrollIntoView();
   selectTree = li;
   selectTree.classList.add('select');
+  if (node instanceof editor.node.Text) {
+    setFontPanel(node);
+    $text.classList.add('show');
+  }
 }
 
 function hideSelect() {
@@ -434,6 +564,7 @@ function hideSelect() {
     selectTree.classList.remove('select');
     selectNode = null;
     selectTree = null;
+    $text.classList.remove('show');
   }
 }
 
@@ -445,6 +576,9 @@ function updateSelect() {
     $selection.style.width = (rect.right - rect.left) / dpi + 'px';
     $selection.style.height = (rect.bottom - rect.top) / dpi + 'px';
     $selection.style.transform = 'none';
+    if (isEditText) {
+      updateEditText();
+    }
   }
 }
 
@@ -667,6 +801,7 @@ $overlap.addEventListener('mousedown', function(e) {
             const y = $selection.offsetTop + offsetY;
             const p = selectNode.getCursorByAbsCoord(x, y);
             showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
+            setFontPanel(node);
             // 防止触发click事件失焦
             e.preventDefault();
           }
@@ -694,6 +829,7 @@ $overlap.addEventListener('dblclick', function(e) {
   if (selectNode && selectNode instanceof editor.node.Text) {
     const p = selectNode.getCursorByAbsCoord(x, y);
     showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
+    setFontPanel(selectNode);
   }
 });
 
@@ -705,6 +841,15 @@ function showEditText(x, y, h) {
   style.height = h + 'px';
   style.display = 'block';
   $inputText.focus();
+}
+
+function updateEditText() {
+  if (isEditText) {
+    const { x, y } = selectNode.getCursorAbsCoord();
+    const style = $inputContainer.style;
+    style.left = x / dpi + 'px';
+    style.top = y / dpi + 'px';
+  }
 }
 
 function hideEditText() {
@@ -777,6 +922,9 @@ document.addEventListener('mouseup', function(e) {
       if(selectNode && isMouseMove) {
         // 发生了拖动位置变化，结束时需转换过程中translate为布局约束（如有）
         selectNode.checkPosChange();
+        if (isEditText) {
+          setFontPanel(selectNode);
+        }
       }
     }
     isMouseDown = false;
@@ -1012,3 +1160,80 @@ function hideBasic() {
   $w.value = '';
   $h.value = '';
 }
+
+function setFontPanel(node) {
+  const { info, data } = editor.style.font;
+  let s = '';
+  for (let i in info) {
+    if (info.hasOwnProperty(i)) {
+      const item = info[i];
+      const list = item.list || [];
+      if (list.length) {
+        s += `<option value="${i}">${item.name || i}</option>`;
+      }
+    }
+  }
+  const res = isEditText ? editor.tools.text.getEditData(node) : editor.tools.text.getData([node]);
+  if (res.fontFamily.length > 1) {
+    s = '<option value="多种字体" disabled="disabled">多种字体</option>' + s;
+  }
+  else if (!res.valid) {
+    s = `<option value="${res.fontFamily[0]}" disabled="disabled">${res.name[0]}</option>` + s;
+  }
+  const name = res.name.length > 1 ? '多种字体' : res.name[0];
+  const ff = res.fontFamily[0];
+  $family.innerHTML = s;
+  $family.value = ff;
+  $family2.innerHTML = name;
+  $style2.innerHTML = res.fontWeight;
+  if (!res.valid) {
+    $family2.classList.add('family-n');
+    $style2.classList.add('style-n');
+    $style.disabled = true;
+  }
+  else {
+    const list = $family.querySelectorAll(`option`);
+    for (let i = 0, len = list.length; i < len; i++) {
+      const option = list[i];
+      if (data[ff].family.toLowerCase() === option.value) {
+        option.selected = true;
+        break;
+      }
+    }
+    $family2.classList.remove('family-n');
+    const fontWeightList = res.fontWeightList;
+    let s = '';
+    for (let i = 0, len = fontWeightList.length; i < len; i++) {
+      const item = fontWeightList[i];
+      s += `<option value="${item.value}">${item.label}</option>`;
+    }
+    $style.innerHTML = s;
+    $style.value = ff;
+    $style2.classList.remove('style-n');
+    $style.disabled = !res.fontWeightList.length || res.fontFamily.length > 1;
+  }
+  $color.value = editor.style.css.color2hexStr(res.color[0]);
+  if (res.color.length > 1) {
+    $color2.style.display = 'block';
+  }
+  else {
+    $color2.style.display = 'none';
+  }
+}
+
+$family.addEventListener('change', function() {
+  const list = editor.style.font.data[$family.value.toLowerCase()].list;
+  const fontFamily = list[0].postscriptName;
+  selectNode.updateTextStyle({ fontFamily });
+  setFontPanel(selectNode);
+});
+
+$style.addEventListener('change', function() {
+  $style2.innerHTML = $style.selectedOptions[0].innerHTML;
+  const fontFamily = $style.value;
+  selectNode.updateTextStyle({ fontFamily });
+});
+
+$color.addEventListener('input', function() {
+  console.log($color.value);
+});
