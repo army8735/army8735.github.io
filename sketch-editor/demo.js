@@ -53,7 +53,7 @@ async function initFonts() {
       return;
     }
     const fonts = await window.queryLocalFonts();
-    // editor.style.font.registerLocalFonts(fonts);
+    editor.style.font.registerLocalFonts(fonts);
   } catch(err) {
     console.error(err.message);
   }
@@ -325,7 +325,6 @@ $input.onchange = function(e) {
       root.on(editor.util.Event.UPDATE_CURSOR, function(x, y, h) {
         showEditText(x / dpi, y / dpi, h / dpi);
         setFontPanel(selectNode);
-        updateSelect();
       });
 
       root.setPageIndex(0);
@@ -799,7 +798,7 @@ $overlap.addEventListener('mousedown', function(e) {
             const { offsetX, offsetY } = e;
             const x = $selection.offsetLeft + offsetX;
             const y = $selection.offsetTop + offsetY;
-            const p = selectNode.getCursorByAbsCoord(x, y);
+            const p = selectNode.setCursorStartByAbsCoord(x, y);
             showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
             setFontPanel(node);
             // 防止触发click事件失焦
@@ -827,7 +826,7 @@ $overlap.addEventListener('dblclick', function(e) {
   const x = $selection.offsetLeft + offsetX;
   const y = $selection.offsetTop + offsetY;
   if (selectNode && selectNode instanceof editor.node.Text) {
-    const p = selectNode.getCursorByAbsCoord(x, y);
+    const p = selectNode.setCursorStartByAbsCoord(x, y);
     showEditText(p.x / dpi, p.y / dpi, p.h / dpi);
     setFontPanel(selectNode);
   }
@@ -840,6 +839,7 @@ function showEditText(x, y, h) {
   style.top = y + 'px';
   style.height = h + 'px';
   style.display = 'block';
+  style.opacity = 1;
   $inputText.focus();
 }
 
@@ -849,6 +849,8 @@ function updateEditText() {
     const style = $inputContainer.style;
     style.left = x / dpi + 'px';
     style.top = y / dpi + 'px';
+    style.display = 'block';
+    style.opacity = 1;
   }
 }
 
@@ -881,7 +883,7 @@ $inputText.addEventListener('keydown', (e) => {
 $inputText.addEventListener('input', (e) => {
   if (!isIme) {
     const s = e.data;
-    selectNode.inputContent(s);
+    selectNode.input(s);
     $inputText.value = '';
   }
 });
@@ -891,7 +893,7 @@ $inputText.addEventListener('compositionstart', (e) => {
 $inputText.addEventListener('compositionend', (e) => {
   isIme = false;
   const s = e.data;
-  selectNode.inputContent(s);
+  selectNode.input(s);
   $inputText.value = '';
 });
 
@@ -923,6 +925,16 @@ document.addEventListener('mouseup', function(e) {
         // 发生了拖动位置变化，结束时需转换过程中translate为布局约束（如有）
         selectNode.checkPosChange();
         if (isEditText) {
+          // 可能选区为空，展示光标
+          const multi = selectNode.checkCursorMulti();
+          if (!multi) {
+            updateEditText();
+          }
+          else {
+            $inputContainer.style.display = 'block';
+            $inputContainer.style.opacity = 0;
+          }
+          $inputText.focus();
           setFontPanel(selectNode);
         }
       }
@@ -1212,7 +1224,7 @@ function setFontPanel(node) {
     $style2.classList.remove('style-n');
     $style.disabled = !res.fontWeightList.length || res.fontFamily.length > 1;
   }
-  $color.value = editor.style.css.color2hexStr(res.color[0]);
+  $color.value = editor.style.css.color2hexStr(res.color[0]).slice(0, 7);
   if (res.color.length > 1) {
     $color2.style.display = 'block';
   }
@@ -1224,16 +1236,35 @@ function setFontPanel(node) {
 $family.addEventListener('change', function() {
   const list = editor.style.font.data[$family.value.toLowerCase()].list;
   const fontFamily = list[0].postscriptName;
-  selectNode.updateTextStyle({ fontFamily });
+  if (isEditText) {
+    if (selectNode.cursor.isMulti) {
+      selectNode.updateTextRangeStyle({ fontFamily });
+    } else {}
+  } else {
+    selectNode.updateTextStyle({ fontFamily });
+  }
   setFontPanel(selectNode);
 });
 
 $style.addEventListener('change', function() {
   $style2.innerHTML = $style.selectedOptions[0].innerHTML;
   const fontFamily = $style.value;
-  selectNode.updateTextStyle({ fontFamily });
+  if (isEditText) {
+    if (selectNode.cursor.isMulti) {
+      selectNode.updateTextRangeStyle({ fontFamily });
+    } else {}
+  } else {
+    selectNode.updateTextStyle({ fontFamily });
+  }
 });
 
 $color.addEventListener('input', function() {
-  console.log($color.value);
+  const color = $color.value;
+  if (isEditText) {
+    if (selectNode.cursor.isMulti) {
+      selectNode.updateTextRangeStyle({ color });
+    } else {}
+  } else {
+    selectNode.updateTextStyle({ color });
+  }
 });
