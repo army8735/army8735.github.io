@@ -7,6 +7,7 @@ const $main = document.querySelector('#main');
 const $canvasC = $main.querySelector('#canvasC');
 const $overlap = $main.querySelector('#overlap');
 const $hover = $main.querySelector('#hover');
+const $actual = $main.querySelector('#actual');
 const $selection = $main.querySelector('#selection');
 const $inputContainer = $main.querySelector('#input-container');
 const $inputText = $inputContainer.querySelector('input');
@@ -330,7 +331,9 @@ $input.onchange = function(e) {
         setFontPanel(selectNode);
       });
 
-      root.setPageIndex(0);
+      setTimeout(function() {
+        root.setPageIndex(json.currentPageIndex || 0);
+      }, 0)
     });
   }
 }
@@ -339,20 +342,25 @@ function genNodeTree(node, abHash) {
   let type = getNodeType(node);
   if (node instanceof editor.node.Geom || node instanceof editor.node.ShapeGroup) {
     const rect = node.rect;
-    const width = rect[2] - rect[0];
-    const height = rect[3] - rect[1];
-    let scale, x = 0, y = 0;
-    if (width >= height) {
-      scale = 14 / width;
-      y = (14 - height * scale) * 0.5;
+    let width = rect[2] - rect[0];
+    let height = rect[3] - rect[1];
+    if (!width || !height) {
+      type = `<b><svg width="14" height="14"><path d="M0,0L10,0L10,10L0,10L0,0ZM4,4L14,4L14,14L4,14,L4,4Z" fill="#D8D8D8" fill-rule="evenodd" stroke="#979797" stroke-width="1"></path></svg></b>`;
     }
     else {
-      scale = 14 / height;
-      x = (14 - width * scale) * 0.5;
+      let scale, x = 0, y = 0;
+      if(width >= height) {
+        scale = 14 / width;
+        y = (14 - height * scale) * 0.5;
+      }
+      else {
+        scale = 14 / height;
+        x = (14 - width * scale) * 0.5;
+      }
+      x -= rect[0] * scale;
+      y -= rect[1] * scale;
+      type = `<b style="transform:translate(${x}px, ${y}px) scale(${scale})">` + node.toSvg(scale) + '</b>';
     }
-    x -= rect[0] * scale;
-    y -= rect[1] * scale;
-    type = `<b style="transform:translate(${x}px, ${y}px) scale(${scale})">` + node.toSvg(scale) + '</b>';
   }
   const li = document.createElement('li');
   if (node.computedStyle.maskMode) {
@@ -553,6 +561,7 @@ function showSelect(node) {
   //   'm', selectNode.matrix.join(','), 'mw', selectNode.matrixWorld.join(','));
   updateSelect();
   $selection.classList.add('show');
+  $actual.classList.add('show');
   selectTree && selectTree.classList.remove('select');
   const li = abHash[node.props.uuid];
   li.scrollIntoView();
@@ -567,6 +576,7 @@ function showSelect(node) {
 function hideSelect() {
   if (selectNode) {
     $selection.classList.remove('show');
+    $actual.classList.remove('show');
     selectTree.classList.remove('select');
     selectNode = null;
     selectTree = null;
@@ -582,6 +592,11 @@ function updateSelect() {
     $selection.style.width = (rect.right - rect.left) / dpi + 'px';
     $selection.style.height = (rect.bottom - rect.top) / dpi + 'px';
     $selection.style.transform = 'none';
+    const rect2 = selectNode.getActualRect();
+    $actual.style.left = rect2.left / dpi + 'px';
+    $actual.style.top = rect2.top / dpi + 'px';
+    $actual.style.width = (rect2.right - rect2.left) / dpi + 'px';
+    $actual.style.height = (rect2.bottom - rect2.top) / dpi + 'px';
     if (isEditText) {
       updateEditText();
     }
