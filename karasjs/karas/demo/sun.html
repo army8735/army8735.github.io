@@ -375,8 +375,7 @@ void main() {
 
   let sun = root.ref.sun;
   sun.frameAnimate(function() {
-    sun.clearCache();
-    sun.refresh(karas.refresh.level.CACHE);
+    sun.refresh(karas.refresh.level.REPAINT);
   });
   let moon = root.ref.moon;
   let sunM = root.ref.sunM;
