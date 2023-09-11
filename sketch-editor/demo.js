@@ -242,6 +242,12 @@ $input.onchange = function(e) {
 
       resize();
       window.onresize = resize;
+      if (root) {
+        root.destroy();
+        $page.innerHTML = '';
+        root = null;
+        $canvasC.innerHTML = '';
+      }
       $canvasC.appendChild(canvas);
       root = editor.parse(json, canvas, dpi);
 
