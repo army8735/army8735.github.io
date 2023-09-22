@@ -345,7 +345,7 @@ $input.onchange = function(e) {
 
       setTimeout(function() {
         root.setPageIndex(json.currentPageIndex || 0);
-      }, 0)
+      }, 0);
     });
   }
 }
@@ -428,6 +428,9 @@ function getNodeType(node) {
   }
   else if (node instanceof editor.node.ShapeGroup) {
     type = '📐';
+  }
+  else if (node instanceof editor.node.Slice) {
+    type = '⬜';
   }
   else {
     type = '❓';
