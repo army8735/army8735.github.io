@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>死光萦绕</title>
+  <link href="style.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      background:#000000;
+      overflow:hidden;
+    }
+
+    body{
+      opacity:0.6;
+    }
+
+    #bg{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:#000;
+      opacity:0;
+    }
+
+    #test{
+      /*opacity:0.8;*/
+    }
+
+    #test, canvas{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:none;
+      box-shadow:none;
+    }
+
+    canvas{
+      /*transform:translateY(-15%);*/
+    }
+
+    #time{
+      position:absolute;
+      left:0;
+      top:80%;
+      width:100%;
+      color:#999;
+      font-size:64px;
+      font-family:Menlo;
+      text-align:center;
+      text-shadow:1px 1px 5px #000;
+    }
+  </style>
+</head>
+<body>
+<div id="test"></div>
+<pre><code class="brush:csx"></code></pre>
+<script type="text/jsx">
+  // karas.debug = 1;
+  const W = document.body.clientWidth, H = document.body.clientHeight;
+  let dom = document.querySelector('#test');
+
+  let img = <div style={{
+    position: 'absolute',
+    left: '50%',
+    top: '44%',
+    width: '80%',
+    height: '80%',
+    background: 'url(light0.webp) no-repeat center',
+    backgroundSize: 'contain',
+    filter:['brightness(90%)', 'contrast(105%)'],
+    translateX: '-50%',
+    translateY: '-50%',
+  }}/>;
+
+  function formatTime(seconds) {
+    let s = '';
+    if(seconds >= 1000 * 60 * 60) {
+      let n = parseInt(seconds / (1000 * 60 * 60));
+      s += prefix(n) + ':';
+      seconds -= n * 1000 * 60 * 60;
+    }
+    else {
+      s += '00:';
+    }
+    if(seconds >= 1000 * 60) {
+      let n = parseInt(seconds / (1000 * 60));
+      s += prefix(n) + ':';
+      seconds -= n * 1000 * 60;
+    }
+    else {
+      s += '00:';
+    }
+    if(seconds >= 1000) {
+      let n = parseInt(seconds / 1000);
+      s += prefix(n);
+    }
+    else {
+      s += '00';
+    }
+    return s;
+  }
+
+  function prefix(n) {
+    n = String(n);
+    if(n.length === 1) {
+      n = '0' + n;
+    }
+    return n;
+  }
+
+  let startTime = Date.now(), endTime = startTime + 1000 * 60 * 60 * 5;
+  let backTime = 1000 * 60 * 60;
+
+  let timer1 = <div style={{
+    position: 'absolute',
+    left: '5%',
+    bottom: '5%',
+    padding: '5 10',
+    color: '#FFF',
+    fontSize: '4vw',
+    filter: 'dropShadow(0 0 5 0 #F00)',
+  }}>游戏剩余：<span ref="free">{ formatTime(endTime - startTime) }</span></div>;
+  let timer2 = <div style={{
+    position: 'absolute',
+    right: '5%',
+    bottom: '5%',
+    padding: '5 10',
+    color: '#FFF',
+    fontSize: '4vw',
+    filter: 'dropShadow(0 0 5 0 #00F)',
+  }}>回溯剩余：<span ref="back">{ formatTime(backTime) }</span></div>;
+
+  let floorNum = <div style={{
+    position: 'absolute',
+    left: '5%',
+    top: '5%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 150,
+    height: 150,
+    background: '#00F',
+    border: '2px solid #FFF',
+    borderRadius: '50%',
+    visibility: 'hidden',
+    color: '#FFF',
+    fontSize: 60,
+    filter: 'drop-shadow(0 0 5 0 #F00)',
+  }}>1F</div>;
+
+  let particle = <div style={{
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: '100%',
+  }}/>;
+
+  let hour = 12, minute = 55, second = 0;
+  let reverseClock = <div style={{
+    position: 'absolute',
+    left: '50%',
+    top: '44%',
+    width: '50vmin',
+    height: '50vmin',
+    border: '5px solid #FFF',
+    borderRadius: '50%',
+    translateX: '-50%',
+    translateY: '-50%',
+    filter: 'drop-shadow(0 0 5 0 #063)',
+    display: 'none',
+  }}>
+    {
+      new Array(60).fill(1).map((item, i) => {
+        return <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: 0,
+          width: i % 5 ? 3 : 5,
+          height: '100%',
+          translateX: '-50%',
+          rotateZ: i * 6,
+        }}>
+          <$rect style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: i % 5 ? '3%' : '5%',
+            strokeWidth: 0,
+            fill: '#FFF',
+          }}/>
+        </div>;
+      })
+    }
+    <$circle style={{
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      width: 10,
+      height: 10,
+      fill: '#FFF',
+      translateX: '-50%',
+      translateY: '-50%',
+    }}/>
+    <div style={{
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      width: 9,
+      height: '100%',
+      translateX: '-50%',
+      rotateZ: 12,
+    }} ref="hour">
+      <$rect style={{
+        position: 'absolute',
+        left: 0,
+        top: '30%',
+        width: '100%',
+        height: '20%',
+        strokeWidth: 0,
+        fill: '#FFF',
+      }}/>
+    </div>
+    <div style={{
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      width: 5,
+      height: '100%',
+      translateX: '-50%',
+      rotateZ: 55,
+    }} ref="minute">
+      <$rect style={{
+        position: 'absolute',
+        left: 0,
+        top: '10%',
+        width: '100%',
+        height: '40%',
+        strokeWidth: 0,
+        fill: '#FFF',
+      }}/>
+    </div>
+    <div style={{
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      width: 2,
+      height: '100%',
+      translateX: '-50%',
+    }} ref="second">
+      <$rect style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '50%',
+        strokeWidth: 0,
+        fill: '#F00',
+      }}/>
+    </div>
+  </div>;
+
+  let root = karas.render(
+    <canvas width={W} height={H}>
+      { img }
+      { timer1 }
+      { timer2 }
+      { floorNum }
+      { reverseClock }
+      { particle }
+    </canvas>,
+    dom
+  );
+
+  let count = 0;
+  karas.animate.frame.onFrame(function(diff) {
+    let now = Date.now();
+    let s = formatTime((endTime - now));
+    root.ref.free.children[0].updateContent(s);
+    hour -= 0.01;
+    if(hour <= 0) {
+      hour = 360;
+    }
+    minute -= 0.1;
+    if(minute <= 0) {
+      minute = 360;
+    }
+    second -= 1;
+    if(second <= 0) {
+      second = 360;
+    }
+    root.ref.hour.updateStyle({
+      rotateZ: hour,
+    });
+    root.ref.minute.updateStyle({
+      rotateZ: minute,
+    });
+    root.ref.second.updateStyle({
+      rotateZ: second,
+    });
+    // 每段时间生成一个粒子光
+    // count += diff;
+    // if(count >= 10000) {
+    //   count = Math.floor(Math.random() * 5000);
+    //   let p = <ParticleLaunch style={{
+    //     position: 'absolute',
+    //     left: 0,
+    //     top: 0,
+    //     width: '100%',
+    //     height: '100%',
+    //   }}/>;
+    //   particle.appendChild(p);
+    // }
+  });
+
+  function floor(n = 1) {
+    floorNum.children[0].updateContent(n + 'F');
+  }
+
+  function go(step) {
+    floorNum.updateStyle({
+      visibility: 'hidden',
+    });
+    let visible = step >= 9 ? 'hidden' : 'visible';
+    timer1.updateStyle({
+      visibility: visible,
+    });
+    timer2.updateStyle({
+      visibility: visible,
+    });
+    reverseClock.updateStyle({
+      display: 'none',
+    });
+    if(step === 0) {
+      img.updateStyle({
+        backgroundImage: 'url(light0.webp)',
+        filter: null,
+      });
+    }
+    else if(step === 1 || step === 5 || step === 9) {
+      img.updateStyle({
+        backgroundImage: 'url(light1.webp)',
+        filter: ['brightness(50%)', 'contrast(140%)', 'blur(3)'],
+      });
+    }
+    else if(step === 2 ||step === 3) {
+      img.updateStyle({
+        backgroundImage: 'url(light2.jpg)',
+        filter: ['brightness(80%)', 'sepia(30%)', 'contrast(130%)', 'blur(3)'],
+      });
+    }
+    else if(step === 4) {
+      img.updateStyle({
+        backgroundImage: 'url(light4.webp)',
+        filter: ['blur(1)'],
+      });
+    }
+    else if(step === 6 || step === 7 || step === 8) {
+      img.updateStyle({
+        backgroundImage: 'url(light6.jpg)',
+        filter: ['blur(1)'],
+      });
+      floorNum.updateStyle({
+        visibility: 'visible',
+      });
+    }
+    else if(step === 10) {
+      img.updateStyle({
+        backgroundImage: 'url(light10.webp)',
+        filter: ['blur(2)'],
+      });
+    }
+    else if(step === 11) {
+      img.updateStyle({
+        backgroundImage: 'url(light11.webp)',
+        filter: ['blur(2)'],
+      });
+    }
+    else if(step === 12) {
+      img.updateStyle({
+        backgroundImage: 'url(light12.webp)',
+        filter: ['blur(2)'],
+      });
+      reverseClock.updateStyle({
+        display: 'block',
+      });
+    }
+  }
+  // go(11);
+
+  function back(n) {
+    backTime -= n * 1000 * 60;
+    backTime = Math.max(backTime, 0);
+    root.ref.back.children[0].updateContent(formatTime(backTime));
+  }
+</script>
+<script src="sea.js"></script>
+<script src="homunculus.js"></script>
+<script src="yurine.js"></script>
+<script src="../index.js"></script>
+<script src="../../karas-particle-launch/index.js"></script>
+<script>
+  seajs.config({
+    alias: {},
+    map: [function(url) {
+    }]
+  });
+  define('fs', {});
+  seajs.use(['jssc'], function(jssc) {
+    var code = document.querySelector('pre code');
+    var jsx = document.querySelector('script[type="text/jsx"]');
+    var source = jsx.textContent || jsx.text;
+    source = source.trim().replace(/\n[ ]{2}/g, '\n');
+    // var text = document.createTextNode(source);
+    // code.appendChild(text);
+    // jssc.exec();
+    var head = document.head || document.getElementsByTagName('head')[0];
+    var jsx = document.querySelectorAll('script');
+    for(var i = 0, len = jsx.length; i < len; i++) {
+      var node = jsx[i];
+      if(node.getAttribute('type') === 'text/jsx' && !node.getAttribute('yurine')) {
+        node.setAttribute('yurine', 1);
+        var code = node.textContent || node.text;
+        if(!code) {
+          continue;
+        }
+        code = yurine.parse(code);
+        var script = document.createElement('script');
+        script.async = true;
+        script.text = code;
+        head.appendChild(script);
+      }
+    }
+  });
+</script>
+</body>
+</html>
