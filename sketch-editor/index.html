@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
-  <title>sketch editor</title>
+  <title>sketch-editor</title>
   <link href="style.css" media="all" rel="stylesheet"/>
 </head>
 <body>
@@ -66,7 +66,6 @@
         }
         $canvasC.appendChild(canvas);
         root = editor.parse(json, canvas, dpi);
-        root.setPageIndex(json.currentPageIndex || 0);
 
         const listener = editor.control.initCanvasControl(root, $canvasC);
         editor.control.initTreeList(root, document.querySelector('#tree'), listener);
