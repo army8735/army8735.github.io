@@ -10,6 +10,7 @@
 <div class="wrap">
   <div class="menu">
     <input type="file" title="请选择sketch文件" id="file" accept=".sketch"/>
+    <button id="save">保存</button>
   </div>
   <div class="container">
     <div class="list">
@@ -28,6 +29,7 @@
   const $canvasC = document.querySelector('#canvasC');
   const dpi = 2;
   const $input = document.querySelector('#file');
+  let root;
   $input.onchange = function(e) {
     const file = $input.files[0];
     $input.value = null;
@@ -37,7 +39,6 @@
     reader.onload = function() {
       editor.openAndConvertSketchBuffer(reader.result).then(function(json) {
         const canvas = document.createElement('canvas');
-        let root;
 
         function resize() {
           const { clientWidth, clientHeight } = $canvasC;
@@ -72,6 +73,26 @@
       });
     }
   };
+  const $button = document.querySelector('#save');
+  $button.addEventListener('click', function(e) {
+    if (root) {
+      root.toSketchFile().then(zip => {
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          if (typeof link.download === 'string') {
+            document.body.appendChild(link);
+            link.download = (root.props.name || 'se') + '.sketch';
+            link.href = url;
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            location.replace(url);
+          }
+        })
+      });
+    }
+  });
 </script>
 </body>
 </html>
