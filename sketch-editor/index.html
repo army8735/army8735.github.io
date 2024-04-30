@@ -37,7 +37,7 @@
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
     reader.onload = function() {
-      editor.openAndConvertSketchBuffer(reader.result).then(function(json) {
+      sketchEditor.openAndConvertSketchBuffer(reader.result).then(function(json) {
         const canvas = document.createElement('canvas');
 
         function resize() {
@@ -66,10 +66,11 @@
           hideSelect();
         }
         $canvasC.appendChild(canvas);
-        root = editor.parse(json, canvas, dpi);
+        root = sketchEditor.parse(json, canvas, dpi);
 
-        const listener = editor.control.initCanvasControl(root, $canvasC);
-        editor.control.initTreeList(root, document.querySelector('#tree'), listener);
+        const listener = sketchEditor.control.initCanvasControl(root, $canvasC);
+        sketchEditor.control.initTreeList(root, document.querySelector('#tree'), listener);
+        sketchEditor.control.initPanel(root, document.querySelector('#side'), listener);
       });
     }
   };
