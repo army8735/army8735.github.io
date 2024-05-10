@@ -294,8 +294,8 @@ body {
 }
 .side .fill-panel,
 .side .stroke-panel {
-  margin: 5px;
-  padding: 0 5px 5px;
+  margin-bottom: 5px;
+  padding: 0 10px 5px;
   border-bottom: 0.5px solid #CCC;
 }
 .side .fill-panel .line,
@@ -492,6 +492,9 @@ body {
   align-items: center;
   position: relative;
 }
+.side .text-panel .ff {
+  margin-bottom: 4px;
+}
 .side .text-panel .ff select {
   flex: 1;
   margin: 0;
@@ -499,6 +502,7 @@ body {
   height: 20px;
   background: #FFF;
   border-radius: 3px;
+  font-size: 11px;
 }
 .side .text-panel .ff .multi {
   position: absolute;
@@ -514,6 +518,29 @@ body {
   color: #999;
   user-select: none;
   pointer-events: none;
+}
+.side .text-panel .num {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.side .text-panel .num > div {
+  display: flex;
+  flex-direction: column;
+  width: 54px;
+}
+.side .text-panel .num input[type=number] {
+  padding: 0 5px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  background: #F0F0F0;
+  font-size: 11px;
+}
+.side .text-panel .num span {
+  margin-top: 2px;
+  font-size: 10px;
+  text-align: center;
 }
 /*.text {*/
 /*  display: none;*/
