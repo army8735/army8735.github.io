@@ -166,13 +166,15 @@ body {
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAMAAACf4xmcAAAAD1BMVEWLi4tMaXGKioqJiYmKiop7sw+NAAAABHRSTlNAAL+ApmIP8AAAAAlwSFlzAAALEwAACxMBAJqcGAAAAK5JREFUeJzNlFEOwzAIQw32/c880SZNtbCQSZtUf79EYAOwLeHnGHwl8sDgqgSD1ZRkoORYyiUExqJ8iYHhORiADczVe1thOP2qMH6B+YSBdO9F99rwhl3x897pZMgImWk3DXPFVGGYkGN3G1hjFg1uYDa+I3l2kWEMu4Bm7/EktZfzHqQpsFvT7PwUFvrWxRvnE4f8UqwoIDmrdebucWhTv1Scmkhvfbn+ci03sBdSIAnm85J8fwAAAABJRU5ErkJggg==);
 }
 .tree .geom {
+  display: flex;
   width: 16px;
   height: 16px;
+  align-items: center;
+  justify-content: center;
 }
 .tree svg {
   display: block;
   overflow: visible;
-  transform-origin: 0 0;
 }
 .tree .visible {
   width: 16px;
@@ -233,8 +235,8 @@ body {
   display: inline-flex;
   justify-content: space-between;
   align-items: center;
-  margin-left: 5px;
-  width: 68px;
+  margin-left: 10px;
+  width: 65px;
   padding: 0 5px 0 0;
   background: #F0F0F0;
   border-radius: 3px;
@@ -255,6 +257,46 @@ body {
   border: none;
   background: transparent;
   font-size: 11px;
+}
+.side .basic-panel .fh {
+  margin-left: 10px;
+  width: 32px;
+  height: 20px;
+  background: #F0F0F0 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAZlJREFUWEfVlu2NgzAMhpNpGON6CzARoT3CRCxQ1oAZYAVyZ1RXKeTD74kKlT8IEceP39ixtTr50Sf7V58JUNf1zTn3Za39JgXpm95N06xv5IEVqKrqorW+kxPn3ArA39ZaeD/YwBhDzi8hAK31D6oCBMDRkyPn3NVXoCgKNQyDQlWAADh6ckyy+wBlWaqu6+g4IBVQAEcOlmXpQwCkAKqCGOCR+VeSmI9iqwDlBaqCGMAY4/6Sr6fSSwGgKogAfIdt2/YpAFQFEcAj+SjD17rPASAqZAG20SMAkorIAmyjlwDQGlJhHMdsSSYBQtEjAASRUyEJEIpeCiBNxihALHoEQJKMUYBY9AiARIUgQCp6FCCnQhCAm06ss+Xuge1AkrqedwB+y431dhQgpcIOwG86sdEKBUjlwg7AbzpHAsRUeAHg6KnNUtM5EiCmwgtAqvR8mP8cAV/P24HlCZArvSMB/Ov5CcClRz8lc31oKJXYzfOspmlaB5t1pGcjPn/JJryG7wl/VJfYBxWQGL5jTXYeeIdTf8/TAX4BImDPMDQ+uPIAAAAASUVORK5CYII=) no-repeat center;
+  background-size: 16px auto;
+  border-radius: 3px;
+}
+.side .basic-panel .fh.disabled {
+  opacity: 0.5;
+}
+.side .basic-panel .fh.disabled:hover {
+  transform: none;
+}
+.side .basic-panel .fh.active {
+  background-color: #F96;
+}
+.side .basic-panel .fh:hover {
+  transform: translateY(-1px);
+}
+.side .basic-panel .fv {
+  margin-left: 10px;
+  width: 32px;
+  height: 20px;
+  background: #F0F0F0 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAT5JREFUWEfFl9sNgzAMRWNmYAfGgO7FOwxGx2AHZsCVK1KlFo+EOBApH0jAPbavHQD18IKH9dVtAHVdt4iYA8C77/vWBB4VoCzLIkmSAhEbO9Na659uFAASBgASLVbhERE7AxMNgAsDQGeney1DIw7AhL/RDsMwcoOLA7gKGxAxAF9hMQATgW2srVTvzZZLGdhztI/wpQxsOXpZlvGKsBcAry+fXCGj+7QEdo2phyniEEH+7OkgqqoKJQX33nU4iKgEMSG4h/7OgtjiFNghwE0lGLXWr83j2DZhlmWKtuSapknRPvQAQZCoOcMlQZwA7IilM+INwCcYXYdk5DLAHogBcvVJMEAoiBgAA8nNt99ZecQBbBCXzokG4AoSHeCshW8F2DJsmqZqnufjSejaUr73maHG/xWi/Bn5wD0O8AHHMUswZKSw7wAAAABJRU5ErkJggg==) no-repeat center;
+  background-size: 16px auto;
+  border-radius: 3px;
+}
+.side .basic-panel .fv.disabled {
+  opacity: 0.5;
+}
+.side .basic-panel .fv.disabled:hover {
+  transform: none;
+}
+.side .basic-panel .fv.active {
+  background-color: #F96;
+}
+.side .basic-panel .fv:hover {
+  transform: translateY(-1px);
 }
 .side .opacity-panel,
 .side .round-panel {
@@ -338,15 +380,6 @@ body {
   background-size: contain;
   transform: translateY(4px);
 }
-.side .fill-panel input[type=color],
-.side .stroke-panel input[type=color] {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  font-size: 11px;
-}
 .side .fill-panel .picker,
 .side .stroke-panel .picker {
   position: relative;
@@ -365,6 +398,8 @@ body {
   top: 0;
   width: 100%;
   height: 100%;
+  cursor: default;
+  user-select: none;
 }
 .side .fill-panel .txt,
 .side .stroke-panel .txt {
@@ -545,12 +580,12 @@ body {
 .side .text-panel .wc {
   margin-bottom: 4px;
 }
-.side .text-panel .wc > div {
+.side .text-panel .wc .weight {
   flex: 1;
   display: flex;
   position: relative;
 }
-.side .text-panel .wc > div select {
+.side .text-panel .wc .weight select {
   flex: 1;
   margin: 0;
   padding: 0;
@@ -559,7 +594,7 @@ body {
   border-radius: 3px;
   font-size: 11px;
 }
-.side .text-panel .wc > div .multi {
+.side .text-panel .wc .weight .multi {
   position: absolute;
   left: 1px;
   top: 1px;
@@ -574,13 +609,28 @@ body {
   user-select: none;
   pointer-events: none;
 }
-.side .text-panel .wc input[type=color] {
-  margin-left: 10px;
+.side .text-panel .wc .color {
+  margin-left: 5px;
+}
+.side .text-panel .wc .picker {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
   width: 40px;
   height: 20px;
-  border: none;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAIAAABuYg/PAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAJKADAAQAAAABAAAAJAAAAAAJxsHGAAAAaUlEQVRIDe3QsRHAIAwEQXAz9N8NqganF8IFit7RB9xovHPvPd6/tdZ7ND7R6CTHNB3DMFJD7zBqOoZhpIbeYdR0DFsZ5zmHxy93VV2+5LPWP8sx0usdRk3HMIzU0DuMmo5hGKmhdyvjD7P7CMyQVK4bAAAAAElFTkSuQmCC) repeat left top;
+  background-size: 12px auto;
+  border: 1px solid #CCC;
   border-radius: 3px;
-  font-size: 11px;
+}
+.side .text-panel .wc .picker b {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  user-select: none;
 }
 .side .text-panel .num {
   display: flex;

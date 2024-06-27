@@ -65,7 +65,10 @@
           canvas.width = clientWidth * dpi;
           canvas.height = clientHeight * dpi;
           $canvasC.appendChild(canvas);
-          const root = sketchEditor.parse(json, canvas, dpi);
+          const root = sketchEditor.parse(json, {
+            canvas,
+            dpi,
+          });
 
           const listener = sketchEditor.control.initCanvasControl(root, $canvasC);
           root.once('refresh', () => {
