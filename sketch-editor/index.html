@@ -87,8 +87,6 @@
           $page.innerHTML = '';
           root = null;
           $canvasC.innerHTML = '';
-          hideHover();
-          hideSelect();
         }
         $canvasC.appendChild(canvas);
         root = sketchEditor.parse(json, {
@@ -97,10 +95,8 @@
         });
 
         const listener = sketchEditor.control.initCanvasControl(root, $canvasC);
-        root.once('refresh', () => {
-          sketchEditor.control.initTreeList(root, document.querySelector('#tree'), listener);
-          sketchEditor.control.initPanel(root, document.querySelector('#side'), listener);
-        });
+        sketchEditor.control.initTreeList(root, document.querySelector('#tree'), listener);
+        sketchEditor.control.initPanel(root, document.querySelector('#side'), listener);
       });
     }
   };
