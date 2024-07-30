@@ -620,15 +620,18 @@ body {
   border-radius: 3px;
   font-size: 11px;
 }
+.side .text-panel .ff select.invalid {
+  color: #F33;
+}
 .side .text-panel .ff .multi {
   position: absolute;
   left: 1px;
   top: 1px;
   right: 20px;
   padding: 0 2px;
-  height: 18px;
+  height: 20px;
   background: #FFF;
-  line-height: 18px;
+  line-height: 20px;
   border-radius: 3px;
   font-size: 11px;
   color: #999;
@@ -658,9 +661,9 @@ body {
   top: 1px;
   right: 20px;
   padding: 0 2px;
-  height: 18px;
+  height: 20px;
   background: #FFF;
-  line-height: 18px;
+  line-height: 20px;
   border-radius: 3px;
   font-size: 11px;
   color: #999;
