@@ -435,8 +435,25 @@ body {
   box-sizing: content-box;
 }
 .side .panel-title {
+  position: relative;
   margin: 0 0 2px;
   font-weight: 700;
+  line-height: 18px;
+}
+.side .panel-title .add {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACPTkDJAAAAWklEQVRYCe3UQQoAIAhEUeuYHbBzVvshUAMXfaGNZMgjNSMQQCAnMHf5OeHo4cpHhTSAAALlAu0yzqkFI94dImflAqopT45V7NGSd8v/AA0gUC4gR4MkAl8JLKW6A7xz+XhTAAAAAElFTkSuQmCC) no-repeat center;
+  background-size: contain;
+}
+.side .panel-title .add:hover {
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.side .panel-title .add:active {
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 .side .align-panel {
   margin-bottom: 5px;
@@ -1103,6 +1120,9 @@ body {
   border: 1px solid #CCC;
   border-radius: 3px;
 }
+.side .shadow-panel .picker.read-only {
+  opacity: 0.5;
+}
 .side .shadow-panel .picker b {
   position: absolute;
   left: 0;
@@ -1124,7 +1144,7 @@ body {
 }
 .side .shadow-panel input[type=number] {
   margin: 0;
-  padding: 0 5px;
+  padding: 0 0 0 5px;
   box-sizing: border-box;
   width: 38px;
   height: 20px;
@@ -1132,6 +1152,9 @@ body {
   border-radius: 3px;
   background: #F0F0F0;
   font-size: 11px;
+}
+.side .shadow-panel input[type=number]:read-only {
+  opacity: 0.5;
 }
 .side .shadow-panel .txt {
   margin-top: 2px;
