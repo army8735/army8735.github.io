@@ -455,6 +455,55 @@ body {
 .side .panel-title .add:active {
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
+.side .panel-title .del {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACPTkDJAAAA2klEQVRYCWNgGAUjPQQYSQiAUqBaQyLVXwaqaydGLRMxishQ858MPSNUC7Y0UAYMCwMahccFoLldyGbTKg0g24HMJiltLAPqBGFKAV5z6B0CGJ4ZdQA5ITAfGI7zMMKSgWEOUGwhELNikcMpxIJTBrcEOw4pkMUkWQ4yh5wQwGE/ecKjDhgNgQEPAXKyYSKO9J4CFf+NQx6rMDkO+InVJAYGkiyGmTHgUTDgDsAXBe+AwSQExNRoE4DMwgqYsYpCBJ8BKU0g5sSjhhgpkOWgiuoFMYpH1Yy8EAAAP8MVKj2tBCkAAAAASUVORK5CYII=) no-repeat center;
+  background-size: contain;
+}
+.side .panel-title .del:hover {
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.side .panel-title .del:active {
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+.side .input-unit {
+  position: relative;
+  width: 50px;
+  height: 20px;
+  background: #F0F0F0;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.side .input-unit input {
+  position: relative;
+  padding: 0 0 0 5px;
+  width: 45px;
+  height: 100%;
+  background: none;
+  border: none;
+  font-size: 11px;
+}
+.side .input-unit .unit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 2px;
+  width: 12px;
+  height: 100%;
+  background: #F0F0F0;
+  line-height: 20px;
+  text-align: center;
+  font-size: 11px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.side .input-unit:hover .unit {
+  visibility: hidden;
+}
 .side .align-panel {
   margin-bottom: 5px;
   padding: 0 10px 5px;
@@ -511,32 +560,18 @@ body {
   display: flex;
   margin-bottom: 3px;
 }
-.side .basic-panel label {
-  display: inline-flex;
-  justify-content: space-between;
-  align-items: center;
+.side .basic-panel .input-unit {
   margin-left: 10px;
-  width: 65px;
-  padding: 0 5px 0 0;
-  background: #F0F0F0;
-  border-radius: 3px;
-  font-family: Menlo, "Courier New", sans-serif;
-  font-size: 10px;
+  width: 70px;
 }
-.side .basic-panel label.disabled {
+.side .basic-panel .input-unit.disabled {
   opacity: 0.5;
 }
-.side .basic-panel label:first-child {
+.side .basic-panel .input-unit:first-child {
   margin-left: 0;
 }
-.side .basic-panel .num {
-  margin: 0;
-  padding: 0 0 0 5px;
-  width: 55px;
-  height: 20px;
-  border: none;
-  background: transparent;
-  font-size: 11px;
+.side .basic-panel .input-unit input {
+  width: 65px;
 }
 .side .basic-panel .fh {
   margin-left: 10px;
@@ -592,28 +627,7 @@ body {
 .side .opacity-panel input[type=range],
 .side .round-panel input[type=range] {
   flex: 1;
-}
-.side .opacity-panel input[type=number],
-.side .round-panel input[type=number] {
-  margin: 0 0 0 5px;
-  padding: 0 5px;
-  width: 40px;
-  height: 20px;
-  border: none;
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
-  background: #F0F0F0;
-  font-size: 11px;
-}
-.side .opacity-panel span,
-.side .round-panel span {
-  padding-right: 3px;
-  background: #F0F0F0;
-  width: 12px;
-  height: 20px;
-  line-height: 20px;
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
+  margin-right: 5px;
 }
 .side .fill-panel,
 .side .stroke-panel {
@@ -1163,6 +1177,46 @@ body {
   font-size: 10px;
   text-align: center;
   color: #333;
+}
+.side .blur-panel {
+  margin-bottom: 5px;
+  padding: 0 10px 5px;
+  border-bottom: 0.5px solid #CCC;
+}
+.side .blur-panel select {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 11px;
+}
+.side .blur-panel .con {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.side .blur-panel button {
+  display: block;
+  box-sizing: border-box;
+  margin: 5px auto 0;
+  width: 100%;
+  line-height: 18px;
+  font-size: 11px;
+  background: #FFF;
+  border: 1px solid #CCC;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.side .blur-panel button:disabled {
+  opacity: 0.5;
+}
+.side .blur-panel .intro {
+  text-indent: 4px;
+  font-size: 11px;
+}
+.side .blur-panel input[type=range] {
+  flex: 1;
+  margin-right: 5px;
 }
 @keyframes blink {
   0% {
