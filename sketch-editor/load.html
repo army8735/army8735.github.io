@@ -51,11 +51,12 @@
     location.href = '?tile=' + (tile.checked ? '1' : '') + '&debug=' + (debug.checked ? '1' : '');
   });
 
-  fetch('https://mdn.alipayobjects.com/portal_xiu8o2/afts/file/A*0wVQRbhuqc0AAAAAAAAAAAAAAQAAAQ')
-    .then((res) => {
-      return res.arrayBuffer();
-    })
-    .then((buff) => {
+  Promise.all([
+    fetch('https://mdn.alipayobjects.com/portal_xiu8o2/afts/file/A*0wVQRbhuqc0AAAAAAAAAAAAAAQAAAQ'),
+    sketchEditor.style.font.registerLocalFonts(),
+  ]).then((res) => {
+    return res[0].arrayBuffer();
+  }).then((buff) => {
       sketchEditor
         .openAndConvertSketchBuffer(buff)
         .then(json => {
