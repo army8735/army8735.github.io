@@ -39196,11 +39196,13 @@
     // 缩放影响字号
     if (scale !== 1) {
       ctx.font = textBox.font.replace(/([\d.e+-]+)px/gi, function ($0, $1) { return $1 * scale + 'px'; });
+      console.log(textBox.font, ';', ctx.font);
       // @ts-ignore
       ctx.letterSpacing = textBox.letterSpacing * scale + 'px';
     }
     else {
       ctx.font = textBox.font;
+      console.log(textBox.font, ';', ctx.font);
       // @ts-ignore
       ctx.letterSpacing = textBox.letterSpacing + 'px';
     }
