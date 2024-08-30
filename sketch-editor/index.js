@@ -17878,11 +17878,11 @@
             request_1.send();
           }
           function success(ab) {
-            var f = new FontFace(fontFamily, ab);
-            f.load()
+            var ff = new FontFace(fontFamily, ab);
+            ff.load()
               .then(function () {
                 if (typeof document !== 'undefined') {
-                  document.fonts.add(f);
+                  document.fonts.add(ff);
                 }
                 cache.state = LOADED;
                 cache.success = true;
@@ -19578,7 +19578,7 @@
     },
     registerLocalFonts: function (fonts) {
       return __awaiter(this, void 0, void 0, function () {
-        var cacheInfo, cache, i, len, font, postscriptName, family, style, o_1, o_2, blob, arrayBuffer, f, r;
+        var cacheInfo, cache, d1, i, len, font, postscriptName, family, style, ff, o_1, o_2, blob, arrayBuffer, f, r;
         var _a, _b, _c;
         return __generator(this, function (_d) {
           switch (_d.label) {
@@ -19597,6 +19597,7 @@
               if (!cacheInfo.version || cacheInfo.version < VERSION) {
                 cache = {};
               }
+              d1 = performance.now();
               i = 0, len = fonts.length;
               _d.label = 3;
             case 3:
@@ -19605,6 +19606,8 @@
               postscriptName = font.postscriptName;
               family = font.family;
               style = font.style;
+              ff = new FontFace(postscriptName, "local(".concat(postscriptName, ")"));
+              document.fonts.add(ff);
               // localStorage存的是this.info
               if (cache.hasOwnProperty(family)) {
                 o_1 = cache[family];
@@ -19653,6 +19656,7 @@
               i++;
               return [3 /*break*/, 3];
             case 8:
+              console.log(performance.now() - d1);
               this.updateLocalStorage();
               return [2 /*return*/];
           }
@@ -23611,6 +23615,7 @@
     if (/[\s.,/\\]/.test(fontFamily)) {
       fontFamily = '"' + fontFamily.replace(/"/g, '\\"') + '"';
     }
+    console.log(fontFamily);
     return (
       // (style.fontStyle || '') + ' ' +
       // (style.fontWeight || '400') + ' ' +
@@ -36550,7 +36555,7 @@
       lineBoxList.push(lineBox);
       // 布局考虑几种情况，是否自动宽和自动高，目前暂无自动宽+固定高
       var W = autoW ? Number.MAX_SAFE_INTEGER : this.width;
-      autoH ? Number.MAX_SAFE_INTEGER : this.height;
+      // const H = autoH ? Number.MAX_SAFE_INTEGER : this.height;
       while (i < length) {
         var setFontIndex = SET_FONT_INDEX[i];
         // 每串富文本重置font测量
