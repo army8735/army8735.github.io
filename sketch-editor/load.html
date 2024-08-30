@@ -51,6 +51,8 @@
     location.href = '?tile=' + (tile.checked ? '1' : '') + '&debug=' + (debug.checked ? '1' : '');
   });
 
+  sketchEditor.config.MAX_TEXTURE_SIZE = 4096;
+
   Promise.all([
     fetch('https://mdn.alipayobjects.com/portal_xiu8o2/afts/file/A*0wVQRbhuqc0AAAAAAAAAAAAAAQAAAQ'),
     sketchEditor.style.font.registerLocalFonts(),

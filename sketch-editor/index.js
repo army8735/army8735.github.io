@@ -19592,7 +19592,6 @@
               cacheInfo = {};
               if (typeof localStorage !== 'undefined') {
                 cacheInfo = JSON.parse(localStorage.getItem(KEY_INFO$1) || '{}');
-                console.log('cacheInfo', cacheInfo);
               }
               cache = cacheInfo.data || {};
               if (!cacheInfo.version || cacheInfo.version < VERSION) {
@@ -23606,20 +23605,16 @@
     ];
   }
   function setFontStyle(style) {
-    var fontSize = style.fontSize || 0;
+    var fontSize = style.fontSize || 16;
     var fontFamily = style.fontFamily || inject.defaultFontFamily;
     // fontFamily += ',' + 'pingfangsc-regular';
     if (/[\s.,/\\]/.test(fontFamily)) {
       fontFamily = '"' + fontFamily.replace(/"/g, '\\"') + '"';
     }
-    return ((style.fontStyle || '') +
-      ' ' +
-      (style.fontWeight || '400') +
-      ' ' +
-      fontSize +
-      'px/' +
-      fontSize +
-      'px ' +
+    return (
+      // (style.fontStyle || '') + ' ' +
+      // (style.fontWeight || '400') + ' ' +
+      fontSize + 'px ' +
       fontFamily);
   }
   function calFontFamily(fontFamily) {
@@ -38608,7 +38603,6 @@
     };
     // 传入location/length，修改范围内的Rich的样式，一般来源是TextPanel中改如颜色
     Text.prototype.updateRichStyle = function (style) {
-      console.log('updateRichStyle', style);
       var payload = this.beforeEdit();
       var location = style.location, length = style.length;
       var lv = RefreshLevel.NONE;
@@ -39196,13 +39190,11 @@
     // 缩放影响字号
     if (scale !== 1) {
       ctx.font = textBox.font.replace(/([\d.e+-]+)px/gi, function ($0, $1) { return $1 * scale + 'px'; });
-      console.log(textBox.font, ';', ctx.font);
       // @ts-ignore
       ctx.letterSpacing = textBox.letterSpacing * scale + 'px';
     }
     else {
       ctx.font = textBox.font;
-      console.log(textBox.font, ';', ctx.font);
       // @ts-ignore
       ctx.letterSpacing = textBox.letterSpacing + 'px';
     }
@@ -39872,7 +39864,9 @@
         var parent_1 = node2.parent;
         var m = multiply(parent_1.tempMatrix, node2.matrix);
         assignMatrix(node2.tempMatrix, m);
-        var b = (target === null || target === void 0 ? void 0 : target.bbox) || node2._filterBbox2 || node2.filterBbox2;
+        // 合并不能用textureCache，因为如果有shadow的话bbox不正确
+        var b = (target && target !== node2.textureCache[scaleIndex]) ?
+          target.bbox : (node2._filterBbox2 || node2.filterBbox2);
         // 防止空
         if (b[2] - b[0] && b[3] - b[1]) {
           mergeBbox(res, b, m);
@@ -39974,7 +39968,6 @@
       for (var j = 0, len2 = Math.ceil(w2 / UNIT); j < len2; j++) {
         var width = j === len2 - 1 ? (w2 - j * UNIT) : UNIT;
         var height = i === len - 1 ? (h2 - i * UNIT) : UNIT;
-        var t = createTexture(gl, 0, undefined, width, height);
         var x0 = x + j * UNIT / scale, y0 = y + i * UNIT / scale;
         var w0 = width / scale, h0 = height / scale;
         var bbox_1 = new Float64Array([
@@ -39983,15 +39976,9 @@
           x0 + w0,
           y0 + h0,
         ]);
-        list.push({
-          bbox: bbox_1,
-          w: width,
-          h: height,
-          t: t,
-        });
-        // checkInRect用
+        // checkInRect用，同时真实渲染时才创建纹理，防止空白区域浪费显存，最后过滤
         var x1 = x2 + j * UNIT, y1 = y2 + i * UNIT;
-        listRect.push({ x: x1, y: y1 });
+        listRect.push({ x: x1, y: y1, w: width, h: height, bbox: bbox_1 });
       }
     }
     // 再外循环按节点序，内循环按分块，确保节点序内容先渲染，从而正确生成分块的bgBlur
@@ -40032,32 +40019,55 @@
         var mixBlendMode = computedStyle.mixBlendMode, blur_2 = computedStyle.blur;
         // 同主循环的bgBlur，先提取总的outline，在分块渲染时每块单独对背景blur
         if (isBgBlur && i > index) {
-          var outline = node.textureOutline[scale] = genOutline(gl, node2, structs, i, total2, target2.bbox, scale);
+          var outline = node2.textureOutline[scale] = genOutline(gl, node2, structs, i, total2, target2.bbox, scale);
           // outline会覆盖这个值，恶心
           assignMatrix(node2.tempMatrix, matrix);
+          list.splice(0);
+          listRect.forEach(function (item) {
+            if (item.t) {
+              var st = {
+                bbox: item.bbox,
+                w: item.w,
+                h: item.h,
+                t: item.t,
+              };
+              item.ref = st; // 生成blur可能会被删除，需要还原回来
+              list.push(st);
+            }
+          });
           genBgBlur(gl, root, res, matrix, outline, blur_2, programs, scale, w, h);
+          listRect.forEach(function (item) {
+            if (item.ref) {
+              item.t = item.ref.t;
+              item.ref = undefined;
+            }
+          });
+          list.splice(0);
           if (frameBuffer) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
           }
         }
         var list2 = target2.list;
         // 内循环目标分块
-        for (var j = 0, len_3 = list.length; j < len_3; j++) {
-          var area = list[j];
+        for (var j = 0, len_3 = listRect.length; j < len_3; j++) {
           var rect = listRect[j];
-          var w_1 = area.w, h_1 = area.h, t = area.t;
-          if (frameBuffer) {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
-            gl.viewport(0, 0, w_1, h_1);
-          }
-          else {
-            frameBuffer = genFrameBufferWithTexture(gl, t, w_1, h_1);
-          }
+          var x_1 = rect.x, y_1 = rect.y, w_1 = rect.w, h_1 = rect.h;
+          var t = rect.t;
           var cx = w_1 * 0.5, cy = h_1 * 0.5;
           // 再循环当前target的分块
           for (var k = 0, len_4 = list2.length; k < len_4; k++) {
             var _d = list2[k], bbox2 = _d.bbox, t2 = _d.t;
-            if (checkInRect(bbox2, matrix, rect.x, rect.y, w_1, h_1)) {
+            if (checkInRect(bbox2, matrix, x_1, y_1, w_1, h_1)) {
+              if (!t) {
+                t = rect.t = createTexture(gl, 0, undefined, w_1, h_1);
+              }
+              if (frameBuffer) {
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+                gl.viewport(0, 0, w_1, h_1);
+              }
+              else {
+                frameBuffer = genFrameBufferWithTexture(gl, t, w_1, h_1);
+              }
               var tex = void 0;
               // 有mbm先将本节点内容绘制到同尺寸纹理上
               if (mixBlendMode !== MIX_BLEND_MODE.NORMAL && i > index) {
@@ -40075,7 +40085,7 @@
               ], -rect.x, -rect.y, false, -1, -1, 1, 1);
               // 这里才是真正生成mbm
               if (mixBlendMode !== MIX_BLEND_MODE.NORMAL && tex) {
-                area.t = genMbm(gl, t, tex, mixBlendMode, programs, w_1, h_1);
+                rect.t = genMbm(gl, t, tex, mixBlendMode, programs, w_1, h_1);
               }
             }
           }
@@ -40093,7 +40103,20 @@
       }
     }
     // 删除fbo恢复
-    releaseFrameBuffer(gl, frameBuffer, W, H);
+    if (frameBuffer) {
+      releaseFrameBuffer(gl, frameBuffer, W, H);
+    }
+    // 赋给结果，这样可能存在的空白区域无纹理
+    listRect.forEach(function (item) {
+      if (item.t) {
+        list.push({
+          bbox: item.bbox,
+          w: item.w,
+          h: item.h,
+          t: item.t,
+        });
+      }
+    });
     return res;
   }
   function genFrameBufferWithTexture(gl, texture, width, height) {
@@ -40839,6 +40862,7 @@
     var bboxS = textureTarget.bbox;
     var bboxR2 = bboxS.slice(0);
     var sb = [0, 0, 0, 0];
+    var sbList = [];
     var data = [];
     for (var i = 0, len = shadow.length; i < len; i++) {
       var item = shadow[i];
@@ -40847,10 +40871,15 @@
       data.push(spread);
       // 除了模糊增量还需考虑偏移增量
       if (item.x || item.y || spread) {
-        sb[0] = Math.min(sb[0], item.x - spread);
-        sb[1] = Math.min(sb[1], item.y - spread);
-        sb[2] = Math.max(sb[2], item.x + spread);
-        sb[3] = Math.max(sb[3], item.y + spread);
+        var x1 = item.x - spread;
+        var y1 = item.y - spread;
+        var x2 = item.x + spread;
+        var y2 = item.y + spread;
+        sbList.push([x1, y1, x2 + (bboxS[2] - bboxS[0]), y2 + (bboxS[3] - bboxS[1])]);
+        sb[0] = Math.min(sb[0], x1);
+        sb[1] = Math.min(sb[1], y1);
+        sb[2] = Math.max(sb[2], x2);
+        sb[3] = Math.max(sb[3], y2);
       }
     }
     bboxR2[0] += sb[0];
@@ -40871,15 +40900,28 @@
       for (var j = 0, len2 = Math.ceil(w2 / UNIT); j < len2; j++) {
         var width = j === len2 - 1 ? (w2 - j * UNIT) : UNIT;
         var height = i === len - 1 ? (h2 - i * UNIT) : UNIT;
-        var t = createTexture(gl, 0, undefined, width, height);
         var x0 = x + j * UNIT / scale, y0 = y + i * UNIT / scale;
         var w0 = width / scale, h0 = height / scale;
+        // 可能shadow和原图位置差非常远，中间出现空白无内容，无需生成纹理
+        var isEmpty = true;
+        for (var k = 0, len_10 = sbList.length; k < len_10; k++) {
+          var sb_1 = sbList[k];
+          if (isRectsOverlap$1(bboxS[0], bboxS[1], bboxS[2], bboxS[3], x0, y0, x0 + w0, y0 + h0)
+            || isRectsOverlap$1(sb_1[0], sb_1[1], sb_1[2], sb_1[3], x0, y0, x0 + w0, y0 + h0)) {
+            isEmpty = false;
+            break;
+          }
+        }
+        if (isEmpty) {
+          continue;
+        }
         var bbox = new Float64Array([
           x0,
           y0,
           x0 + w0,
           y0 + h0,
         ]);
+        var t = createTexture(gl, 0, undefined, width, height);
         listR2.push({
           bbox: bbox,
           w: width,
@@ -40904,7 +40946,7 @@
       bboxR[2] += spread;
       bboxR[3] += spread;
       // 写到一个扩展好尺寸的tex中方便后续处理
-      var x_1 = bboxR[0], y_1 = bboxR[1];
+      var x_2 = bboxR[0], y_2 = bboxR[1];
       var w_10 = bboxR[2] - bboxR[0], h_10 = bboxR[3] - bboxR[1];
       // const x2 = x * scale,
       //   y2 = y * scale;
@@ -40912,12 +40954,12 @@
       var temp = TextureCache.getEmptyInstance(gl, bboxR);
       var listT = temp.list;
       // 由于存在扩展，原本的位置全部偏移，需要重算
-      var frameBuffer_1 = drawInSpreadBbox(gl, program, textureTarget, temp, x_1, y_1, scale, w2_5, h2_5);
+      var frameBuffer_1 = drawInSpreadBbox(gl, program, textureTarget, temp, x_2, y_2, scale, w2_5, h2_5);
       var res = TextureCache.getEmptyInstance(gl, bboxR);
       var listR = res.list;
       gl.useProgram(dropShadowProgram);
       // 使用这个尺寸的纹理，遍历shadow，仅生成shadow部分
-      for (var i_4 = 0, len_10 = listT.length; i_4 < len_10; i_4++) {
+      for (var i_4 = 0, len_11 = listT.length; i_4 < len_11; i_4++) {
         var _b = listT[i_4], bbox = _b.bbox, w_11 = _b.w, h_11 = _b.h, t = _b.t;
         gl.viewport(0, 0, w_11, h_11);
         var b = bbox.slice(0);
@@ -40940,12 +40982,14 @@
       if (blur_3) {
         var sigma = blur_3 * 0.5;
         var d = kernelSize(sigma);
+        var sigma2 = sigma * scale;
+        var d2 = kernelSize(sigma2);
         var spread_1 = outerSizeByD(d);
-        var programGauss = genGaussShader(gl, programs, sigma * scale, kernelSize(sigma * scale));
+        var programGauss = genGaussShader(gl, programs, sigma2, d2);
         gl.useProgram(programGauss);
         var temp_1 = TextureCache.getEmptyInstance(gl, bboxR);
         var listT_1 = temp_1.list;
-        for (var i_5 = 0, len_11 = listR.length; i_5 < len_11; i_5++) {
+        for (var i_5 = 0, len_12 = listR.length; i_5 < len_12; i_5++) {
           var _c = listR[i_5], bbox = _c.bbox, w_12 = _c.w, h_12 = _c.h, t = _c.t;
           gl.viewport(0, 0, w_12, h_12);
           var tex = drawGauss(gl, programGauss, t, w_12, h_12);
@@ -40957,8 +41001,8 @@
           });
         }
         if (listR.length > 1) {
-          var listO = createInOverlay(gl, temp_1, x_1, y_1, w_10, h_10, scale, spread_1);
-          for (var i_6 = 0, len_12 = listO.length; i_6 < len_12; i_6++) {
+          var listO = createInOverlay(gl, temp_1, x_2, y_2, w_10, h_10, scale, spread_1);
+          for (var i_6 = 0, len_13 = listO.length; i_6 < len_13; i_6++) {
             var item = listO[i_6];
             var bbox = item.bbox, w_13 = item.w, h_13 = item.h, t = item.t;
             gl.useProgram(program);
@@ -40967,7 +41011,7 @@
             var cx = w_13 * 0.5, cy = h_13 * 0.5;
             var hasDraw = false;
             // 用temp而非原始的，因为位图存在缩放，bbox会有误差
-            for (var j = 0, len_13 = listR.length; j < len_13; j++) {
+            for (var j = 0, len_14 = listR.length; j < len_14; j++) {
               var _d = listR[j], bbox2 = _d.bbox, w2_6 = _d.w, h2_6 = _d.h, t2 = _d.t;
               if (checkInRect(bbox, undefined, bbox2[0], bbox2[1], w2_6, h2_6)) {
                 drawTextureCache(gl, cx, cy, program, [
@@ -40994,12 +41038,12 @@
       }
       gl.useProgram(program);
       // 将这个shadow汇入最终结果上，要考虑偏移
-      for (var i_7 = 0, len_14 = listR2.length; i_7 < len_14; i_7++) {
+      for (var i_7 = 0, len_15 = listR2.length; i_7 < len_15; i_7++) {
         var _e = listR2[i_7], bbox = _e.bbox, w_14 = _e.w, h_14 = _e.h, t = _e.t;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
         gl.viewport(0, 0, w_14, h_14);
         var cx = w_14 * 0.5, cy = h_14 * 0.5;
-        for (var j = 0, len_15 = listR.length; j < len_15; j++) {
+        for (var j = 0, len_16 = listR.length; j < len_16; j++) {
           var _f = listR[j], bbox2 = _f.bbox, w2_7 = _f.w, h2_7 = _f.h, t2 = _f.t;
           if (checkInRect(bbox, undefined, bbox2[0], bbox2[1], w2_7, h2_7)) {
             drawTextureCache(gl, cx, cy, program, [
@@ -41015,7 +41059,9 @@
       }
       // 删除fbo恢复
       res.release();
-      releaseFrameBuffer(gl, frameBuffer_1, W, H);
+      if (frameBuffer_1) {
+        releaseFrameBuffer(gl, frameBuffer_1, W, H);
+      }
     }
     // 将原本的图层绘到最上方
     var frameBuffer;
@@ -41030,7 +41076,7 @@
         frameBuffer = genFrameBufferWithTexture(gl, t, w_15, h_15);
       }
       var cx = w_15 * 0.5, cy = h_15 * 0.5;
-      for (var j = 0, len_16 = listS.length; j < len_16; j++) {
+      for (var j = 0, len_17 = listS.length; j < len_17; j++) {
         var _h = listS[j], bbox2 = _h.bbox, w2_8 = _h.w, h2_8 = _h.h, t2 = _h.t;
         if (checkInRect(bbox, undefined, bbox2[0], bbox2[1], w2_8, h2_8)) {
           drawTextureCache(gl, cx, cy, program, [
@@ -41044,7 +41090,9 @@
         }
       }
     }
-    releaseFrameBuffer(gl, frameBuffer, W, H);
+    if (frameBuffer) {
+      releaseFrameBuffer(gl, frameBuffer, W, H);
+    }
     return res2;
   }
   function genMask(gl, root, node, maskMode, structs, index, lv, total, W, H, scale, scaleIndex) {
@@ -41122,7 +41170,7 @@
         }
         // 后续兄弟节点遍历
         var isFirst = !i && !j;
-        for (var i_8 = index + total + 1, len_17 = structs.length; i_8 < len_17; i_8++) {
+        for (var i_8 = index + total + 1, len_18 = structs.length; i_8 < len_18; i_8++) {
           var _b = structs[i_8], node2 = _b.node, lv2 = _b.lv, total2 = _b.total, next2 = _b.next;
           var computedStyle_1 = node2.computedStyle;
           // mask只会影响next同层级以及其子节点，跳出后实现（比如group结束）
@@ -41130,7 +41178,7 @@
             node.struct.next = i_8 - index - total - 1;
             break;
           }
-          else if (i_8 === len_17 || (computedStyle_1.breakMask && lv === lv2)) {
+          else if (i_8 === len_18 || (computedStyle_1.breakMask && lv === lv2)) {
             node.struct.next = i_8 - index - total - 1;
             break;
           }
@@ -41378,7 +41426,7 @@
       else {
         frameBuffer = genFrameBufferWithTexture(gl, tex, w, h);
       }
-      for (var j = 0, len_18 = listO.length; j < len_18; j++) {
+      for (var j = 0, len_19 = listO.length; j < len_19; j++) {
         var _b = listO[j], bbox2 = _b.bbox, t2 = _b.t;
         if (checkInRect(bbox2, matrix, bbox[0] * scale, bbox[1] * scale, (bbox[2] - bbox[0]) * scale, (bbox[3] - bbox[1]) * scale)) {
           drawTextureCache(gl, cx, cy, program, [
@@ -41466,7 +41514,7 @@
       listO3.push(tex);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
       gl.viewport(0, 0, w, h);
-      for (var j = 0, len_19 = listO.length; j < len_19; j++) {
+      for (var j = 0, len_20 = listO.length; j < len_20; j++) {
         var _d = listO[j], bbox2 = _d.bbox, t2 = _d.t;
         if (checkInRect(bbox2, matrix, bbox[0] * scale, bbox[1] * scale, (bbox[2] - bbox[0]) * scale, (bbox[3] - bbox[1]) * scale)) {
           drawTextureCache(gl, cx, cy, program, [
@@ -41535,7 +41583,7 @@
       var _e = listT[i], bbox = _e.bbox, w = _e.w, h = _e.h, t = _e.t;
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
       gl.viewport(0, 0, w, h);
-      for (var j = 0, len_20 = listB.length; j < len_20; j++) {
+      for (var j = 0, len_21 = listB.length; j < len_21; j++) {
         var _f = listB[j], bbox2 = _f.bbox, t2 = _f.t;
         if (checkInRect(bbox2, undefined, bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1])) {
           drawTextureCache(gl, w * 0.5, h * 0.5, program, [
@@ -41573,12 +41621,12 @@
     canvasCache.available = true;
     var list = canvasCache.list;
     var _loop_1 = function (i, len) {
-      var _b = list[i], x_2 = _b.x, y_2 = _b.y, ctx = _b.os.ctx;
-      var dx2 = -x_2;
-      var dy2 = -y_2;
+      var _b = list[i], x_3 = _b.x, y_3 = _b.y, ctx = _b.os.ctx;
+      var dx2 = -x_3;
+      var dy2 = -y_3;
       ctx.fillStyle = '#FFF';
       // 这里循环收集这个作为轮廓mask的节点的所有轮廓，用普通canvas模式填充白色到内容区域
-      for (var i_9 = index, len_21 = index + total + 1; i_9 < len_21; i_9++) {
+      for (var i_9 = index, len_22 = index + total + 1; i_9 < len_22; i_9++) {
         var _c = structs[i_9], node_1 = _c.node, total_1 = _c.total, next = _c.next;
         var matrix = void 0;
         if (i_9 === index) {
@@ -41615,14 +41663,14 @@
         // 文本忽略透明度渲染
         else if (node_1 instanceof Text) {
           var lineBoxList = node_1.lineBoxList;
-          for (var i_10 = 0, len_22 = lineBoxList.length; i_10 < len_22; i_10++) {
+          for (var i_10 = 0, len_23 = lineBoxList.length; i_10 < len_23; i_10++) {
             var lineBox = lineBoxList[i_10];
             if (lineBox.y >= h) {
               break;
             }
             var list_1 = lineBox.list;
-            var len_23 = list_1.length;
-            for (var i_11 = 0; i_11 < len_23; i_11++) {
+            var len_24 = list_1.length;
+            for (var i_11 = 0; i_11 < len_24; i_11++) {
               var textBox = list_1[i_11];
               Text.setFontAndLetterSpacing(ctx, textBox, scale);
               ctx.fillText(textBox.str, textBox.x * scale + dx2, (textBox.y + textBox.baseline) * scale + dy2);
@@ -48368,7 +48416,7 @@
   var html$2 = "\n  <div class=\"panel-title\">\u9634\u5F71<b class=\"btn del\"></b><b class=\"btn add\"></b></div>\n";
   function renderItem(index, multiEnable, enable, multiColor, color, multiX, x, multiY, y, multiBlur, blur, multiSpread, spread) {
     var readOnly = (multiEnable || !enable) ? 'readonly="readonly"' : '';
-    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"pick ").concat(multiColor ? 'multi' : '', "\" style=\"").concat(multiColor ? '' : "background:".concat(color), "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">\u989C\u8272</span>\n    </div>\n    <div>\n      <input class=\"x\" type=\"number\" step=\"1\" value=\"").concat(multiX ? '' : x, "\" placeholder=\"").concat(multiX ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">X</span>\n    </div>\n    <div>\n      <input class=\"y\" type=\"number\" step=\"1\" value=\"").concat(multiY ? '' : y, "\" placeholder=\"").concat(multiY ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">Y</span>\n    </div>\n    <div>\n      <input class=\"blur\" type=\"number\" min=\"0\" step=\"1\" value=\"").concat(multiBlur ? '' : blur, "\" placeholder=\"").concat(multiBlur ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">\u6A21\u7CCA</span>\n    </div>\n    <div>\n      <input class=\"spread\" type=\"number\" min=\"0\" step=\"1\" value=\"").concat(multiSpread ? '' : spread, "\" placeholder=\"").concat(multiSpread ? '多个' : '', "\" readonly=\"readonly\"/>\n      <span class=\"txt\">\u6269\u5C55</span>\n    </div>\n  </div>");
+    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"pick ").concat(multiColor ? 'multi' : '', "\" style=\"").concat(multiColor ? '' : "background:".concat(color), "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">\u989C\u8272</span>\n    </div>\n    <div>\n      <input class=\"x\" type=\"number\" min=\"-500000\" max=\"500000\" step=\"1\" value=\"").concat(multiX ? '' : x, "\" placeholder=\"").concat(multiX ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">X</span>\n    </div>\n    <div>\n      <input class=\"y\" type=\"number\" min=\"-500000\" max=\"500000\" step=\"1\" value=\"").concat(multiY ? '' : y, "\" placeholder=\"").concat(multiY ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">Y</span>\n    </div>\n    <div>\n      <input class=\"blur\" type=\"number\" min=\"0\" max=\"50\" step=\"1\" value=\"").concat(multiBlur ? '' : blur, "\" placeholder=\"").concat(multiBlur ? '多个' : '', "\" ").concat(readOnly, "/>\n      <span class=\"txt\">\u6A21\u7CCA</span>\n    </div>\n  </div>");
   }
   var ShadowPanel = /** @class */ (function (_super) {
     __extends(ShadowPanel, _super);
@@ -48747,7 +48795,7 @@
             spread.push(data.spread);
           }
         });
-        panel.innerHTML += renderItem(i, shadowEnable.length > 1, shadowEnable[0], color.length > 1, color[0], x.length > 1, x[0], y.length > 1, y[0], blur_1.length > 1, blur_1[0], spread.length > 1, spread[0]);
+        panel.innerHTML += renderItem(i, shadowEnable.length > 1, shadowEnable[0], color.length > 1, color[0], x.length > 1, x[0], y.length > 1, y[0], blur_1.length > 1, blur_1[0]);
         if (shadowEnable.length === 1 && !shadowEnable[0]) {
           showDel = true;
         }
@@ -49532,7 +49580,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.4.11";
+  var version = "0.4.13";
 
   var gl = {
     ca: ca,
