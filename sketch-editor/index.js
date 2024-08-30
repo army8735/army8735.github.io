@@ -17914,10 +17914,16 @@
         load(fontFamily, url, cache);
       }
     },
-    loadArrayBufferFont: function (postscriptName, ab) {
+    addArrayBufferFont: function (postscriptName, ab) {
       if (typeof document !== 'undefined' && typeof FontFace !== 'undefined') {
-        var f = new FontFace(postscriptName, ab);
-        document.fonts.add(f);
+        var ff = new FontFace(postscriptName, ab);
+        document.fonts.add(ff);
+      }
+    },
+    addLocalFont: function (postscriptName) {
+      if (typeof document !== 'undefined' && typeof FontFace !== 'undefined') {
+        var ff = new FontFace(postscriptName, "local(".concat(postscriptName));
+        document.fonts.add(ff);
       }
     },
     IMG: IMG,
@@ -19578,7 +19584,7 @@
     },
     registerLocalFonts: function (fonts) {
       return __awaiter(this, void 0, void 0, function () {
-        var cacheInfo, cache, d1, i, len, font, postscriptName, family, style, ff, o_1, o_2, blob, arrayBuffer, f, r;
+        var cacheInfo, cache, i, len, font, postscriptName, family, style, o_1, o_2, blob, arrayBuffer, f, r;
         var _a, _b, _c;
         return __generator(this, function (_d) {
           switch (_d.label) {
@@ -19597,7 +19603,6 @@
               if (!cacheInfo.version || cacheInfo.version < VERSION) {
                 cache = {};
               }
-              d1 = performance.now();
               i = 0, len = fonts.length;
               _d.label = 3;
             case 3:
@@ -19606,8 +19611,7 @@
               postscriptName = font.postscriptName;
               family = font.family;
               style = font.style;
-              ff = new FontFace(postscriptName, "local(".concat(postscriptName, ")"));
-              document.fonts.add(ff);
+              inject.addLocalFont(postscriptName); // windows上需要注册
               // localStorage存的是this.info
               if (cache.hasOwnProperty(family)) {
                 o_1 = cache[family];
@@ -19656,7 +19660,6 @@
               i++;
               return [3 /*break*/, 3];
             case 8:
-              console.log(performance.now() - d1);
               this.updateLocalStorage();
               return [2 /*return*/];
           }
@@ -19692,7 +19695,7 @@
         info[family] = o;
       }
       this._register(family, style, postscriptName, true);
-      inject.loadArrayBufferFont(postscriptName, ab);
+      inject.addArrayBufferFont(postscriptName, ab);
     },
     _cal: function (family, f) {
       var spread = 0;
@@ -23615,7 +23618,6 @@
     if (/[\s.,/\\]/.test(fontFamily)) {
       fontFamily = '"' + fontFamily.replace(/"/g, '\\"') + '"';
     }
-    console.log(fontFamily);
     return (
       // (style.fontStyle || '') + ' ' +
       // (style.fontWeight || '400') + ' ' +
