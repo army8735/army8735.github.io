@@ -17767,6 +17767,7 @@
       }
     },
     defaultFontFamily: 'Arial',
+    defaultFontSize: 16,
     getFontCanvas: function () {
       return inject.getOffscreenCanvas(16, 16, '__$$CHECK_SUPPORT_FONT_FAMILY$$__', { willReadFrequently: true });
     },
@@ -19666,8 +19667,9 @@
         });
       });
     },
-    registerAb: function (ab) {
+    registerAb: function (ab, focus) {
       var _a, _b, _c, _d, _e, _f, _g, _h;
+      if (focus === void 0) { focus = false; }
       var o = {};
       var f = opentype.parse(ab);
       if (f && f.name) {
@@ -19685,7 +19687,7 @@
       if (!family || !style || !postscriptName) {
         return;
       }
-      if (this.hasRegister(postscriptName)) {
+      if (this.hasRegister(postscriptName) && !focus) {
         return;
       }
       if (!info.hasOwnProperty(family)) {
@@ -22814,9 +22816,9 @@
     }
     var fontSize = style.fontSize;
     if (!isNil(fontSize)) {
-      var n = calUnit(fontSize || 16, true);
+      var n = calUnit(fontSize || inject.defaultFontSize, true);
       if (n.v <= 0) {
-        n.v = 16;
+        n.v = inject.defaultFontSize;
       }
       res.fontSize = n;
     }
@@ -23612,7 +23614,7 @@
     ];
   }
   function setFontStyle(style) {
-    var fontSize = style.fontSize || 16;
+    var fontSize = style.fontSize || inject.defaultFontSize;
     var fontFamily = style.fontFamily || inject.defaultFontFamily;
     // fontFamily += ',' + 'pingfangsc-regular';
     if (/[\s.,/\\]/.test(fontFamily)) {
@@ -23953,9 +23955,9 @@
   function convertItem(layer, index, opt, w, h) {
     return __awaiter(this, void 0, void 0, function () {
       var width, height, translateX, translateY, visible, opacity, rotateZ, scaleX, scaleY, w_1, h_1, dw, dh, isLocked, isExpanded, constrainProportions, children, i, len, res, hasBackgroundColor, backgroundColor, symbolId, includeBackgroundColorInInstance, resizingConstraint, left, top, right, bottom, maskMode, hasClippingMask, clippingMaskMode, breakMask, blur, b, type, center, p, hueRotate, saturate, brightness, contrast, colorControls, blend, mixBlendMode, shadow, shadowEnable, innerShadow, innerShadowEnable, shadows, innerShadows, _a, fill, fillEnable, fillOpacity, children, i, len, res, _b, fill, fillEnable, fillOpacity, src, md5, _c, fill, fillEnable, fillOpacity, fillMode, stroke, strokeEnable, strokeWidth, strokePosition, strokeMode, strokeDasharray, strokeLinecap, strokeLinejoin, strokeMiterlimit, tb, _d, string, attributes, rich, MSAttributedStringFontAttribute, fontSize, fontFamily, paragraphStyle, alignment, lineHeight, _e, _f, underlineStyle, _g, strikethroughStyle, _h, letterSpacing, MSAttributedStringColorAttribute, textAlign, verticalAlignment, textVerticalAlign, textDecoration, paragraphSpacing, color, _j, fill, fillEnable, fillOpacity, fillMode, stroke, strokeEnable, strokeWidth, strokePosition, strokeMode, strokeDasharray, strokeLinecap, strokeLinejoin, strokeMiterlimit, styleId, points, _k, fill, fillEnable, fillOpacity, fillMode, fillRule, stroke, strokeEnable, strokeWidth, strokePosition, strokeMode, strokeDasharray, strokeLinecap, strokeLinejoin, strokeMiterlimit, styleId, pointRadiusBehaviour, _l, fill, fillEnable, fillOpacity, fillMode, fillRule, stroke, strokeEnable, strokeWidth, strokePosition, strokeMode, strokeDasharray, strokeLinecap, strokeLinejoin, strokeMiterlimit, styleId, children, i, len, res;
-      var _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7;
-      return __generator(this, function (_8) {
-        switch (_8.label) {
+      var _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
+      return __generator(this, function (_13) {
+        switch (_13.label) {
           case 0:
             width = layer.frame.width || 0.5;
             height = layer.frame.height || 0.5;
@@ -24000,16 +24002,16 @@
               || layer._class === FileFormat.ClassValue.SymbolMaster)) return [3 /*break*/, 5];
             children = [];
             i = 0, len = layer.layers.length;
-            _8.label = 1;
+            _13.label = 1;
           case 1:
             if (!(i < len)) return [3 /*break*/, 4];
             return [4 /*yield*/, convertItem(layer.layers[i], (i + 1) / (len + 1), opt, width, height)];
           case 2:
-            res = _8.sent();
+            res = _13.sent();
             if (res) {
               children.push(res);
             }
-            _8.label = 3;
+            _13.label = 3;
           case 3:
             i++;
             return [3 /*break*/, 1];
@@ -24269,7 +24271,7 @@
             if (!(layer._class === FileFormat.ClassValue.SymbolInstance)) return [3 /*break*/, 7];
             return [4 /*yield*/, geomStyle(layer, opt)];
           case 6:
-            _a = _8.sent(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+            _a = _13.sent(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
             return [2 /*return*/, {
               tagName: TAG_NAME.SYMBOL_INSTANCE,
               props: {
@@ -24318,22 +24320,22 @@
             if (!(layer._class === FileFormat.ClassValue.Group)) return [3 /*break*/, 13];
             children = [];
             i = 0, len = layer.layers.length;
-            _8.label = 8;
+            _13.label = 8;
           case 8:
             if (!(i < len)) return [3 /*break*/, 11];
             return [4 /*yield*/, convertItem(layer.layers[i], (i + 1) / (len + 1), opt, layer.frame.width, layer.frame.height)];
           case 9:
-            res = _8.sent();
+            res = _13.sent();
             if (res) {
               children.push(res);
             }
-            _8.label = 10;
+            _13.label = 10;
           case 10:
             i++;
             return [3 /*break*/, 8];
           case 11: return [4 /*yield*/, geomStyle(layer, opt)];
           case 12:
-            _b = _8.sent(), fill = _b.fill, fillEnable = _b.fillEnable, fillOpacity = _b.fillOpacity;
+            _b = _13.sent(), fill = _b.fill, fillEnable = _b.fillEnable, fillOpacity = _b.fillOpacity;
             return [2 /*return*/, {
               tagName: TAG_NAME.GROUP,
               props: {
@@ -24380,16 +24382,16 @@
             md5 = layer.image._ref.replace(/^images\//, '');
             return [4 /*yield*/, readImageFile(layer.image._ref, opt)];
           case 14:
-            src = _8.sent();
+            src = _13.sent();
             return [3 /*break*/, 16];
           case 15:
             if (layer.image._ref_class === 'MSNetworkImage') {
               src = layer.image._ref;
             }
-            _8.label = 16;
+            _13.label = 16;
           case 16: return [4 /*yield*/, geomStyle(layer, opt)];
           case 17:
-            _c = _8.sent(), fill = _c.fill, fillEnable = _c.fillEnable, fillOpacity = _c.fillOpacity, fillMode = _c.fillMode, stroke = _c.stroke, strokeEnable = _c.strokeEnable, strokeWidth = _c.strokeWidth, strokePosition = _c.strokePosition, strokeMode = _c.strokeMode, strokeDasharray = _c.strokeDasharray, strokeLinecap = _c.strokeLinecap, strokeLinejoin = _c.strokeLinejoin, strokeMiterlimit = _c.strokeMiterlimit;
+            _c = _13.sent(), fill = _c.fill, fillEnable = _c.fillEnable, fillOpacity = _c.fillOpacity, fillMode = _c.fillMode, stroke = _c.stroke, strokeEnable = _c.strokeEnable, strokeWidth = _c.strokeWidth, strokePosition = _c.strokePosition, strokeMode = _c.strokeMode, strokeDasharray = _c.strokeDasharray, strokeLinecap = _c.strokeLinecap, strokeLinejoin = _c.strokeLinejoin, strokeMiterlimit = _c.strokeMiterlimit;
             return [2 /*return*/, {
               tagName: TAG_NAME.BITMAP,
               props: {
@@ -24468,7 +24470,7 @@
             _d = layer.attributedString, string = _d.string, attributes = _d.attributes;
             rich = attributes.length
               ? attributes.map(function (item) {
-                var location = item.location, length = item.length, _a = item.attributes, _b = _a.MSAttributedStringFontAttribute, _c = _b === void 0 ? {} : _b, _d = _c.attributes, _e = _d === void 0 ? {} : _d, _f = _e.name, name = _f === void 0 ? inject.defaultFontFamily : _f, _g = _e.size, fontSize = _g === void 0 ? 16 : _g, _h = _a.MSAttributedStringColorAttribute, _j = _h === void 0 ? {} : _h, _k = _j.red, red = _k === void 0 ? 0 : _k, _l = _j.green, green = _l === void 0 ? 0 : _l, _m = _j.blue, blue = _m === void 0 ? 0 : _m, _o = _j.alpha, alpha = _o === void 0 ? 1 : _o, _p = _a.kerning, kerning = _p === void 0 ? 0 : _p, _q = _a.underlineStyle, underlineStyle = _q === void 0 ? FileFormat.UnderlineStyle.None : _q, _r = _a.strikethroughStyle, strikethroughStyle = _r === void 0 ? FileFormat.StrikethroughStyle.None : _r, _s = _a.paragraphStyle, _t = _s === void 0 ? {} : _s, _u = _t.alignment, alignment = _u === void 0 ? 0 : _u, _v = _t.maximumLineHeight, maximumLineHeight = _v === void 0 ? 0 : _v, _w = _t.paragraphSpacing, paragraphSpacing = _w === void 0 ? 0 : _w;
+                var location = item.location, length = item.length, _a = item.attributes, _b = _a.MSAttributedStringFontAttribute, _c = _b === void 0 ? {} : _b, _d = _c.attributes, _e = _d === void 0 ? {} : _d, _f = _e.name, name = _f === void 0 ? inject.defaultFontFamily : _f, _g = _e.size, fontSize = _g === void 0 ? inject.defaultFontSize : _g, _h = _a.MSAttributedStringColorAttribute, _j = _h === void 0 ? {} : _h, _k = _j.red, red = _k === void 0 ? 0 : _k, _l = _j.green, green = _l === void 0 ? 0 : _l, _m = _j.blue, blue = _m === void 0 ? 0 : _m, _o = _j.alpha, alpha = _o === void 0 ? 1 : _o, _p = _a.kerning, kerning = _p === void 0 ? 0 : _p, _q = _a.underlineStyle, underlineStyle = _q === void 0 ? FileFormat.UnderlineStyle.None : _q, _r = _a.strikethroughStyle, strikethroughStyle = _r === void 0 ? FileFormat.StrikethroughStyle.None : _r, _s = _a.paragraphStyle, _t = _s === void 0 ? {} : _s, _u = _t.alignment, alignment = _u === void 0 ? 0 : _u, _v = _t.maximumLineHeight, maximumLineHeight = _v === void 0 ? 0 : _v, _w = _t.paragraphSpacing, paragraphSpacing = _w === void 0 ? 0 : _w;
                 var textDecoration = [];
                 if (underlineStyle !== FileFormat.UnderlineStyle.None) {
                   textDecoration.push(TEXT_DECORATION.UNDERLINE);
@@ -24477,8 +24479,8 @@
                   textDecoration.push(TEXT_DECORATION.LINE_THROUGH);
                 }
                 return {
-                  location: location,
-                  length: length,
+                  location: parseInt(location) || 0,
+                  length: parseInt(length) || 0,
                   fontFamily: name,
                   fontSize: fontSize,
                   fontWeight: 400, // 无用写死
@@ -24496,16 +24498,16 @@
                   ],
                 };
               })
-              : undefined;
+              : [];
             MSAttributedStringFontAttribute = (_0 = (_z = (_y = (_x = layer.style) === null || _x === void 0 ? void 0 : _x.textStyle) === null || _y === void 0 ? void 0 : _y.encodedAttributes) === null || _z === void 0 ? void 0 : _z.MSAttributedStringFontAttribute) === null || _0 === void 0 ? void 0 : _0.attributes;
-            fontSize = (MSAttributedStringFontAttribute === null || MSAttributedStringFontAttribute === void 0 ? void 0 : MSAttributedStringFontAttribute.size) || 16;
-            fontFamily = (MSAttributedStringFontAttribute === null || MSAttributedStringFontAttribute === void 0 ? void 0 : MSAttributedStringFontAttribute.name) || inject.defaultFontFamily;
-            paragraphStyle = (_3 = (_2 = (_1 = layer.style) === null || _1 === void 0 ? void 0 : _1.textStyle) === null || _2 === void 0 ? void 0 : _2.encodedAttributes) === null || _3 === void 0 ? void 0 : _3.paragraphStyle;
-            alignment = paragraphStyle === null || paragraphStyle === void 0 ? void 0 : paragraphStyle.alignment;
+            fontSize = (MSAttributedStringFontAttribute === null || MSAttributedStringFontAttribute === void 0 ? void 0 : MSAttributedStringFontAttribute.size) || ((_1 = rich[0]) === null || _1 === void 0 ? void 0 : _1.fontSize) || inject.defaultFontSize;
+            fontFamily = (MSAttributedStringFontAttribute === null || MSAttributedStringFontAttribute === void 0 ? void 0 : MSAttributedStringFontAttribute.name) || ((_2 = rich[0]) === null || _2 === void 0 ? void 0 : _2.fontFamily) || inject.defaultFontFamily;
+            paragraphStyle = (_5 = (_4 = (_3 = layer.style) === null || _3 === void 0 ? void 0 : _3.textStyle) === null || _4 === void 0 ? void 0 : _4.encodedAttributes) === null || _5 === void 0 ? void 0 : _5.paragraphStyle;
+            alignment = (_6 = paragraphStyle === null || paragraphStyle === void 0 ? void 0 : paragraphStyle.alignment) !== null && _6 !== void 0 ? _6 : (_7 = rich[0]) === null || _7 === void 0 ? void 0 : _7.textAlign;
             lineHeight = (paragraphStyle === null || paragraphStyle === void 0 ? void 0 : paragraphStyle.maximumLineHeight) || 'normal';
-            _e = ((_5 = (_4 = layer.style) === null || _4 === void 0 ? void 0 : _4.textStyle) === null || _5 === void 0 ? void 0 : _5.encodedAttributes) || {}, _f = _e.underlineStyle, underlineStyle = _f === void 0 ? 0 : _f, _g = _e.strikethroughStyle, strikethroughStyle = _g === void 0 ? 0 : _g, _h = _e.kerning, letterSpacing = _h === void 0 ? 0 : _h, MSAttributedStringColorAttribute = _e.MSAttributedStringColorAttribute;
+            _e = ((_9 = (_8 = layer.style) === null || _8 === void 0 ? void 0 : _8.textStyle) === null || _9 === void 0 ? void 0 : _9.encodedAttributes) || {}, _f = _e.underlineStyle, underlineStyle = _f === void 0 ? 0 : _f, _g = _e.strikethroughStyle, strikethroughStyle = _g === void 0 ? 0 : _g, _h = _e.kerning, letterSpacing = _h === void 0 ? 0 : _h, MSAttributedStringColorAttribute = _e.MSAttributedStringColorAttribute;
             textAlign = ['left', 'right', 'center', 'justify'][alignment || 0];
-            verticalAlignment = (_7 = (_6 = layer.style) === null || _6 === void 0 ? void 0 : _6.textStyle) === null || _7 === void 0 ? void 0 : _7.verticalAlignment;
+            verticalAlignment = (_11 = (_10 = layer.style) === null || _10 === void 0 ? void 0 : _10.textStyle) === null || _11 === void 0 ? void 0 : _11.verticalAlignment;
             textVerticalAlign = ['top', 'middle', 'bottom'][verticalAlignment || 0];
             textDecoration = [];
             if (underlineStyle !== FileFormat.UnderlineStyle.None) {
@@ -24522,10 +24524,10 @@
                 Math.floor(MSAttributedStringColorAttribute.blue * 255),
                 MSAttributedStringColorAttribute.alpha,
               ]
-              : [0, 0, 0, 1];
+              : (((_12 = rich[0]) === null || _12 === void 0 ? void 0 : _12.color) || [0, 0, 0, 1]);
             return [4 /*yield*/, geomStyle(layer, opt)];
           case 19:
-            _j = _8.sent(), fill = _j.fill, fillEnable = _j.fillEnable, fillOpacity = _j.fillOpacity, fillMode = _j.fillMode, stroke = _j.stroke, strokeEnable = _j.strokeEnable, strokeWidth = _j.strokeWidth, strokePosition = _j.strokePosition, strokeMode = _j.strokeMode, strokeDasharray = _j.strokeDasharray, strokeLinecap = _j.strokeLinecap, strokeLinejoin = _j.strokeLinejoin, strokeMiterlimit = _j.strokeMiterlimit, styleId = _j.styleId;
+            _j = _13.sent(), fill = _j.fill, fillEnable = _j.fillEnable, fillOpacity = _j.fillOpacity, fillMode = _j.fillMode, stroke = _j.stroke, strokeEnable = _j.strokeEnable, strokeWidth = _j.strokeWidth, strokePosition = _j.strokePosition, strokeMode = _j.strokeMode, strokeDasharray = _j.strokeDasharray, strokeLinecap = _j.strokeLinecap, strokeLinejoin = _j.strokeLinejoin, strokeMiterlimit = _j.strokeMiterlimit, styleId = _j.styleId;
             return [2 /*return*/, {
               tagName: TAG_NAME.TEXT,
               props: {
@@ -24612,7 +24614,7 @@
             });
             return [4 /*yield*/, geomStyle(layer, opt)];
           case 21:
-            _k = _8.sent(), fill = _k.fill, fillEnable = _k.fillEnable, fillOpacity = _k.fillOpacity, fillMode = _k.fillMode, fillRule = _k.fillRule, stroke = _k.stroke, strokeEnable = _k.strokeEnable, strokeWidth = _k.strokeWidth, strokePosition = _k.strokePosition, strokeMode = _k.strokeMode, strokeDasharray = _k.strokeDasharray, strokeLinecap = _k.strokeLinecap, strokeLinejoin = _k.strokeLinejoin, strokeMiterlimit = _k.strokeMiterlimit, styleId = _k.styleId;
+            _k = _13.sent(), fill = _k.fill, fillEnable = _k.fillEnable, fillOpacity = _k.fillOpacity, fillMode = _k.fillMode, fillRule = _k.fillRule, stroke = _k.stroke, strokeEnable = _k.strokeEnable, strokeWidth = _k.strokeWidth, strokePosition = _k.strokePosition, strokeMode = _k.strokeMode, strokeDasharray = _k.strokeDasharray, strokeLinecap = _k.strokeLinecap, strokeLinejoin = _k.strokeLinejoin, strokeMiterlimit = _k.strokeMiterlimit, styleId = _k.styleId;
             pointRadiusBehaviour = POINTS_RADIUS_BEHAVIOUR.DISABLED;
             if (layer.pointRadiusBehaviour === FileFormat.PointsRadiusBehaviour.Legacy) {
               pointRadiusBehaviour = POINTS_RADIUS_BEHAVIOUR.LEGACY;
@@ -24685,19 +24687,19 @@
             if (!(layer._class === FileFormat.ClassValue.ShapeGroup)) return [3 /*break*/, 28];
             return [4 /*yield*/, geomStyle(layer, opt)];
           case 23:
-            _l = _8.sent(), fill = _l.fill, fillEnable = _l.fillEnable, fillOpacity = _l.fillOpacity, fillMode = _l.fillMode, fillRule = _l.fillRule, stroke = _l.stroke, strokeEnable = _l.strokeEnable, strokeWidth = _l.strokeWidth, strokePosition = _l.strokePosition, strokeMode = _l.strokeMode, strokeDasharray = _l.strokeDasharray, strokeLinecap = _l.strokeLinecap, strokeLinejoin = _l.strokeLinejoin, strokeMiterlimit = _l.strokeMiterlimit, styleId = _l.styleId;
+            _l = _13.sent(), fill = _l.fill, fillEnable = _l.fillEnable, fillOpacity = _l.fillOpacity, fillMode = _l.fillMode, fillRule = _l.fillRule, stroke = _l.stroke, strokeEnable = _l.strokeEnable, strokeWidth = _l.strokeWidth, strokePosition = _l.strokePosition, strokeMode = _l.strokeMode, strokeDasharray = _l.strokeDasharray, strokeLinecap = _l.strokeLinecap, strokeLinejoin = _l.strokeLinejoin, strokeMiterlimit = _l.strokeMiterlimit, styleId = _l.styleId;
             children = [];
             i = 0, len = layer.layers.length;
-            _8.label = 24;
+            _13.label = 24;
           case 24:
             if (!(i < len)) return [3 /*break*/, 27];
             return [4 /*yield*/, convertItem(layer.layers[i], (i + 1) / (len + 1), opt, layer.frame.width, layer.frame.height)];
           case 25:
-            res = _8.sent();
+            res = _13.sent();
             if (res) {
               children.push(res);
             }
-            _8.label = 26;
+            _13.label = 26;
           case 26:
             i++;
             return [3 /*break*/, 24];
@@ -36432,10 +36434,11 @@
       var textDecoration = [];
       var maxW = 0;
       var x = 0, y = 0;
+      // 初始数据合并校验
+      this.mergeRich();
       // 富文本每串不同的需要设置字体测量，这个索引记录每个rich块首字符的start索引，在遍历时到这个字符则重设
       var SET_FONT_INDEX = [];
       if (rich.length) {
-        this.mergeRich(); // 初始数据合并
         var _loop_1 = function (i_3, len) {
           var item = rich[i_3];
           SET_FONT_INDEX[item.location] = i_3;
@@ -36687,10 +36690,12 @@
         var textAlign = rich[0].textAlign;
         for (var i_5 = 0, len = lineBoxList.length; i_5 < len; i_5++) {
           var lineBox_1 = lineBoxList[i_5];
-          // sketch中每个\n换行都会产生新的rich，行首就是index
-          var r = hash_1[lineBox_1.index];
-          if (r) {
-            textAlign = r.textAlign;
+          // sketch中每个\n换行且不同对齐都会产生新的rich，行首就是index
+          if (lineBox_1.startEnter || !lineBox_1.index) {
+            var r = hash_1[lineBox_1.index];
+            if (r) {
+              textAlign = r.textAlign;
+            }
           }
           // 非\n而是布局宽度造成的换行，自动沿用之前的
           if (textAlign === TEXT_ALIGN.CENTER) {
@@ -36707,41 +36712,20 @@
           }
         }
       }
-      else {
-        var textAlign = computedStyle.textAlign;
-        if (textAlign === TEXT_ALIGN.CENTER) {
-          for (var i_6 = 0, len = lineBoxList.length; i_6 < len; i_6++) {
-            var lineBox_2 = lineBoxList[i_6];
-            var d = this.width - lineBox_2.width;
-            if (d) {
-              lineBox_2.offsetX(d * 0.5);
-            }
-          }
-        }
-        else if (textAlign === TEXT_ALIGN.RIGHT) {
-          for (var i_7 = 0, len = lineBoxList.length; i_7 < len; i_7++) {
-            var lineBox_3 = lineBoxList[i_7];
-            var d = this.width - lineBox_3.width;
-            if (d) {
-              lineBox_3.offsetX(d);
-            }
-          }
-        }
-      }
       // 垂直对齐偏移
       var dh = this.height - lineBox.y - lineBox.height;
       if (dh) {
         var textVerticalAlign = computedStyle.textVerticalAlign;
         if (textVerticalAlign === TEXT_VERTICAL_ALIGN.MIDDLE) {
-          for (var i_8 = 0, len = lineBoxList.length; i_8 < len; i_8++) {
-            var lineBox_4 = lineBoxList[i_8];
-            lineBox_4.offsetY(dh * 0.5);
+          for (var i_6 = 0, len = lineBoxList.length; i_6 < len; i_6++) {
+            var lineBox_2 = lineBoxList[i_6];
+            lineBox_2.offsetY(dh * 0.5);
           }
         }
         else if (textVerticalAlign === TEXT_VERTICAL_ALIGN.BOTTOM) {
-          for (var i_9 = 0, len = lineBoxList.length; i_9 < len; i_9++) {
-            var lineBox_5 = lineBoxList[i_9];
-            lineBox_5.offsetY(dh);
+          for (var i_7 = 0, len = lineBoxList.length; i_7 < len; i_7++) {
+            var lineBox_3 = lineBoxList[i_7];
+            lineBox_3.offsetY(dh);
           }
         }
       }
@@ -36806,10 +36790,10 @@
               ctx.fillRect(x1, lineBox.y * scale + dy2, lineBox.w * scale - x1, lineBox.lineHeight * scale);
             }
             // 中间循环
-            for (var i_10 = startLineBox + 1, len_2 = endLineBox; i_10 < len_2; i_10++) {
-              var lineBox_6 = lineBoxList[i_10];
-              if (lineBox_6.list.length) {
-                ctx.fillRect(lineBox_6.list[0].x * scale + dx2, lineBox_6.y * scale + dy2, lineBox_6.w * scale, lineBox_6.lineHeight * scale);
+            for (var i_8 = startLineBox + 1, len_2 = endLineBox; i_8 < len_2; i_8++) {
+              var lineBox_4 = lineBoxList[i_8];
+              if (lineBox_4.list.length) {
+                ctx.fillRect(lineBox_4.list[0].x * scale + dx2, lineBox_4.y * scale + dy2, lineBox_4.w * scale, lineBox_4.lineHeight * scale);
               }
             }
             // 最后尾行
@@ -36849,8 +36833,8 @@
           }
           var list_3 = lineBox.list;
           var len_3 = list_3.length;
-          var _loop_5 = function (i_11) {
-            var textBox = list_3[i_11];
+          var _loop_5 = function (i_9) {
+            var textBox = list_3[i_9];
             var textDecoration = textBox.textDecoration;
             setFontAndLetterSpacing(ctx, textBox, scale);
             if (isFillOrStroke) {
@@ -36870,8 +36854,8 @@
               });
             }
           };
-          for (var i_11 = 0; i_11 < len_3; i_11++) {
-            _loop_5(i_11);
+          for (var i_9 = 0; i_9 < len_3; i_9++) {
+            _loop_5(i_9);
           }
         }
       }
@@ -36881,15 +36865,15 @@
         var dy2 = -y_2;
         // fill就用普通颜色绘制，每个fill都需绘制一遍
         if (hasFill) {
-          var _loop_6 = function (i_12, len_4) {
-            if (!fillEnable[i_12] || !fillOpacity[i_12]) {
+          var _loop_6 = function (i_10, len_4) {
+            if (!fillEnable[i_10] || !fillOpacity[i_10]) {
               return "continue";
             }
-            var f = fill[i_12];
+            var f = fill[i_10];
             // 椭圆的径向渐变无法直接完成，用mask来模拟，即原本用纯色填充，然后离屏绘制渐变并用matrix模拟椭圆，再合并
             var ellipse = void 0;
-            var mode = fillMode[i_12];
-            ctx.globalAlpha = fillOpacity[i_12];
+            var mode = fillMode[i_10];
+            ctx.globalAlpha = fillOpacity[i_10];
             if (Array.isArray(f)) {
               if (!f[3]) {
                 return "continue";
@@ -36903,11 +36887,11 @@
                 f = f;
                 var url_1 = f.url;
                 if (url_1) {
-                  var loader_1 = this_1.loaders[i_12];
+                  var loader_1 = this_1.loaders[i_10];
                   var cache = inject.IMG[url_1];
                   // 已有的图像同步直接用
                   if (!loader_1 && cache) {
-                    loader_1 = this_1.loaders[i_12] = {
+                    loader_1 = this_1.loaders[i_10] = {
                       error: false,
                       loading: false,
                       width: cache.width,
@@ -36926,9 +36910,9 @@
                       var ctx2 = os.ctx;
                       if (f.type === PATTERN_FILL_TYPE.TILE) {
                         var ratio = (_a = f.scale) !== null && _a !== void 0 ? _a : 1;
-                        for (var i_13 = 0, len_5 = Math.ceil(width / ratio / loader_1.width); i_13 < len_5; i_13++) {
+                        for (var i_11 = 0, len_5 = Math.ceil(width / ratio / loader_1.width); i_11 < len_5; i_11++) {
                           for (var j = 0, len_6 = Math.ceil(height / ratio / loader_1.height); j < len_6; j++) {
-                            ctx2.drawImage(loader_1.source, dx2 + i_13 * loader_1.width * scale * ratio, dy2 + j * loader_1.height * scale * ratio, loader_1.width * scale * ratio, loader_1.height * scale * ratio);
+                            ctx2.drawImage(loader_1.source, dx2 + i_11 * loader_1.width * scale * ratio, dy2 + j * loader_1.height * scale * ratio, loader_1.width * scale * ratio, loader_1.height * scale * ratio);
                           }
                         }
                       }
@@ -36967,7 +36951,7 @@
                     }
                   }
                   else {
-                    loader_1 = this_1.loaders[i_12] = this_1.loaders[i_12] || {
+                    loader_1 = this_1.loaders[i_10] = this_1.loaders[i_10] || {
                       error: false,
                       loading: true,
                       width: 0,
@@ -36977,7 +36961,7 @@
                     inject.loadImg(url_1, function (data) {
                       var _a;
                       // 可能会变更，所以加载完后对比下是不是当前最新的
-                      if (url_1 === ((_a = fill[i_12]) === null || _a === void 0 ? void 0 : _a.url)) {
+                      if (url_1 === ((_a = fill[i_10]) === null || _a === void 0 ? void 0 : _a.url)) {
                         loader_1.loading = false;
                         if (data.success) {
                           loader_1.error = false;
@@ -37054,16 +37038,16 @@
               ctx.globalCompositeOperation = 'source-over';
             }
           };
-          for (var i_12 = 0, len_4 = fill.length; i_12 < len_4; i_12++) {
-            _loop_6(i_12, len_4);
+          for (var i_10 = 0, len_4 = fill.length; i_10 < len_4; i_10++) {
+            _loop_6(i_10, len_4);
           }
         }
         // 普通颜色
         else {
           // 富文本记录索引开始对应的颜色
           if (rich.length) {
-            for (var i_14 = 0, len_7 = rich.length; i_14 < len_7; i_14++) {
-              var item = rich[i_14];
+            for (var i_12 = 0, len_7 = rich.length; i_12 < len_7; i_12++) {
+              var item = rich[i_12];
               SET_COLOR_INDEX.push({
                 index: item.location,
                 color: color2rgbaStr(item.color),
@@ -37077,16 +37061,16 @@
             color = color2rgbaStr(computedStyle.color);
             ctx.fillStyle = color;
           }
-          for (var i_15 = 0, len_8 = lineBoxList.length; i_15 < len_8; i_15++) {
-            var lineBox = lineBoxList[i_15];
+          for (var i_13 = 0, len_8 = lineBoxList.length; i_13 < len_8; i_13++) {
+            var lineBox = lineBoxList[i_13];
             // 固定尺寸超过则overflow: hidden
             if (lineBox.y >= h) {
               break;
             }
             var list_4 = lineBox.list;
             var len_9 = list_4.length;
-            var _loop_7 = function (i_16) {
-              var textBox = list_4[i_16];
+            var _loop_7 = function (i_14) {
+              var textBox = list_4[i_14];
               var textDecoration = textBox.textDecoration;
               // textBox的分隔一定是按rich的，用字符索引来获取颜色
               var index = textBox.index;
@@ -37108,8 +37092,8 @@
                 });
               }
             };
-            for (var i_16 = 0; i_16 < len_9; i_16++) {
-              _loop_7(i_16);
+            for (var i_14 = 0; i_14 < len_9; i_14++) {
+              _loop_7(i_14);
             }
           }
         }
@@ -37134,16 +37118,16 @@
           });
           if (hasInnerShadow_1) {
             // 类似普通绘制文字的循环，只是颜色统一
-            for (var i_17 = 0, len_10 = lineBoxList.length; i_17 < len_10; i_17++) {
-              var lineBox = lineBoxList[i_17];
+            for (var i_15 = 0, len_10 = lineBoxList.length; i_15 < len_10; i_15++) {
+              var lineBox = lineBoxList[i_15];
               // 固定尺寸超过则overflow: hidden
               if (lineBox.y >= h) {
                 break;
               }
               var list_5 = lineBox.list;
               var len_11 = list_5.length;
-              for (var i_18 = 0; i_18 < len_11; i_18++) {
-                var textBox = list_5[i_18];
+              for (var i_16 = 0; i_16 < len_11; i_16++) {
+                var textBox = list_5[i_16];
                 setFontAndLetterSpacing(ctx2, textBox, scale);
                 ctx2.fillText(textBox.str, textBox.x * scale + dx2, (textBox.y + textBox.baseline) * scale + dy2);
               }
@@ -37200,13 +37184,13 @@
         // 强制1
         ctx.miterLimit = 1;
         ctx.fillStyle = 'transparent';
-        var _loop_8 = function (i_19, len_12) {
-          if (!strokeEnable[i_19] || !strokeWidth[i_19]) {
+        var _loop_8 = function (i_17, len_12) {
+          if (!strokeEnable[i_17] || !strokeWidth[i_17]) {
             return "continue";
           }
-          var s = stroke[i_19];
-          var p = strokePosition[i_19];
-          ctx.globalCompositeOperation = getCanvasGCO(strokeMode[i_19]);
+          var s = stroke[i_17];
+          var p = strokePosition[i_17];
+          ctx.globalCompositeOperation = getCanvasGCO(strokeMode[i_17]);
           // 颜色
           if (Array.isArray(s)) {
             ctx.strokeStyle = color2rgbaStr(s);
@@ -37235,11 +37219,11 @@
                 ctx2_1.lineCap = ctx.lineCap;
                 ctx2_1.lineJoin = ctx.lineJoin;
                 ctx2_1.miterLimit = ctx.miterLimit * scale;
-                ctx2_1.lineWidth = strokeWidth[i_19] * scale;
+                ctx2_1.lineWidth = strokeWidth[i_17] * scale;
                 if (p === STROKE_POSITION.INSIDE || p === STROKE_POSITION.OUTSIDE) {
                   ctx2_1.fillStyle = '#FFF';
                   draw(ctx2_1, true);
-                  ctx2_1.lineWidth = strokeWidth[i_19] * 2 * scale;
+                  ctx2_1.lineWidth = strokeWidth[i_17] * 2 * scale;
                   ctx2_1.strokeStyle = '#FFF';
                   if (p === STROKE_POSITION.INSIDE) {
                     ctx2_1.globalCompositeOperation = 'source-in';
@@ -37250,7 +37234,7 @@
                   draw(ctx2_1, false);
                 }
                 else {
-                  ctx2_1.lineWidth = strokeWidth[i_19] * scale;
+                  ctx2_1.lineWidth = strokeWidth[i_17] * scale;
                   ctx2_1.strokeStyle = '#FFF';
                   draw(ctx2_1, false);
                 }
@@ -37285,8 +37269,8 @@
             ctx2.lineJoin = ctx.lineJoin;
             ctx2.miterLimit = ctx.miterLimit * scale;
             ctx2.strokeStyle = ctx.strokeStyle;
-            ctx2.lineWidth = strokeWidth[i_19] * 2 * scale;
-            ctx2.lineWidth = strokeWidth[i_19] * 2 * scale;
+            ctx2.lineWidth = strokeWidth[i_17] * 2 * scale;
+            ctx2.lineWidth = strokeWidth[i_17] * 2 * scale;
             ctx2.fillStyle = '#FFF';
             draw(ctx2, false);
             var os3 = inject.getOffscreenCanvas(w, h);
@@ -37303,7 +37287,7 @@
             os3.release();
           }
           else {
-            ctx.lineWidth = strokeWidth[i_19] * scale;
+            ctx.lineWidth = strokeWidth[i_17] * scale;
             draw(ctx, false);
           }
           if (os) {
@@ -37313,8 +37297,8 @@
           // 还原
           ctx.globalCompositeOperation = 'source-over';
         };
-        for (var i_19 = 0, len_12 = stroke.length; i_19 < len_12; i_19++) {
-          _loop_8(i_19);
+        for (var i_17 = 0, len_12 = stroke.length; i_17 < len_12; i_17++) {
+          _loop_8(i_17);
         }
       };
       var this_1 = this;
@@ -37332,11 +37316,11 @@
       cursor.isMulti = false;
       var len = lineBoxList.length;
       for (var i = 0; i < len; i++) {
-        var lineBox_7 = lineBoxList[i];
+        var lineBox_5 = lineBoxList[i];
         // 确定y在哪一行后
-        if (local.y >= lineBox_7.y && local.y < lineBox_7.y + lineBox_7.h) {
+        if (local.y >= lineBox_5.y && local.y < lineBox_5.y + lineBox_5.h) {
           cursor.startLineBox = i;
-          var res_1 = this.getCursorByLocalX(local.x, lineBox_7, false);
+          var res_1 = this.getCursorByLocalX(local.x, lineBox_5, false);
           this.tempCursorX = this.currentCursorX = res_1.x;
           var p_1 = calPoint({ x: res_1.x, y: res_1.y }, m);
           return {
@@ -37370,20 +37354,19 @@
       cursor.isMulti = true;
       var len = lineBoxList.length;
       for (var m_1 = 0; m_1 < len; m_1++) {
-        var lineBox_8 = lineBoxList[m_1];
+        var lineBox_6 = lineBoxList[m_1];
         // 确定y在哪一行后
-        if (local.y >= lineBox_8.y && local.y < lineBox_8.y + lineBox_8.h) {
+        if (local.y >= lineBox_6.y && local.y < lineBox_6.y + lineBox_6.h) {
           cursor.endLineBox = m_1;
-          this.getCursorByLocalX(local.x, lineBox_8, true);
+          this.getCursorByLocalX(local.x, lineBox_6, true);
           // 变化需要更新渲染
           if (cursor.endLineBox !== i ||
             cursor.endTextBox !== j ||
             cursor.endString !== k) {
-            // 还要检查首尾，相同时不是多选
+            // 还要检查首尾，相同时不渲染底色选项
             var isMulti = cursor.startLineBox !== cursor.endLineBox ||
               cursor.startTextBox !== cursor.endTextBox ||
               cursor.startString !== cursor.endString;
-            cursor.isMulti = isMulti;
             this.showSelectArea = isMulti;
             (_a = this.root) === null || _a === void 0 ? void 0 : _a.addUpdate(this, [], RefreshLevel.REPAINT, false, false, undefined);
           }
@@ -37889,9 +37872,8 @@
     };
     // 根据字符串索引更新光标
     Text.prototype.updateCursorByIndex = function (index) {
-      var _a;
-      var _b = this.setCursorByIndex(index, false), lineBox = _b.lineBox, textBox = _b.textBox;
-      var _c = this, cursor = _c.cursor, matrixWorld = _c.matrixWorld;
+      var _a = this.setCursorByIndex(index, false), lineBox = _a.lineBox, textBox = _a.textBox;
+      var _b = this, cursor = _b.cursor, matrixWorld = _b.matrixWorld;
       // 是否空行
       if (textBox) {
         var ctx = inject.getFontCanvas().ctx;
@@ -37915,39 +37897,43 @@
         }
       }
       var p = calPoint({ x: this.tempCursorX, y: lineBox.y }, matrixWorld);
-      (_a = this.root) === null || _a === void 0 ? void 0 : _a.emit(Event.UPDATE_CURSOR, p.x, p.y, lineBox.lineHeight * matrixWorld[0]);
+      return {
+        x: p.x,
+        y: p.y,
+        h: lineBox.lineHeight * matrixWorld[0],
+      };
     };
     Text.prototype.setCursorByIndex = function (index, isEnd) {
       if (isEnd === void 0) { isEnd = false; }
       var lineBoxList = this.lineBoxList;
       var cursor = this.cursor;
-      for (var i_20 = 0, len = lineBoxList.length; i_20 < len; i_20++) {
-        var lineBox_9 = lineBoxList[i_20];
-        var list_6 = lineBox_9.list;
-        if (!list_6.length && lineBox_9.index === index) {
-          cursor.startLineBox = i_20;
+      for (var i_18 = 0, len = lineBoxList.length; i_18 < len; i_18++) {
+        var lineBox_7 = lineBoxList[i_18];
+        var list_6 = lineBox_7.list;
+        if (!list_6.length && lineBox_7.index === index) {
+          cursor.startLineBox = i_18;
           cursor.startTextBox = 0;
           cursor.startString = 0;
-          return { lineBox: lineBox_9, textBox: undefined };
+          return { lineBox: lineBox_7, textBox: undefined };
         }
         for (var j_1 = 0, len_13 = list_6.length; j_1 < len_13; j_1++) {
           var textBox_1 = list_6[j_1];
           if (index >= textBox_1.index &&
             (index < textBox_1.index + textBox_1.str.length ||
               (j_1 === len_13 - 1 &&
-                lineBox_9.endEnter &&
+                lineBox_7.endEnter &&
                 index <= textBox_1.index + textBox_1.str.length))) {
             if (isEnd) {
-              cursor.endLineBox = i_20;
+              cursor.endLineBox = i_18;
               cursor.endTextBox = j_1;
               cursor.endString = index - textBox_1.index;
             }
             else {
-              cursor.startLineBox = i_20;
+              cursor.startLineBox = i_18;
               cursor.startTextBox = j_1;
               cursor.startString = index - textBox_1.index;
             }
-            return { lineBox: lineBox_9, textBox: textBox_1 };
+            return { lineBox: lineBox_7, textBox: textBox_1 };
           }
         }
       }
@@ -37997,13 +37983,17 @@
       }
       return cursor.isMulti;
     };
-    // 获取光标当前坐标，无视multi，只取开头，没有高度，一般在滚动画布时更新获取新位置
+    // 获取光标当前坐标，无视multi，只取开头，一般在滚动画布时更新获取新位置
     Text.prototype.getCursorAbsCoords = function () {
       var m = this.matrixWorld;
       var lineBoxList = this.lineBoxList;
       var cursor = this.cursor;
+      if (cursor.isMulti) {
+        return;
+      }
       var lineBox = lineBoxList[cursor.startLineBox];
       var list = lineBox.list;
+      var rh = lineBox.lineHeight;
       // 空行
       if (!list.length) {
         var textAlign = this.computedStyle.textAlign;
@@ -38014,31 +38004,50 @@
         else if (textAlign === TEXT_ALIGN.RIGHT) {
           x = this.width;
         }
-        return calPoint({ x: x, y: lineBox.y }, m);
+        var p_2 = calPoint({ x: x, y: lineBox.y }, m);
+        return {
+          x: p_2.x,
+          y: p_2.y,
+          h: rh * m[0],
+        };
       }
-      return calPoint({ x: this.currentCursorX, y: lineBox.y }, m);
+      var p = calPoint({ x: this.currentCursorX, y: lineBox.y }, m);
+      return {
+        x: p.x,
+        y: p.y,
+        h: rh * m[0],
+      };
     };
-    // 上下左右按键移动光标，上下保持当前x，左右则更新
+    // 上下左右按键移动光标，上下保持当前x（tempCursorX），左右则更新
     Text.prototype.moveCursor = function (code) {
-      var _a, _b, _c;
-      var m = this.matrixWorld;
+      var matrix = this.matrixWorld;
       // 先求得当前光标位置在字符串的索引
       var cursor = this.cursor;
-      var i = cursor.startLineBox, j = cursor.startTextBox, k = cursor.startString;
+      var sorted = this.getSortedCursor();
+      var i = sorted.startLineBox, j = sorted.startTextBox, k = sorted.startString;
       var lineBoxList = this.lineBoxList;
       var lineBox = lineBoxList[i];
       var list = lineBox.list;
       var textBox = list[j];
-      var pos = textBox ? textBox.index + k : lineBox.index + k; // 空行时k就是0
+      var pos = textBox ? (textBox.index + k) : (lineBox.index + k); // 空行时k就是0
+      // multi原地取消多选
+      if (cursor.isMulti) {
+        cursor.isMulti = false;
+        this.showSelectArea = false;
+        this.refresh();
+        // 左上光标到开头，右下到结尾
+        if (code === 39 || code === 40) {
+          var l = sorted.endLineBox, m = sorted.endTextBox, n = sorted.endString;
+          lineBox = lineBoxList[l];
+          list = lineBox.list;
+          textBox = list[m];
+          pos = textBox ? (textBox.index + n) : (lineBox.index + n);
+        }
+        // 更新会把当前值赋给start
+        return this.updateCursorByIndex(pos);
+      }
       // 左
       if (code === 37) {
-        if (cursor.isMulti) {
-          cursor.isMulti = false;
-          this.showSelectArea = false;
-          this.refresh();
-          this.updateCursorByIndex(pos);
-          return;
-        }
         if (pos === 0) {
           return;
         }
@@ -38058,8 +38067,7 @@
               cursor.startTextBox = j = list.length - 1;
               // 看是否是enter，决定是否到末尾
               textBox = list[j];
-              cursor.startString =
-                textBox.str.length - (lineBox.endEnter ? 0 : 1);
+              cursor.startString = textBox.str.length - (lineBox.endEnter ? 0 : 1);
             }
           }
           // 非行开头到上个textBox末尾
@@ -38077,12 +38085,6 @@
       // 上
       else if (code === 38) {
         if (pos === 0) {
-          if (cursor.isMulti) {
-            cursor.isMulti = false;
-            this.showSelectArea = false;
-            this.refresh();
-            this.updateCursorByIndex(pos);
-          }
           return;
         }
         if (cursor.isMulti) {
@@ -38101,29 +38103,16 @@
           lineBox = lineBoxList[--i];
           cursor.startLineBox = i;
           var res = this.getCursorByLocalX(this.tempCursorX, lineBox, false);
-          var p_2 = calPoint({ x: res.x, y: res.y }, m);
-          (_a = this.root) === null || _a === void 0 ? void 0 : _a.emit(Event.UPDATE_CURSOR, p_2.x, p_2.y, lineBox.lineHeight * m[0]);
-          return;
+          var p_3 = calPoint({ x: res.x, y: res.y }, matrix);
+          return {
+            x: p_3.x,
+            y: p_3.y,
+            h: lineBox.lineHeight * matrix[0],
+          };
         }
       }
       // 右
       else if (code === 39) {
-        if (cursor.isMulti) {
-          cursor.isMulti = false;
-          this.showSelectArea = false;
-          cursor.startLineBox = cursor.endLineBox;
-          cursor.startTextBox = cursor.endTextBox;
-          cursor.startString = cursor.endString;
-          this.refresh();
-          lineBox = lineBoxList[cursor.startLineBox];
-          list = lineBox.list;
-          textBox = list[cursor.startTextBox];
-          var p_3 = textBox
-            ? textBox.index + cursor.startString
-            : lineBox.index + cursor.startString;
-          this.updateCursorByIndex(p_3);
-          return;
-        }
         if (pos === this._content.length) {
           return;
         }
@@ -38194,18 +38183,7 @@
       // 下
       else if (code === 40) {
         if (pos === this._content.length) {
-          if (cursor.isMulti) {
-            cursor.isMulti = false;
-            this.showSelectArea = false;
-            this.refresh();
-            this.updateCursorByIndex(pos);
-          }
           return;
-        }
-        if (cursor.isMulti) {
-          cursor.isMulti = false;
-          this.showSelectArea = false;
-          this.refresh();
         }
         // 最后一行到末尾
         if (i === lineBoxList.length - 1) {
@@ -38218,12 +38196,15 @@
           lineBox = lineBoxList[++i];
           cursor.startLineBox = i;
           var res = this.getCursorByLocalX(this.tempCursorX, lineBox, false);
-          var p_4 = calPoint({ x: res.x, y: res.y }, m);
-          (_b = this.root) === null || _b === void 0 ? void 0 : _b.emit(Event.UPDATE_CURSOR, p_4.x, p_4.y, lineBox.lineHeight * m[0]);
-          return;
+          var p_4 = calPoint({ x: res.x, y: res.y }, matrix);
+          return {
+            x: p_4.x,
+            y: p_4.y,
+            h: lineBox.lineHeight * matrix[0],
+          };
         }
       }
-      // 左右和特殊情况的上下，前面计算了cursorIndex的位置，据此获取光标位置，并记录x
+      // 左右和特殊情况的上下（到行首行尾），前面计算了cursorIndex的位置，据此获取光标位置，并记录x
       if (textBox) {
         var ctx = inject.getFontCanvas().ctx;
         ctx.font = textBox.font;
@@ -38245,8 +38226,12 @@
           this.tempCursorX = this.currentCursorX = 0;
         }
       }
-      var p = calPoint({ x: this.tempCursorX, y: lineBox.y }, m);
-      (_c = this.root) === null || _c === void 0 ? void 0 : _c.emit(Event.UPDATE_CURSOR, p.x, p.y, lineBox.lineHeight * m[0]);
+      var p = calPoint({ x: this.currentCursorX, y: lineBox.y }, matrix);
+      return {
+        x: p.x,
+        y: p.y,
+        h: lineBox.lineHeight * matrix[0],
+      };
     };
     /**
      * 在左百分比+宽度自动的情况，输入后要保持原本的位置，因为是中心点百分比对齐父级，
@@ -38348,8 +38333,8 @@
       outer: for (var i = 0, len = list.length; i < len; i++) {
         var _a = list[i], x = _a.x, w = _a.w, str = _a.str, font_1 = _a.font, letterSpacing = _a.letterSpacing;
         // x位于哪个textBox上，注意开头结尾
-        if ((!i && localX <= x + w) ||
-          (localX >= x && localX <= x + w) ||
+        if ((!i && localX < x) ||
+          (localX >= x && localX < x + w) ||
           i === len - 1) {
           if (isEnd) {
             cursor.endTextBox = i;
@@ -38408,6 +38393,22 @@
           }
         }
       }
+      // 如果处在相邻的2个textBox，都设置到后面那个
+      var ti = isEnd ? cursor.endTextBox : cursor.startTextBox;
+      if (ti < list.length - 1) {
+        var textBox = list[ti];
+        var si = isEnd ? cursor.endString : cursor.startString;
+        if (si === textBox.str.length) {
+          if (isEnd) {
+            cursor.endTextBox++;
+            cursor.endString = 0;
+          }
+          else {
+            cursor.startTextBox++;
+            cursor.startString = 0;
+          }
+        }
+      }
       // 空行特殊判断对齐方式
       if (!list.length) {
         var textAlign = this.computedStyle.textAlign;
@@ -38442,7 +38443,7 @@
         }
       }
       if (style.hasOwnProperty('color')) {
-        style2.color = color2rgbaInt(style.color);
+        style2.color = color2rgbaInt(style.color || '#000');
       }
       if (style.hasOwnProperty('fontFamily')) {
         style2.fontFamily = style.fontFamily;
@@ -38479,125 +38480,6 @@
       }
       this.afterEdit(payload);
     };
-    Text.prototype.updateTextRangeStyle = function (style, cb) {
-      var _a = this, cursor = _a.cursor, rich = _a.rich;
-      // 正常情况不会出现光标单选
-      if (!cursor.isMulti || !rich.length) {
-        return false;
-      }
-      var payload = this.beforeEdit();
-      var _b = this.getSortedCursor(), isReversed = _b.isReversed, start = _b.start, end = _b.end;
-      var lv = RefreshLevel.NONE;
-      // 找到所处的rich开始结束范围
-      for (var i = 0, len = rich.length; i < len; i++) {
-        var item = rich[i];
-        if (item.location + item.length > start) {
-          for (var j = len - 1; j >= i; j--) {
-            var item2 = rich[j];
-            if (item2.location < end) {
-              // 同一个rich拆分为2段或者3段或者不拆分，在中间就是3段，索引靠近首尾一侧拆2段，全相等不拆分
-              if (i === j) {
-                // 整个rich恰好被选中
-                if (item.location === start &&
-                  item.location + item.length === end) {
-                  lv |= this.updateRichItem(item, style);
-                }
-                // 选区开头是start则更新，后面新生成一段
-                else if (item.location === start) {
-                  var n = Object.assign({}, item);
-                  var t = this.updateRichItem(item, style);
-                  if (t) {
-                    lv |= t;
-                    var length_1 = item.length;
-                    item.length = end - start;
-                    n.location = end;
-                    n.length = length_1 - item.length;
-                    rich.splice(i + 1, 0, n);
-                  }
-                }
-                // 选取结尾是end则更新，前面插入一段
-                else if (item.location + item.length === end) {
-                  var n = Object.assign({}, item);
-                  var t = this.updateRichItem(n, style);
-                  if (t) {
-                    lv |= t;
-                    item.length = start - item.location;
-                    n.location = start;
-                    n.length = end - start;
-                    rich.splice(i + 1, 0, n);
-                  }
-                }
-                // 选了中间一段，原有的部分作为开头，后面拆入2段新的
-                else {
-                  var n = Object.assign({}, item);
-                  var t = this.updateRichItem(n, style);
-                  if (t) {
-                    lv |= t;
-                    var length_2 = item.length;
-                    item.length = start - item.location;
-                    n.location = start;
-                    n.length = end - start;
-                    rich.splice(i + 1, 0, n);
-                    var n2 = Object.assign({}, item);
-                    n2.location = end;
-                    n2.length = length_2 - item.length - n.length;
-                    rich.splice(i + 2, 0, n2);
-                  }
-                }
-              }
-              // 跨rich段，开头结尾的rich除了检测更新样式外，还要看是否造成了分割，中间部分的只需检查更新即可
-              else {
-                var first = Object.assign({}, item);
-                var item3 = rich[j];
-                var last = Object.assign({}, item3);
-                // 倒序进行，先从后面更新
-                var t = this.updateRichItem(item3, style);
-                if (t) {
-                  lv |= t;
-                  if (end < item3.location + item3.length) {
-                    last.location = end;
-                    last.length = item3.location + item3.length - end;
-                    item3.length = end - item3.location;
-                    rich.splice(j + 1, 0, last);
-                  }
-                }
-                for (var k = i + 1; k < j - 1; k++) {
-                  lv |= this.updateRichItem(rich[k], style);
-                }
-                var t2 = this.updateRichItem(first, style);
-                if (t2) {
-                  lv |= t2;
-                  if (start > item.location) {
-                    first.location = start;
-                    first.length = item.location + item.length - start;
-                    item.length = start - item.location;
-                    rich.splice(i + 1, 0, first);
-                  }
-                }
-              }
-              break;
-            }
-          }
-          break;
-        }
-      }
-      if (lv) {
-        // 合并相同的rich段，更新光标位置
-        this.mergeRich();
-        var parent_1 = this.parent;
-        // 手动重新布局，因为要重新生成lineBox和textBox，然后设置光标再刷新
-        this.layout({
-          w: parent_1.width,
-          h: parent_1.height,
-        });
-        this.clearCacheUpward(false);
-        this.setCursorByIndex(isReversed ? end : start, false);
-        this.setCursorByIndex(isReversed ? start : end, true);
-        this.refresh(RefreshLevel.REPAINT, cb);
-      }
-      this.afterEdit(payload);
-      return lv;
-    };
     Text.prototype.getRich = function () {
       return this.rich.map(function (item) {
         return Object.assign({}, item);
@@ -38605,13 +38487,14 @@
     };
     Text.prototype.setRich = function (rich) {
       var _a;
+      var payload = this.beforeEdit();
       this.rich = rich;
       (_a = this.root) === null || _a === void 0 ? void 0 : _a.addUpdate(this, [], RefreshLevel.REFLOW);
+      this.afterEdit(payload);
     };
     // 传入location/length，修改范围内的Rich的样式，一般来源是TextPanel中改如颜色
-    Text.prototype.updateRichStyle = function (style) {
+    Text.prototype.updateRangeStyle = function (location, length, style) {
       var payload = this.beforeEdit();
-      var location = style.location, length = style.length;
       var lv = RefreshLevel.NONE;
       var rich = this.rich;
       for (var i = 0, len = rich.length; i < len; i++) {
@@ -38745,12 +38628,28 @@
     // 输入文字后扩展所在位置的rich
     Text.prototype.expandRich = function (start, length) {
       var rich = this.rich;
+      // 空内容下，start会是0
       if (!rich.length) {
+        var computedStyle = this.computedStyle;
+        rich.push({
+          location: start,
+          length: length,
+          fontFamily: computedStyle.fontFamily,
+          fontSize: computedStyle.fontSize,
+          fontWeight: 400,
+          fontStyle: 'normal',
+          letterSpacing: computedStyle.letterSpacing,
+          textAlign: [TEXT_ALIGN.LEFT, TEXT_ALIGN.RIGHT, TEXT_ALIGN.CENTER, TEXT_ALIGN.JUSTIFY][computedStyle.textAlign],
+          textDecoration: computedStyle.textDecoration,
+          lineHeight: computedStyle.lineHeight,
+          paragraphSpacing: computedStyle.paragraphSpacing,
+          color: computedStyle.color,
+        });
         return;
       }
       for (var i = 0, len = rich.length; i < len; i++) {
         var item = rich[i];
-        if (item.location <= start && item.location + item.length > start) {
+        if (item.location <= start && (item.location + item.length > start || i === len - 1)) {
           item.length += length;
           for (var j = i + 1; j < len; j++) {
             rich[j].location += length;
@@ -38760,19 +38659,20 @@
       }
     };
     Text.prototype.insertRich = function (style, start, length) {
+      var computedStyle = this.computedStyle;
       var st = Object.assign({
         location: start,
         length: length,
-        fontFamily: 'arial',
-        fontSize: 16,
+        fontFamily: computedStyle.fontFamily,
+        fontSize: computedStyle.fontSize,
         fontWeight: 400,
         fontStyle: 'normal',
-        letterSpacing: 0,
-        textAlign: TEXT_ALIGN.LEFT,
-        textDecoration: [],
-        lineHeight: 0,
-        paragraphSpacing: 0,
-        color: [0, 0, 0, 1],
+        letterSpacing: computedStyle.letterSpacing,
+        textAlign: [TEXT_ALIGN.LEFT, TEXT_ALIGN.RIGHT, TEXT_ALIGN.CENTER, TEXT_ALIGN.JUSTIFY][computedStyle.textAlign],
+        textDecoration: computedStyle.textDecoration,
+        lineHeight: computedStyle.lineHeight,
+        paragraphSpacing: computedStyle.paragraphSpacing,
+        color: computedStyle.color,
       }, style);
       st.color = color2rgbaInt(st.color);
       // 防止被style中脏数据覆盖
@@ -38811,32 +38711,101 @@
       rich.push(st);
       this.mergeRich();
     };
-    // 合并相邻相同的rich
+    // 合并相邻相同的rich，排序以及校验，防止脏数据
     Text.prototype.mergeRich = function () {
-      var rich = this.rich;
-      if (!rich.length || rich.length < 2) {
-        return false;
-      }
+      var _a = this, rich = _a.rich, content = _a._content, style = _a.style;
+      rich.sort(function (a, b) {
+        if (a.location === b.location) {
+          return a.length - b.length;
+        }
+        return a.location - b.location;
+      });
       var hasMerge = false;
+      var dft = {
+        fontFamily: style.fontFamily.v,
+        fontSize: style.fontSize.v,
+        fontWeight: 400,
+        fontStyle: 'normal',
+        letterSpacing: style.letterSpacing.v,
+        textAlign: style.textAlign.v,
+        textDecoration: style.textDecoration.map(function (item) { return item.v; }),
+        lineHeight: style.lineHeight.v,
+        paragraphSpacing: style.paragraphSpacing.v,
+        color: style.color.v.slice(0),
+      };
+      // 首尾索引不合法
+      if (content.length) {
+        var last = rich[rich.length - 1];
+        if (!rich.length || last.location + last.length < content.length) {
+          rich.push(__assign({ location: last ? last.location + last.length : 0, length: last ? content.length - last.location - last.length : content.length }, dft));
+          hasMerge = true;
+        }
+        last = rich[rich.length - 1];
+        if (last.location + last.length > content.length) {
+          last.length = content.length - last.location;
+          hasMerge = true;
+        }
+        var first = rich[0];
+        if (first.location > 0) {
+          rich.unshift(__assign({ location: 0, length: first.location }, dft));
+          hasMerge = true;
+        }
+      }
       for (var i = rich.length - 2; i >= 0; i--) {
         var a = rich[i];
         var b = rich[i + 1];
+        if (!b.length) {
+          rich.splice(i + 1, 1);
+          continue;
+        }
+        if (!a.length) {
+          rich.splice(i, 1);
+          i++;
+          continue;
+        }
+        var pn = a.location + a.length;
+        // 索引不连续的脏数据处理，分断开和重合2种情况
+        if (pn !== b.location) {
+          if (pn < b.location) {
+            rich.splice(i + 1, 0, __assign({ location: pn, length: b.location - pn }, dft));
+            i += 2;
+          }
+          else {
+            var d = a.location + a.length - b.location;
+            b.location -= d;
+            b.length -= d;
+            i++;
+          }
+          hasMerge = true;
+          continue;
+        }
+        // textAlign是个特殊对比，如果不是\n换行导致的不一样需修正一致
         if (equal(a, b, [
           'color',
           'fontFamily',
           'fontSize',
           'letterSpacing',
           'lineHeight',
-          'textAlign',
+          // 'textAlign',
           'textDecoration',
           'paragraphSpacing',
         ])) {
-          a.length += b.length;
-          rich.splice(i + 1, 1);
-          hasMerge = true;
+          if (a.textAlign === b.textAlign || content.charAt(b.location - 1) !== '\n') {
+            a.length += b.length;
+            rich.splice(i + 1, 1);
+            hasMerge = true;
+          }
         }
       }
       return hasMerge;
+    };
+    Text.prototype.setInputStyle = function (style) {
+      if (!style) {
+        this.inputStyle = undefined;
+      }
+      else {
+        this.inputStyle = __assign(__assign({}, this.inputStyle), style);
+      }
     };
     // 如果end索引大于start，将其对换返回
     Text.prototype.getSortedCursor = function () {
@@ -38909,21 +38878,24 @@
     // 返回光标所在的Rich数据列表
     Text.prototype.getCursorRich = function () {
       var _a = this, rich = _a.rich, lineBoxList = _a.lineBoxList;
-      if (!rich.length) {
-        return [];
-      }
-      if (rich.length === 1) {
-        return [rich[0]];
-      }
       var res = [];
-      // 字符索引对应的rich快速查找
-      var RICH_INDEX = [];
-      for (var i = 0, len = rich.length; i < len; i++) {
-        var item = rich[i];
-        var location_1 = item.location, length_3 = item.length;
-        for (var i_21 = location_1, len_14 = location_1 + length_3; i_21 < len_14; i_21++) {
-          RICH_INDEX[i_21] = item;
+      function get2(t, i, j) {
+        if (i === void 0) { i = 0; }
+        if (j === void 0) { j = rich.length - 1; }
+        while (i < j) {
+          var m = Math.floor((i + j) * 0.5);
+          var r = rich[m];
+          if (r.location < t && r.location + r.length >= t) {
+            return r;
+          }
+          if (r.location >= t) {
+            j = Math.min(m, j - 1);
+          }
+          else {
+            i = Math.max(m, i + 1);
+          }
         }
+        return rich[i];
       }
       var _b = this.getSortedCursor(), isMulti = _b.isMulti, startLineBox = _b.startLineBox, startTextBox = _b.startTextBox, startString = _b.startString, endLineBox = _b.endLineBox, endTextBox = _b.endTextBox, endString = _b.endString;
       // 多选区域
@@ -38960,25 +38932,22 @@
           }
         }
       }
-      // 单光标位置
-      else {
+      // 单光标位置，以光标之前的字符为准，另外多选可能选取为空，也视为单选情况
+      if (!isMulti || !res.length) {
         var lineBox = lineBoxList[startLineBox];
         var list = lineBox.list;
         // 空行
         if (!list.length) {
-          var r = RICH_INDEX[lineBox.index];
+          var r = get2(lineBox.index);
           if (res.indexOf(r) === -1) {
             res.push(r);
           }
         }
         else {
-          // 如果光标在textBox的开头，要取前一个的，除非当前textBox是行首
-          var i = startString === 0 && startTextBox > 0
-            ? startTextBox - 1
-            : startTextBox;
-          var textBox = list[i];
-          var r = RICH_INDEX[textBox.index];
-          if (r && res.indexOf(r) === -1) {
+          // 如果光标在textBox的开头，要取前一个的，除非当前textBox是行首取当前的用+1来hack
+          var textBox = list[startTextBox];
+          var r = get2(textBox.index + (startTextBox + startString === 0 ? 1 : startString));
+          if (res.indexOf(r) === -1) {
             res.push(r);
           }
         }
@@ -39378,8 +39347,8 @@
     }
     Page.prototype.initIfNot = function () {
       if (this.json) {
-        for (var i = 0, len = this.json.children.length; i < len; i++) {
-          var res = parse(this.json.children[i], this.root);
+        for (var i = 0, children = this.json.children, len = children.length; i < len; i++) {
+          var res = parse(children[i], this.root);
           if (res) {
             this.appendChild(res);
           }
@@ -39662,7 +39631,7 @@
           node.calContent();
         }
       }
-      var maskMode = computedStyle.maskMode; computedStyle.breakMask; var opacity = computedStyle.opacity, shadow = computedStyle.shadow, shadowEnable = computedStyle.shadowEnable, innerShadow = computedStyle.innerShadow, innerShadowEnable = computedStyle.innerShadowEnable, blur_1 = computedStyle.blur, mixBlendMode = computedStyle.mixBlendMode, fill = computedStyle.fill, fillEnable = computedStyle.fillEnable, hueRotate = computedStyle.hueRotate, saturate = computedStyle.saturate, brightness = computedStyle.brightness, contrast = computedStyle.contrast;
+      var maskMode = computedStyle.maskMode, opacity = computedStyle.opacity, shadow = computedStyle.shadow, shadowEnable = computedStyle.shadowEnable, innerShadow = computedStyle.innerShadow, innerShadowEnable = computedStyle.innerShadowEnable, blur_1 = computedStyle.blur, mixBlendMode = computedStyle.mixBlendMode, fill = computedStyle.fill, fillEnable = computedStyle.fillEnable, hueRotate = computedStyle.hueRotate, saturate = computedStyle.saturate, brightness = computedStyle.brightness, contrast = computedStyle.contrast;
       // 特殊的group可以指定唯一的fill用作tint色调功能
       var isGroup = node.isGroup;
       var isGroupTint = false;
@@ -40888,6 +40857,9 @@
         sb[2] = Math.max(sb[2], x2);
         sb[3] = Math.max(sb[3], y2);
       }
+    }
+    if (!sbList.length) {
+      return;
     }
     bboxR2[0] += sb[0];
     bboxR2[1] += sb[1];
@@ -43518,7 +43490,6 @@
       // 非富文本
       putInfo(node, lh, valid, postscriptName, fontFamily, name, color, fontSize, fontWeight, letterSpacing, lineHeight, autoLineHeight, paragraphSpacing, textAlign, textBehaviour, computedStyle);
     }
-    // const { fontWeight, fontWeightList } = getWeight(fontFamily);
     var fontWeightList = [];
     if (fontFamily.length === 1) {
       fontWeightList = getFontWeightList(fontFamily[0]);
@@ -43554,68 +43525,48 @@
     }
     return [];
   }
-  // export function getEditTextInfo(node: Text) {
-  //   const { rich, style } = node;
-  //   // 一般不可能，有内容都会有个rich内容，这里兜个底，只有1个rich也复用逻辑
-  //   if (!rich.length) {
-  //     return getTextInfo([node]);
-  //   }
-  //   const valid: boolean[] = [];
-  //   const fontFamily: string[] = [];
-  //   const name: string[] = [];
-  //   const color: string[] = [];
-  //   const fontSize: number[] = [];
-  //   const letterSpacing: number[] = [];
-  //   const lineHeight: number[] = [];
-  //   const autoLineHeight: boolean[] = [];
-  //   const paragraphSpacing: number[] = [];
-  //   const textAlign: TEXT_ALIGN[] = [];
-  //   const textVerticalAlign: TEXT_VERTICAL_ALIGN[] = [node.computedStyle.textVerticalAlign];
-  //   const textBehaviour: TEXT_BEHAVIOUR[] = [];
-  //   const richList = node.getCursorRich();
-  //   const { left, right, top, bottom, width, height, lineHeight: lh } = style;
-  //   for (let i = 0, len = richList.length; i < len; i++) {
-  //     putInfo(
-  //       left,
-  //       right,
-  //       top,
-  //       bottom,
-  //       width,
-  //       height,
-  //       lh,
-  //       valid,
-  //       fontFamily,
-  //       name,
-  //       color,
-  //       fontSize,
-  //       letterSpacing,
-  //       lineHeight,
-  //       autoLineHeight,
-  //       paragraphSpacing,
-  //       textAlign,
-  //       textBehaviour,
-  //       richList[i],
-  //       true,
-  //     );
-  //   }
-  //   const { fontWeight, fontWeightList } = getWeight(fontFamily);
-  //   return {
-  //     valid,
-  //     fontFamily,
-  //     name,
-  //     fontWeight,
-  //     fontWeightList,
-  //     color,
-  //     fontSize,
-  //     autoLineHeight,
-  //     lineHeight,
-  //     letterSpacing,
-  //     paragraphSpacing,
-  //     textAlign,
-  //     textVerticalAlign,
-  //     textBehaviour,
-  //   };
-  // }
+  function getEditTextInfo(node) {
+    var valid = [];
+    var postscriptName = [];
+    var fontFamily = [];
+    var name = [];
+    var color = [];
+    var fontSize = [];
+    var letterSpacing = [];
+    var lineHeight = [];
+    var autoLineHeight = [];
+    var paragraphSpacing = [];
+    var textAlign = [];
+    var textVerticalAlign = [node.computedStyle.textVerticalAlign];
+    var textBehaviour = [];
+    var fontWeight = [];
+    var richList = node.getCursorRich();
+    var lh = node.style.lineHeight;
+    for (var i = 0, len = richList.length; i < len; i++) {
+      putInfo(node, lh, valid, postscriptName, fontFamily, name, color, fontSize, fontWeight, letterSpacing, lineHeight, autoLineHeight, paragraphSpacing, textAlign, textBehaviour, richList[i], true);
+    }
+    var fontWeightList = [];
+    if (fontFamily.length === 1) {
+      fontWeightList = getFontWeightList(fontFamily[0]);
+    }
+    return {
+      valid: valid,
+      postscriptName: postscriptName,
+      fontFamily: fontFamily,
+      name: name,
+      fontWeight: fontWeight,
+      fontWeightList: fontWeightList,
+      color: color,
+      fontSize: fontSize,
+      autoLineHeight: autoLineHeight,
+      lineHeight: lineHeight,
+      letterSpacing: letterSpacing,
+      paragraphSpacing: paragraphSpacing,
+      textAlign: textAlign,
+      textVerticalAlign: textVerticalAlign,
+      textBehaviour: textBehaviour,
+    };
+  }
   function setTextBehaviour(node, behaviour) {
     var next = {};
     var style = node.getStyle();
@@ -43743,7 +43694,7 @@
     TEXT_BEHAVIOUR: TEXT_BEHAVIOUR,
     SIZE_LIST: SIZE_LIST,
     getTextInfo: getTextInfo,
-    // getEditTextInfo,
+    getEditTextInfo: getEditTextInfo,
     getTextBehaviour: getTextBehaviour,
     setTextBehaviour: setTextBehaviour,
     getFontWeightList: getFontWeightList,
@@ -44454,21 +44405,25 @@
             // 回车等候一下让input先触发，输入法状态不会触发
             setTimeout(function () {
               _this.node.enter();
-              _this.updateCurCursor();
-              _this.listener.select.updateSelect([_this.node]);
-              _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+              _this.updateCursor();
+              listener.select.updateSelect([_this.node]);
+              listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+              listener.emit(Listener.CURSOR_NODE, [_this.node]);
             }, 0);
           }
           else if (keyCode === 8) {
             e.stopPropagation();
             _this.node.delete();
-            _this.updateCurCursor();
-            _this.listener.select.updateSelect([_this.node]);
-            _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+            _this.updateCursor();
+            listener.select.updateSelect([_this.node]);
+            listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+            listener.emit(Listener.CURSOR_NODE, [_this.node]);
           }
           else if (keyCode >= 37 && keyCode <= 40) {
-            _this.node.moveCursor(keyCode);
-            _this.updateCurCursor();
+            var p = _this.node.moveCursor(keyCode);
+            _this.updateCursor(p);
+            _this.showCursor();
+            listener.emit(Listener.CURSOR_NODE, [_this.node]);
           }
         }
       });
@@ -44478,7 +44433,7 @@
           var s = e.data;
           if (s) {
             _this.node.input(s);
-            _this.updateCurCursor();
+            _this.updateCursor();
             _this.showCursor();
             inputEl.value = '';
             _this.listener.select.updateSelect([_this.node]);
@@ -44494,11 +44449,12 @@
         if (_this.node) {
           var s = e.data;
           _this.node.input(s);
-          _this.updateCurCursor();
+          _this.updateCursor();
           _this.showCursor();
           inputEl.value = '';
           _this.listener.select.updateSelect([_this.node]);
           _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+          listener.emit(Listener.CURSOR_NODE, [_this.node]);
         }
       });
       var cursorEl = this.cursorEl = document.createElement('div');
@@ -44560,11 +44516,14 @@
     Input.prototype.hideCursor = function () {
       this.cursorEl.style.opacity = '0';
     };
-    Input.prototype.updateCurCursor = function () {
-      var dpi = this.root.dpi;
-      var p = this.node.getCursorAbsCoords();
-      this.containerEl.style.left = p.x / dpi + 'px';
-      this.containerEl.style.top = p.y / dpi + 'px';
+    Input.prototype.updateCursor = function (p) {
+      p = p || this.node.getCursorAbsCoords();
+      if (p) {
+        var dpi = this.root.dpi;
+        this.containerEl.style.left = p.x / dpi + 'px';
+        this.containerEl.style.top = p.y / dpi + 'px';
+        this.containerEl.style.height = p.h / dpi + 'px';
+      }
     };
     Input.prototype.destroy = function () {
       this.hide();
@@ -44957,7 +44916,7 @@
           popup: false,
         });
       }
-      var color = node.style.backgroundColor;
+      var color = node.getAttribute('color') || '';
       var opacity = parseFloat(node.style.opacity);
       var rgba = color2rgbaInt(color);
       rgba[3] *= isNaN(opacity) ? 1 : opacity;
@@ -45263,13 +45222,14 @@
               if (this.state === State$1.EDIT_TEXT) {
                 var text = selected[0];
                 text.hideSelectArea();
-                text.setCursorStartByAbsCoords(x, y);
-                this.input.update(e.clientX - this.originX, e.clientY - this.originY);
+                var p = text.setCursorStartByAbsCoords(x, y);
+                this.input.updateCursor(p);
                 this.input.showCursor();
                 // 防止触发click事件失焦
                 if (e instanceof MouseEvent) {
                   e.preventDefault();
                 }
+                this.emit(Listener.CURSOR_NODE, selected.slice(0));
                 return;
               }
               // 唯一已选节点继续点击，不触发选择事件
@@ -45433,8 +45393,19 @@
           var x = (e.clientX - this.originX) * dpi;
           var y = (e.clientY - this.originY) * dpi;
           var text = selected[0];
+          var _d = text.cursor, isMulti = _d.isMulti, startLineBox = _d.startLineBox, startTextBox = _d.startTextBox, startString = _d.startString, endLineBox = _d.endLineBox, endTextBox = _d.endTextBox, endString = _d.endString;
           text.setCursorEndByAbsCoords(x, y);
           this.input.hideCursor();
+          var cursor = text.cursor;
+          if (isMulti !== cursor.isMulti
+            || startLineBox !== cursor.startLineBox
+            || startTextBox !== cursor.startTextBox
+            || startString !== cursor.startString
+            || endLineBox !== cursor.endLineBox
+            || endTextBox !== cursor.endTextBox
+            || endString !== cursor.endString) {
+            this.emit(Listener.CURSOR_NODE, selected.slice(0));
+          }
         }
         else {
           if ((_a = this.options.disabled) === null || _a === void 0 ? void 0 : _a.move) {
@@ -45663,7 +45634,7 @@
           var multi = text.checkCursorMulti();
           // 可能框选的文字为空不是多选，需取消
           if (!multi) {
-            this.input.updateCurCursor();
+            this.input.updateCursor();
             this.input.showCursor();
           }
           else {
@@ -46026,7 +45997,7 @@
     };
     Listener.prototype.updateInput = function () {
       if (this.state === State$1.EDIT_TEXT) {
-        this.input.updateCurCursor();
+        this.input.updateCursor();
       }
     };
     Listener.prototype.onContextMenu = function (e) {
@@ -46071,6 +46042,7 @@
     Listener.TEXT_ALIGN_NODE = 'TEXT_ALIGN_NODE';
     Listener.TEXT_VERTICAL_ALIGN_NODE = 'TEXT_VERTICAL_ALIGN_NODE';
     Listener.TEXT_CONTENT_NODE = 'TEXT_CONTENT_NODE';
+    Listener.CURSOR_NODE = 'CURSOR_NODE';
     Listener.SHADOW_NODE = 'SHADOW_NODE';
     Listener.BLUR_NODE = 'BLUR_NODE';
     Listener.COLOR_ADJUST_NODE = 'COLOR_ADJUST_NODE';
@@ -46454,7 +46426,7 @@
     return Panel;
   }());
 
-  var html$9 = "\n  <div class=\"line\">\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"x\" step=\"1\"/>\n      <span class=\"unit\">X</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"y\" step=\"1\"/>\n      <span class=\"unit\">Y</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"r\" step=\"1\"/>\n      <span class=\"unit\">\u00B0</span>\n    </div>\n  </div>\n  <div class=\"line\">\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"w\" step=\"1\"/>\n      <span class=\"unit\">W</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"h\" step=\"1\"/>\n      <span class=\"unit\">H</span>\n    </div>\n    <span class=\"fh\"></span>\n    <span class=\"fv\"></span>\n  </div>\n";
+  var html$9 = "\n  <div class=\"line\">\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"x\" step=\"1\"/>\n      <span class=\"unit\">X</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"y\" step=\"1\"/>\n      <span class=\"unit\">Y</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"r\" step=\"1\"/>\n      <span class=\"unit\">\u00B0</span>\n    </div>\n  </div>\n  <div class=\"line\">\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"w\" step=\"1\"/>\n      <span class=\"unit\">W</span>\n    </div>\n    <div class=\"input-unit\">\n      <input type=\"number\" class=\"h\" step=\"1\"/>\n      <span class=\"unit\">H</span>\n    </div>\n    <span class=\"fh\" title=\"\u6C34\u5E73\u7FFB\u8F6C\"></span>\n    <span class=\"fv\" title=\"\u5782\u76F4\u7FFB\u8F6C\"></span>\n  </div>\n";
   var BasicPanel = /** @class */ (function (_super) {
     __extends(BasicPanel, _super);
     function BasicPanel(root, dom, listener) {
@@ -47621,7 +47593,7 @@
       // 选择颜色会刷新但不产生步骤，关闭颜色面板后才callback产生
       var pickCallback = function () {
         // 只有变更才会有next
-        if (nexts && nexts.length) {
+        if (nodes.length && nexts.length) {
           listener.history.addCommand(new UpdateRichCommand(nodes, prevs.map(function (prev, i) {
             return { prev: prev, next: nexts[i] };
           }), UpdateRichCommand.COLOR));
@@ -47631,6 +47603,7 @@
         nexts = [];
       };
       var onInput = function (e, key) {
+        var _a, _b;
         _this.silence = true;
         var input = e.target;
         var value = parseFloat(input.value) || 0;
@@ -47642,64 +47615,92 @@
         }
         nexts = [];
         var isInput = e instanceof InputEvent; // 上下键还是真正输入
-        _this.nodes.forEach(function (node) {
-          var _a;
-          if (isFirst) {
-            nodes.push(node);
-            prevs.push(node.getRich());
-          }
-          // 按上下可能是多个值的情况
-          if (!isInput) {
-            var d_1 = 0;
-            if (input.placeholder) {
-              d_1 = value > 0 ? 1 : -1;
-              if (listener.shiftKey) {
-                d_1 *= 10;
+        if (listener.state === State$1.EDIT_TEXT && _this.nodes.length === 1) {
+          var node_1 = _this.nodes[0];
+          var cursor = node_1.getSortedCursor();
+          if (cursor.isMulti) {
+            if (isFirst) {
+              nodes.push(node_1);
+              prevs.push(node_1.getRich());
+            }
+            // 按上下可能是多个值的情况
+            if (!isInput) {
+              var d_1 = 0;
+              if (input.placeholder) {
+                d_1 = value > 0 ? 1 : -1;
+                if (listener.shiftKey) {
+                  d_1 *= 10;
+                }
               }
+              else {
+                d_1 = value - prevs[0][0][key];
+                if (listener.shiftKey) {
+                  d_1 *= 10;
+                }
+              }
+              var start_1 = cursor.start, end_1 = cursor.end;
+              node_1.rich.forEach(function (rich) {
+                var _a;
+                if (rich.location < end_1 && rich.location + rich.length > start_1) {
+                  var location_1 = Math.max(rich.location, start_1);
+                  var len = Math.min(rich.length, end_1 - rich.location) - (location_1 - rich.location);
+                  node_1.updateRangeStyle(location_1, len, (_a = {},
+                    _a[key] = getRichKeyValue(rich, key, d_1),
+                    _a));
+                }
+              });
             }
             else {
-              d_1 = value - prevs[0][0][key];
-              if (listener.shiftKey) {
-                d_1 *= 10;
-              }
-            }
-            node.rich.forEach(function (rich) {
-              var _a;
-              var p = rich[key];
-              // 0表示auto，需从fontFamily何fontSize自动计算
-              if (!p && key === 'lineHeight') {
-                var data = o.data[rich.fontFamily];
-                if (data) {
-                  p = rich.fontSize * data.lhr;
-                }
-                // 兜底防止没有
-                else {
-                  p = rich.fontSize * (o.data[inject.defaultFontFamily] || o.data.arial).lhr;
-                }
-              }
-              var n = p + d_1;
-              if (key === 'fontSize' || key === 'lineHeight') {
-                n = Math.max(0, n);
-              }
-              node.updateRichStyle((_a = {
-                location: rich.location,
-                length: rich.length
-              },
-                _a[key] = n,
+              node_1.updateRangeStyle(cursor.startString, cursor.endTextBox - cursor.startString, (_a = {},
+                _a[key] = value,
                 _a));
-            });
+            }
+            nexts.push(node_1.getRich());
           }
-          // 输入统一改为单个值比较简单
           else {
-            node.updateRichStyle((_a = {
-              location: 0,
-              length: node._content.length
-            },
-              _a[key] = value,
-              _a));
+            node_1.setInputStyle((_b = {},
+              _b[key] = value,
+              _b));
           }
-          nexts.push(node.getRich());
-        });
+        }
+        else {
+          _this.nodes.forEach(function (node) {
+            var _a;
+            if (isFirst) {
+              nodes.push(node);
+              prevs.push(node.getRich());
+            }
+            // 按上下可能是多个值的情况
+            if (!isInput) {
+              var d_2 = 0;
+              if (input.placeholder) {
+                d_2 = value > 0 ? 1 : -1;
+                if (listener.shiftKey) {
+                  d_2 *= 10;
+                }
+              }
+              else {
+                d_2 = value - prevs[0][0][key];
+                if (listener.shiftKey) {
+                  d_2 *= 10;
+                }
+              }
+              node.rich.forEach(function (rich) {
+                var _a;
+                node.updateRangeStyle(rich.location, rich.length, (_a = {},
+                  _a[key] = getRichKeyValue(rich, key, d_2),
+                  _a));
+              });
+            }
+            // 输入统一改为单个值比较简单
+            else {
+              node.updateRangeStyle(0, node._content.length, (_a = {},
+                _a[key] = value,
+                _a));
+            }
+            nexts.push(node.getRich());
+          });
+        }
         if (nodes.length) {
           listener.select.updateSelect(nodes);
           if (key === 'fontSize') {
@@ -47792,18 +47793,36 @@
           select_1.value = ff_1;
           select_1.disabled = false;
           var data_1 = [];
-          nodes.forEach(function (node) {
-            var prev = node.getRich();
-            node.updateRichStyle({
-              location: 0,
-              length: node._content.length,
-              fontFamily: ff_1,
+          if (listener.state === State$1.EDIT_TEXT && _this.nodes.length === 1) {
+            var node = nodes[0];
+            var cursor = node.getSortedCursor();
+            if (cursor.isMulti) {
+              var prev = node.getRich();
+              node.updateRangeStyle(cursor.start, cursor.end - cursor.start, {
+                fontFamily: ff_1,
+              });
+              data_1.push({ prev: prev, next: node.getRich() });
+            }
+            else {
+              node.setInputStyle({
+                fontFamily: ff_1,
+              });
+            }
+          }
+          else {
+            nodes.forEach(function (node) {
+              var prev = node.getRich();
+              node.updateRangeStyle(0, node._content.length, {
+                fontFamily: ff_1,
+              });
+              data_1.push({ prev: prev, next: node.getRich() });
             });
-            data_1.push({ prev: prev, next: node.getRich() });
-          });
-          listener.history.addCommand(new UpdateRichCommand(nodes, data_1, UpdateRichCommand.FONT_FAMILY));
-          listener.select.updateSelect(nodes);
-          listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
+          }
+          if (data_1.length) {
+            listener.history.addCommand(new UpdateRichCommand(nodes, data_1, UpdateRichCommand.FONT_FAMILY));
+            listener.select.updateSelect(nodes);
+            listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
+          }
         }
         else if (key === 'fontWeight') {
           var multi = panel.querySelector('.wc .multi');
@@ -47813,18 +47832,36 @@
             option.remove();
           }
           var data_2 = [];
-          nodes.forEach(function (node) {
-            var prev = node.getRich();
-            node.updateRichStyle({
-              location: 0,
-              length: node._content.length,
-              fontFamily: value,
+          if (listener.state === State$1.EDIT_TEXT && _this.nodes.length === 1) {
+            var node = nodes[0];
+            var cursor = node.getSortedCursor();
+            if (cursor.isMulti) {
+              var prev = node.getRich();
+              node.updateRangeStyle(cursor.start, cursor.end - cursor.start, {
+                fontFamily: value,
+              });
+              data_2.push({ prev: prev, next: node.getRich() });
+            }
+            else {
+              node.setInputStyle({
+                fontFamily: value,
+              });
+            }
+          }
+          else {
+            nodes.forEach(function (node) {
+              var prev = node.getRich();
+              node.updateRangeStyle(0, node._content.length, {
+                fontFamily: value,
+              });
+              data_2.push({ prev: prev, next: node.getRich() });
             });
-            data_2.push({ prev: prev, next: node.getRich() });
-          });
-          listener.history.addCommand(new UpdateRichCommand(nodes, data_2, UpdateRichCommand.FONT_FAMILY));
-          listener.select.updateSelect(nodes);
-          listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
+          }
+          if (data_2.length) {
+            listener.history.addCommand(new UpdateRichCommand(nodes, data_2, UpdateRichCommand.FONT_FAMILY));
+            listener.select.updateSelect(nodes);
+            listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
+          }
         }
         _this.silence = false;
       };
@@ -47855,15 +47892,29 @@
           // 每次变更记录更新nexts
           p.onChange = function (color) {
             nexts = [];
-            nodes.forEach(function (node) {
-              var o = {
-                location: 0,
-                length: node._content.length,
-                color: color.rgba.slice(0),
-              };
-              node.updateRichStyle(o);
-              nexts.push(node.getRich());
-            });
+            if (listener.state === State$1.EDIT_TEXT && nodes.length === 1) {
+              var node = nodes[0];
+              var cursor = node.getSortedCursor();
+              if (cursor.isMulti) {
+                node.updateRangeStyle(cursor.start, cursor.end - cursor.start, {
+                  color: color.rgba.slice(0),
+                });
+                nexts.push(node.getRich());
+              }
+              else {
+                node.setInputStyle({
+                  color: color.rgba.slice(0),
+                });
+              }
+            }
+            else {
+              nodes.forEach(function (node) {
+                node.updateRangeStyle(0, node._content.length, {
+                  color: color.rgba.slice(0),
+                });
+                nexts.push(node.getRich());
+              });
+            }
           };
           p.onDone = function () {
             picker$1.hide();
@@ -47927,6 +47978,7 @@
           listener.emit(Listener.RESIZE_NODE, nodes.slice(0));
           (_a = dom.querySelector('.wh .cur')) === null || _a === void 0 ? void 0 : _a.classList.remove('cur');
           classList.add('cur');
+          dom.querySelector('.wh .txt').innerHTML = el.title;
         }
         // 左右对齐
         else if ((classList.contains('left') || classList.contains('right') || classList.contains('center') || el.classList.contains('justify'))
@@ -47950,9 +48002,7 @@
             var data_4 = [];
             nodes_1.forEach(function (node) {
               var prev = node.getRich();
-              node.updateRichStyle({
-                location: 0,
-                length: node._content.length,
+              node.updateRangeStyle(0, node._content.length, {
                 textAlign: value_1,
               });
               data_4.push({ prev: prev, next: node.getRich() });
@@ -48012,6 +48062,7 @@
         Listener.TEXT_ALIGN_NODE,
         Listener.TEXT_VERTICAL_ALIGN_NODE,
         Listener.ADD_NODE,
+        Listener.CURSOR_NODE,
       ], function (nodes) {
         // 输入的时候，防止重复触发；选择/undo/redo的时候则更新显示
         if (_this.silence) {
@@ -48081,7 +48132,8 @@
       });
       var texts = nodes.filter(function (item) { return item instanceof Text; });
       this.nodes = texts;
-      var o = getTextInfo(texts);
+      var isEditText = this.listener.state === State$1.EDIT_TEXT && nodes.length === 1;
+      var o = isEditText ? getEditTextInfo(texts[0]) : getTextInfo(texts);
       {
         var select = panel.querySelector('.ff select');
         // 移除上次可能遗留的无效字体展示
@@ -48162,6 +48214,7 @@
           color.style.background = o.color[0];
           color.classList.remove('multi');
         }
+        color.setAttribute('color', o.color[0]);
       }
       {
         var input = panel.querySelector('.fs input');
@@ -48280,6 +48333,25 @@
     };
     return TextPanel;
   }(Panel));
+  function getRichKeyValue(rich, key, d) {
+    var p = rich[key];
+    // 0表示auto，需从fontFamily何fontSize自动计算
+    if (!p && key === 'lineHeight') {
+      var data = o.data[rich.fontFamily];
+      if (data) {
+        p = rich.fontSize * data.lhr;
+      }
+      // 兜底防止没有
+      else {
+        p = rich.fontSize * (o.data[inject.defaultFontFamily] || o.data.arial).lhr;
+      }
+    }
+    var n = p + d;
+    if (key === 'fontSize' || key === 'lineHeight') {
+      n = Math.max(0, n);
+    }
+    return n;
+  }
 
   var html$3 = "\n  <div class=\"line\">\n    <span class=\"left\" title=\"\u5C45\u5DE6\"></span>\n    <span class=\"center\" title=\"\u5DE6\u53F3\u5C45\u4E2D\"></span>\n    <span class=\"right\" title=\"\u5C45\u53F3\"></span>\n    <span class=\"top\" title=\"\u5C45\u4E0A\"></span>\n    <span class=\"middle\" title=\"\u4E0A\u4E0B\u5C45\u4E2D\"></span>\n    <span class=\"bottom\" title=\"\u5C45\u4E0B\"></span>\n  </div>\n";
   var AlignPanel = /** @class */ (function (_super) {
@@ -48653,6 +48725,9 @@
           type = 4;
         }
         var n = parseFloat(input.value) || 0;
+        if (n > 500000 || n < -500000) {
+          n = 0;
+        }
         // 连续多次只有首次记录节点和prev值，但每次都更新next值
         var isFirst = !nodes.length;
         if (isFirst) {
@@ -49587,7 +49662,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.4.13";
+  var version = "0.4.17";
 
   var gl = {
     ca: ca,
