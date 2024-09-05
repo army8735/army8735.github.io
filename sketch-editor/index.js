@@ -43991,13 +43991,8 @@
     else {
       for (var i = 0, len = children.length; i < len; i++) {
         var child = children[i];
-        // 开头位置特殊判断
-        if (!i && node.props.index < child.props.index) {
+        if (node.props.index < child.props.index) {
           child.insertBefore(node);
-          break;
-        }
-        else if (node.props.index > child.props.index) {
-          child.insertAfter(node);
           break;
         }
         // 直到最后也没有
@@ -44723,10 +44718,12 @@
         y: node.computedStyle.top,
         parent: parent,
       };
-      // 可能造成了parent尺寸变化，需修正
-      var rect = parent.getChildrenRect(node);
-      o.x -= rect.minX;
-      o.y -= rect.minY;
+      // 可能造成了parent尺寸变化，需修正，比如被删除节点删除后使得父Group的左上原点变化，删除记录的绝对x/y要考虑
+      if (parent.isGroup && parent instanceof Group) {
+        var rect = parent.getChildrenRect(node);
+        o.x -= rect.minX;
+        o.y -= rect.minY;
+      }
       node.remove();
       return o;
     };
@@ -46111,6 +46108,7 @@
       this.root = root;
       this.dom = dom;
       this.listener = listener;
+      this.silence = false;
       // 可能存在，如果不存在就侦听改变，切换页面同样侦听
       var page = root.getCurPage();
       if (page) {
@@ -46161,6 +46159,7 @@
         _this.select(nodes);
       });
       dom.addEventListener('click', function (e) {
+        _this.silence = true;
         var target = e.target;
         var classList = target.classList;
         var isDt = target.tagName.toUpperCase() === 'DT';
@@ -46236,6 +46235,7 @@
         else {
           listener.active([]);
         }
+        _this.silence = false;
       });
       var onChange = function (target) {
         var v = target.value;
@@ -46311,8 +46311,11 @@
     }
     Tree.prototype.init = function () {
       this.dom.innerHTML = '';
+      var dl = document.createElement('dl');
+      this.dom.appendChild(dl);
       var page = this.root.getCurPage();
       if (page) {
+        dl.setAttribute('uuid', page.props.uuid);
         var children = page.children;
         if (!children.length) {
           return;
@@ -46320,9 +46323,12 @@
         var fragment = new DocumentFragment();
         for (var i = children.length - 1; i >= 0; i--) {
           var child = children[i];
-          fragment.appendChild(genNodeTree(child, child.struct.lv));
+          var res = genNodeTree(child, child.struct.lv);
+          var dd = document.createElement('dd');
+          dd.appendChild(res);
+          fragment.appendChild(dd);
         }
-        this.dom.appendChild(fragment);
+        dl.appendChild(fragment);
       }
     };
     Tree.prototype.hover = function (node) {
@@ -46371,7 +46377,10 @@
             dl = dl.parentElement;
           }
           dt.classList.add('active');
-          dt.scrollIntoView();
+          if (!_this.silence) {
+            // @ts-ignore
+            dt.scrollIntoViewIfNeeded ? dt.scrollIntoViewIfNeeded() : dt.scrollIntoView();
+          }
         }
       });
       if (nodes.length) ;

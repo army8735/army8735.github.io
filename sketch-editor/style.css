@@ -109,6 +109,7 @@ body {
 }
 .tree > dl {
   margin-left: 0;
+  height: auto;
 }
 .tree dt {
   display: flex;
