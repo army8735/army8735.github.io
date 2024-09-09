@@ -19667,9 +19667,8 @@
         });
       });
     },
-    registerAb: function (ab, focus) {
+    registerAb: function (ab) {
       var _a, _b, _c, _d, _e, _f, _g, _h;
-      if (focus === void 0) { focus = false; }
       var o = {};
       var f = opentype.parse(ab);
       if (f && f.name) {
@@ -19685,9 +19684,6 @@
       var style = ((_f = f.name.preferredSubfamily) === null || _f === void 0 ? void 0 : _f.en) || ((_g = f.name.fontSubfamily) === null || _g === void 0 ? void 0 : _g.en);
       var postscriptName = (_h = f.name.postScriptName) === null || _h === void 0 ? void 0 : _h.en;
       if (!family || !style || !postscriptName) {
-        return;
-      }
-      if (this.hasRegister(postscriptName) && !focus) {
         return;
       }
       if (!info.hasOwnProperty(family)) {
@@ -26375,7 +26371,6 @@
     Event.STYLE_CHANGED = 'STYLE_CHANGED';
     Event.DID_ADD_PAGE = 'DID_ADD_PAGE';
     Event.WILL_REMOVE_PAGE = 'WILL_REMOVE_PAGE';
-    Event.UPDATE_CURSOR = 'UPDATE_CURSOR';
     return Event;
   }());
 
@@ -37280,15 +37275,23 @@
       var local = calPoint({ x: x, y: y }, im);
       var lineBoxList = this.lineBoxList;
       var cursor = this.cursor;
+      var start = cursor.start;
       cursor.isMulti = false;
       var len = lineBoxList.length;
       for (var i = 0; i < len; i++) {
         var lineBox_5 = lineBoxList[i];
         // 确定y在哪一行后
         if (local.y >= lineBox_5.y && local.y < lineBox_5.y + lineBox_5.lineHeight) {
-          cursor.startLineBox = i;
+          cursor.startLineBox = cursor.endLineBox = i;
           var res_1 = this.getCursorByLocalX(local.x, lineBox_5, false);
+          cursor.endTextBox = cursor.startTextBox;
+          cursor.endString = cursor.startString;
+          cursor.end = cursor.start;
           this.tempCursorX = this.currentCursorX = res_1.x;
+          // 点在老的地方不清空，防止连续点击同一位置
+          if (cursor.start !== start) {
+            this.inputStyle = undefined;
+          }
           var p_1 = calPoint({ x: res_1.x, y: res_1.y }, m);
           return {
             x: p_1.x,
@@ -37299,9 +37302,16 @@
       }
       // 找不到认为是最后一行末尾
       var lineBox = lineBoxList[len - 1];
-      cursor.startLineBox = len - 1;
+      cursor.startLineBox = cursor.endLineBox = len - 1;
       var res = this.getCursorByLocalX(this.width, lineBox, false);
+      cursor.endTextBox = cursor.startTextBox;
+      cursor.endString = cursor.startString;
+      cursor.end = cursor.start;
       this.tempCursorX = this.currentCursorX = res.x;
+      // 点在老的地方不清空，防止连续点击同一位置
+      if (cursor.start !== start) {
+        this.inputStyle = undefined;
+      }
       var p = calPoint({ x: res.x, y: res.y }, m);
       return {
         x: p.x,
@@ -37309,7 +37319,7 @@
         h: res.h * m[0],
       };
     };
-    // 设置结束光标位置
+    // 设置结束光标位置，多选时用
     Text.prototype.setCursorEndByAbsCoords = function (x, y) {
       var m = this.matrixWorld;
       var im = inverse4(m);
@@ -37345,6 +37355,10 @@
       if (cursor.end !== end) {
         this.refresh();
       }
+      // 多选区清空输入的新样式，如果在原地轻微移动不改变end则保持panel设置的新样式，防止手抖
+      if (cursor.end !== cursor.start) {
+        this.inputStyle = undefined;
+      }
       var p = calPoint({ x: res.x, y: res.y }, m);
       return {
         x: p.x,
@@ -37352,12 +37366,17 @@
         h: res.h * m[0],
       };
     };
+    // 重置为非multi，如有需要刷新取消选区
     Text.prototype.resetCursor = function () {
       var cursor = this.cursor;
       if (cursor.isMulti) {
         cursor.isMulti = false;
         if (cursor.start !== cursor.end) {
           this.refresh();
+          cursor.endLineBox = cursor.startLineBox;
+          cursor.endTextBox = cursor.startTextBox;
+          cursor.endString = cursor.startString;
+          cursor.end = cursor.start;
         }
       }
     };
@@ -37991,19 +38010,22 @@
       };
     };
     // 上下左右按键移动光标，上下保持当前x（tempCursorX），左右则更新
-    Text.prototype.moveCursor = function (code) {
+    Text.prototype.moveCursor = function (code, isEnd) {
+      if (isEnd === void 0) { isEnd = false; }
       var matrix = this.matrixWorld;
       // 先求得当前光标位置在字符串的索引
       var cursor = this.cursor;
       var sorted = this.getSortedCursor();
-      var i = sorted.startLineBox, j = sorted.startTextBox, k = sorted.startString;
+      var i = isEnd ? sorted.endLineBox : sorted.startLineBox;
+      var j = isEnd ? sorted.endTextBox : sorted.startTextBox;
+      var k = isEnd ? sorted.endString : sorted.startString;
       var lineBoxList = this.lineBoxList;
       var lineBox = lineBoxList[i];
       var list = lineBox.list;
       var textBox = list[j];
-      var pos = textBox ? (textBox.index + k) : (lineBox.index + k); // 空行时k就是0
-      // multi原地取消多选
-      if (cursor.isMulti) {
+      var pos = isEnd ? sorted.end : sorted.start;
+      // multi移动光标原地取消多选
+      if (cursor.isMulti && !isEnd) {
         cursor.isMulti = false;
         if (cursor.start !== cursor.end) {
           this.refresh();
@@ -38016,8 +38038,12 @@
           textBox = list[m];
           pos = textBox ? (textBox.index + n) : (lineBox.index + n);
         }
+        this.inputStyle = undefined;
         // 更新会把当前值赋给start
         return this.updateCursorByIndex(pos);
+      }
+      else if (isEnd) {
+        cursor.isMulti = true;
       }
       // 左
       if (code === 37) {
@@ -38028,35 +38054,75 @@
         if (k === 0) {
           // 行开头要到上行末尾
           if (j === 0) {
-            cursor.startLineBox = --i;
+            if (isEnd) {
+              cursor.endLineBox = --i;
+            }
+            else {
+              cursor.startLineBox = --i;
+            }
             lineBox = lineBoxList[i];
             list = lineBox.list;
             // 防止上一行是空行
             if (!list.length) {
-              cursor.startTextBox = 0;
-              cursor.startString = 0;
-              cursor.start = lineBox.index;
+              if (isEnd) {
+                cursor.endTextBox = 0;
+                cursor.endString = 0;
+                cursor.end = lineBox.index;
+              }
+              else {
+                cursor.startTextBox = 0;
+                cursor.startString = 0;
+                cursor.start = lineBox.index;
+              }
             }
             else {
-              cursor.startTextBox = j = list.length - 1;
+              if (isEnd) {
+                cursor.endTextBox = j = list.length - 1;
+              }
+              else {
+                cursor.startTextBox = j = list.length - 1;
+              }
               // 看是否是enter，决定是否到末尾
               textBox = list[j];
-              cursor.startString = textBox.str.length - (lineBox.endEnter ? 0 : 1);
-              cursor.start = textBox.index + cursor.startString;
+              if (isEnd) {
+                cursor.endString = textBox.str.length - (lineBox.endEnter ? 0 : 1);
+                cursor.end = textBox.index + cursor.endString;
+              }
+              else {
+                cursor.startString = textBox.str.length - (lineBox.endEnter ? 0 : 1);
+                cursor.start = textBox.index + cursor.startString;
+              }
             }
           }
           // 非行开头到上个textBox末尾
           else {
-            cursor.startTextBox = --j;
+            if (isEnd) {
+              cursor.endTextBox = --j;
+            }
+            else {
+              cursor.startTextBox = --j;
+            }
             textBox = list[j];
-            cursor.startString = textBox.str.length - 1;
-            cursor.start = textBox.index + cursor.startString;
+            if (isEnd) {
+              cursor.endString = textBox.str.length - 1;
+              cursor.end = textBox.index + cursor.endString;
+            }
+            else {
+              cursor.startString = textBox.str.length - 1;
+              cursor.start = textBox.index + cursor.startString;
+            }
           }
         }
         // textBox内容中
         else {
-          cursor.startString = --k;
-          cursor.start = textBox.index + cursor.startString;
+          if (isEnd) {
+            cursor.endString = --k;
+            cursor.end = textBox.index + cursor.endString;
+          }
+          else {
+            cursor.startString = --k;
+            cursor.start = textBox.index + cursor.startString;
+          }
         }
       }
       // 上
@@ -38064,22 +38130,38 @@
         if (pos === 0) {
           return;
         }
-        if (cursor.isMulti) {
-          cursor.isMulti = false;
-          this.refresh();
-        }
         // 第一行到开头
         if (i === 0) {
-          cursor.startTextBox = 0;
+          if (isEnd) {
+            cursor.endTextBox = 0;
+          }
+          else {
+            cursor.startTextBox = 0;
+          }
           textBox = list[0];
-          cursor.startString = 0;
-          cursor.start = 0;
+          if (isEnd) {
+            cursor.endString = 0;
+            cursor.end = 0;
+          }
+          else {
+            cursor.startString = 0;
+            cursor.start = 0;
+          }
         }
         // 向上一行找最接近的，保持当前的x，直接返回结果
         else {
           lineBox = lineBoxList[--i];
-          cursor.startLineBox = i;
-          var res = this.getCursorByLocalX(this.tempCursorX, lineBox, false);
+          if (isEnd) {
+            cursor.endLineBox = i;
+          }
+          else {
+            cursor.startLineBox = i;
+          }
+          var res = this.getCursorByLocalX(this.tempCursorX, lineBox, isEnd);
+          if (isEnd) {
+            this.refresh();
+          }
+          this.inputStyle = undefined;
           var p_4 = calPoint({ x: res.x, y: res.y }, matrix);
           return {
             x: p_4.x,
@@ -38096,40 +38178,91 @@
         // 本行空行，或者已经到行末尾且是enter换行
         if (!textBox ||
           (j === list.length - 1 && k === textBox.str.length && lineBox.endEnter)) {
-          cursor.startLineBox = ++i;
-          cursor.startTextBox = 0;
-          cursor.startString = 0;
+          if (isEnd) {
+            cursor.endLineBox = ++i;
+            cursor.endTextBox = 0;
+            cursor.endString = 0;
+          }
+          else {
+            cursor.startLineBox = ++i;
+            cursor.startTextBox = 0;
+            cursor.startString = 0;
+          }
           lineBox = lineBoxList[i];
           list = lineBox.list;
           textBox = list[0];
-          cursor.start = textBox.index;
+          if (isEnd) {
+            cursor.end = textBox.index;
+          }
+          else {
+            cursor.start = textBox.index;
+          }
         }
-        // 已经到行末尾，自动换行用鼠标也能点到末尾，下行一定有内容不可能是enter
+        // 已经到行末尾，自动换行用鼠标也能点到末尾但按键统一下行，下行一定不是空行
         else if (j === list.length - 1 && k === textBox.str.length) {
-          cursor.startLineBox = ++i;
-          cursor.startTextBox = 0;
-          cursor.startString = 1;
+          if (isEnd) {
+            cursor.endLineBox = ++i;
+            cursor.endTextBox = 0;
+            cursor.endString = 1;
+          }
+          else {
+            cursor.startLineBox = ++i;
+            cursor.startTextBox = 0;
+            cursor.startString = 1;
+          }
           lineBox = lineBoxList[i];
           list = lineBox.list;
           textBox = list[0];
-          cursor.start = textBox.index;
+          if (isEnd) {
+            cursor.end = textBox.index + 1;
+          }
+          else {
+            cursor.start = textBox.index + 1;
+          }
         }
         // 已经到textBox末尾（行中非行尾），等同于next的开头
         else if (k === textBox.str.length) {
-          cursor.startTextBox = ++j;
+          if (isEnd) {
+            cursor.endTextBox = ++j;
+          }
+          else {
+            cursor.startTextBox = ++j;
+          }
           textBox = list[j];
-          cursor.startString = 1;
-          cursor.start = textBox.index + 1;
+          if (isEnd) {
+            cursor.endString = 1;
+            cursor.end = textBox.index + 1;
+          }
+          else {
+            cursor.startString = 1;
+            cursor.start = textBox.index + 1;
+          }
           // 歧义的原因，可能此时已经到了行尾（最后一个textBox只有1个字符，光标算作prev的末尾时右移），如果不是enter要视作下行开头
           if (j === list.length - 1 && textBox.str.length === 1) {
             if (!lineBox.endEnter && i < lineBoxList.length - 1) {
-              cursor.startLineBox = ++i;
+              if (isEnd) {
+                cursor.endLineBox = ++i;
+              }
+              else {
+                cursor.startLineBox = ++i;
+              }
               lineBox = lineBoxList[i];
               list = lineBox.list;
-              cursor.startTextBox = j = 0;
+              if (isEnd) {
+                cursor.endTextBox = j = 0;
+              }
+              else {
+                cursor.startTextBox = j = 0;
+              }
               textBox = list[j];
-              cursor.startString = 0;
-              cursor.start = textBox.index;
+              if (isEnd) {
+                cursor.endString = 0;
+                cursor.end = textBox.index;
+              }
+              else {
+                cursor.startString = 0;
+                cursor.start = textBox.index;
+              }
             }
           }
         }
@@ -38138,31 +38271,70 @@
           // 行末尾特殊检查是否是回车导致的换行，回车停留在末尾，否则到下行开头，最后一行也停留
           if (j === list.length - 1) {
             if (lineBox.endEnter || i === lineBoxList.length - 1) {
-              cursor.startString++;
-              cursor.start = textBox.index + cursor.startString;
+              if (isEnd) {
+                cursor.endString++;
+                cursor.end = textBox.index + cursor.endString;
+              }
+              else {
+                cursor.startString++;
+                cursor.start = textBox.index + cursor.startString;
+              }
             }
             else {
-              cursor.startLineBox = ++i;
+              if (isEnd) {
+                cursor.endLineBox = ++i;
+              }
+              else {
+                cursor.startLineBox = ++i;
+              }
               lineBox = lineBoxList[i];
               list = lineBox.list;
-              cursor.startTextBox = j = 0;
+              if (isEnd) {
+                cursor.endTextBox = j = 0;
+              }
+              else {
+                cursor.startTextBox = j = 0;
+              }
               textBox = list[j];
-              cursor.startString = 0;
-              cursor.start = textBox.index;
+              if (isEnd) {
+                cursor.endString = 0;
+                cursor.end = textBox.index;
+              }
+              else {
+                cursor.startString = 0;
+                cursor.start = textBox.index;
+              }
             }
           }
           // 非行末尾到下个textBox开头
           else {
-            cursor.startTextBox = ++j;
+            if (isEnd) {
+              cursor.endTextBox = ++j;
+            }
+            else {
+              cursor.startTextBox = ++j;
+            }
             textBox = list[j];
-            cursor.startString = 0;
-            cursor.start = textBox.index;
+            if (isEnd) {
+              cursor.endString = 0;
+              cursor.end = textBox.index;
+            }
+            else {
+              cursor.startString = 0;
+              cursor.start = textBox.index;
+            }
           }
         }
         // textBox非末尾
         else {
-          cursor.startString = ++k;
-          cursor.start = textBox.index + cursor.startString;
+          if (isEnd) {
+            cursor.endString = ++k;
+            cursor.end = textBox.index + cursor.endString;
+          }
+          else {
+            cursor.startString = ++k;
+            cursor.start = textBox.index + cursor.startString;
+          }
         }
       }
       // 下
@@ -38172,16 +38344,36 @@
         }
         // 最后一行到末尾
         if (i === lineBoxList.length - 1) {
-          cursor.startTextBox = j = list.length - 1;
+          if (isEnd) {
+            cursor.endTextBox = j = list.length - 1;
+          }
+          else {
+            cursor.startTextBox = j = list.length - 1;
+          }
           textBox = list[j];
-          cursor.startString = textBox ? textBox.str.length : 0;
-          cursor.start = textBox.index + cursor.startString;
+          if (isEnd) {
+            cursor.endString = textBox ? textBox.str.length : 0;
+            cursor.end = textBox.index + cursor.endString;
+          }
+          else {
+            cursor.startString = textBox ? textBox.str.length : 0;
+            cursor.start = textBox.index + cursor.startString;
+          }
         }
         // 向下一行找最接近的，保持当前的x，直接返回结果
         else {
           lineBox = lineBoxList[++i];
-          cursor.startLineBox = i;
-          var res = this.getCursorByLocalX(this.tempCursorX, lineBox, false);
+          if (isEnd) {
+            cursor.endLineBox = i;
+          }
+          else {
+            cursor.startLineBox = i;
+          }
+          var res = this.getCursorByLocalX(this.tempCursorX, lineBox, isEnd);
+          if (isEnd) {
+            this.refresh();
+          }
+          this.inputStyle = undefined;
           var p_5 = calPoint({ x: res.x, y: res.y }, matrix);
           return {
             x: p_5.x,
@@ -38212,6 +38404,10 @@
           this.tempCursorX = this.currentCursorX = 0;
         }
       }
+      if (isEnd) {
+        this.refresh();
+      }
+      this.inputStyle = undefined;
       var p = calPoint({ x: this.currentCursorX, y: lineBox.y }, matrix);
       return {
         x: p.x,
@@ -38224,7 +38420,39 @@
      * 其它几种都不需要：左右百分比定宽、左固定、右固定、左百分比+定宽，
      * 不会出现仅右百分比的情况，所有改变处理都一样
      */
-    Text.prototype.input = function (s, style) {
+    Text.prototype.input = function (s) {
+      var payload = this.beforeEdit();
+      var _a = this.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
+      var c = this._content;
+      // 选择区域特殊情况，先删除掉这一段文字，还要使用选区开头的样式
+      if (isMulti) {
+        var r = this.getCursorRich();
+        this.cursor.isMulti = false;
+        this._content = c.slice(0, start) + c.slice(end);
+        this.cutRich(start, end);
+        c = this._content;
+        this._content = c.slice(0, start) + s + c.slice(start);
+        this.insertRich(r[0], start, s.length);
+      }
+      // 有新增的输入样式
+      else if (this.inputStyle) {
+        var r = this.getCursorRich();
+        this._content = c.slice(0, start) + s + c.slice(start);
+        this.insertRich(Object.assign({}, r[0], this.inputStyle), start, s.length);
+        this.inputStyle = undefined;
+      }
+      // 否则是在当前Rich上增加内容
+      else {
+        this._content = c.slice(0, start) + s + c.slice(start);
+        this.expandRich(start, s.length);
+      }
+      this.refresh(RefreshLevel.REFLOW);
+      this.afterEdit(payload);
+      this.updateCursorByIndex(start + s.length);
+    };
+    // 按下回车触发
+    Text.prototype.enter = function () {
+      this.inputStyle = undefined;
       var payload = this.beforeEdit();
       var _a = this.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
       // 选择区域特殊情况，先删除掉这一段文字
@@ -38234,31 +38462,6 @@
         var c_1 = this._content;
         this._content = c_1.slice(0, start) + c_1.slice(end);
       }
-      // 传入style说明是插入一段新Rich
-      if (style) {
-        this.insertRich(style, start, s.length);
-      }
-      // 否则是在当前Rich上增加内容
-      else {
-        this.expandRich(start, s.length);
-      }
-      var c = this._content;
-      this._content = c.slice(0, start) + s + c.slice(start);
-      this.refresh(RefreshLevel.REFLOW);
-      this.afterEdit(payload);
-      this.updateCursorByIndex(start + s.length);
-    };
-    // 按下回车触发
-    Text.prototype.enter = function () {
-      var payload = this.beforeEdit();
-      var _a = this.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
-      // 选择区域特殊情况，先删除掉这一段文字
-      if (isMulti) {
-        this.cursor.isMulti = false;
-        this.cutRich(start, end);
-        var c_2 = this._content;
-        this._content = c_2.slice(0, start) + c_2.slice(end);
-      }
       this.expandRich(start, 1);
       var c = this._content;
       this._content = c.slice(0, start) + '\n' + c.slice(start);
@@ -38267,30 +38470,40 @@
       this.updateCursorByIndex(start + 1);
     };
     // 按下delete键触发
-    Text.prototype.delete = function () {
+    Text.prototype.delete = function (isDeleteKey) {
+      if (isDeleteKey === void 0) { isDeleteKey = false; }
+      this.inputStyle = undefined;
       var c = this._content;
       // 没内容没法删
       if (!c) {
         return;
       }
       var _a = this.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
-      // 开头也没法删
-      if (!start) {
+      // 开头backspace没法删
+      if (start < 1 && !isMulti && !isDeleteKey) {
+        return;
+      }
+      // 结尾delete键没法删
+      else if (start === c.length && isDeleteKey) {
         return;
       }
       var payload = this.beforeEdit();
       if (isMulti) {
         this.cursor.isMulti = false;
-        this.cutRich(start, end);
         this._content = c.slice(0, start) + c.slice(end);
+        this.cutRich(start, end);
+      }
+      else if (isDeleteKey) {
+        this._content = c.slice(0, start) + c.slice(start + 1);
+        this.cutRich(start, start + 1);
       }
       else {
-        this.cutRich(start - 1, start);
         this._content = c.slice(0, start - 1) + c.slice(start);
+        this.cutRich(start - 1, start);
       }
       this.refresh(RefreshLevel.REFLOW);
       this.afterEdit(payload);
-      if (isMulti) {
+      if (isMulti || isDeleteKey) {
         this.updateCursorByIndex(start);
       }
       else {
@@ -38400,6 +38613,14 @@
       }
       // 空行特殊判断对齐方式
       if (!list.length) {
+        if (isEnd) {
+          cursor.endString = 0;
+          cursor.end = lineBox.index;
+        }
+        else {
+          cursor.startString = 0;
+          cursor.start = lineBox.index;
+        }
         var textAlign = this.computedStyle.textAlign;
         if (textAlign === TEXT_ALIGN.CENTER) {
           rx = this.width * 0.5;
@@ -38521,6 +38742,43 @@
       if (lv) {
         this.refresh(lv);
       }
+      // 开头同时更新节点本身默认样式
+      if (location === 0) {
+        if (style.fontFamily !== undefined) {
+          this.style.fontFamily.v = style.fontFamily;
+        }
+        if (style.fontSize !== undefined) {
+          this.style.fontSize.v = style.fontSize;
+        }
+        if (style.color !== undefined) {
+          this.style.color.v = color2rgbaInt(style.color);
+        }
+        if (style.letterSpacing !== undefined) {
+          this.style.letterSpacing.v = style.letterSpacing;
+        }
+        if (style.lineHeight !== undefined) {
+          if (style.lineHeight === 0) {
+            this.style.lineHeight.v = 0;
+            this.style.lineHeight.u = StyleUnit.AUTO;
+          }
+          else {
+            this.style.lineHeight.v = style.lineHeight;
+            this.style.lineHeight.u = StyleUnit.PX;
+          }
+        }
+        if (style.paragraphSpacing !== undefined) {
+          this.style.paragraphSpacing.v = style.paragraphSpacing;
+        }
+        if (style.textAlign !== undefined) {
+          this.style.textAlign.v = style.textAlign;
+        }
+        if (style.textDecoration !== undefined) {
+          this.style.textDecoration = style.textDecoration.map(function (item) { return ({
+            v: item,
+            u: StyleUnit.NUMBER,
+          }); });
+        }
+      }
       this.afterEdit(payload);
     };
     Text.prototype.updateRichItem = function (item, style) {
@@ -38589,21 +38847,28 @@
           // 跨多个选区
           else {
             item.length = start - item.location;
-            for (var j = i + 1; j < len; j++) {
+            for (var j = i + 1, len_13 = rich.length; j < len_13; j++) {
               var item2 = rich[j];
-              if (item2.location <= end && item2.location + item2.length > end) {
-                item2.length = end - item2.location;
-                item2.location = item.location + item.length;
+              if (item2.location <= end && (item2.location + item2.length > end || j === len_13 - 1)) {
+                item2.length -= end - item2.location;
+                item2.location -= count;
+                // 后续的偏移
+                for (var k = j + 1, len_14 = rich.length; k < len_14; k++) {
+                  rich[k].location -= count;
+                }
                 // 开始和结束的rich中间有的话删除
                 if (i < j - 1) {
-                  rich.splice(i + 1, j - i + 1);
+                  rich.splice(i + 1, j - i - 1);
                 }
-                // 后续的偏移
-                for (var k = j + 1; k < len; k++) {
-                  rich[k].location -= count;
+                // end是末尾时会遇到
+                if (!item2.length) {
+                  rich.splice(j, 1);
                 }
                 break;
               }
+            }
+            if (!item.length) {
+              rich.splice(i, 1);
             }
           }
           break;
@@ -38613,7 +38878,7 @@
     };
     // 输入文字后扩展所在位置的rich
     Text.prototype.expandRich = function (start, length) {
-      var rich = this.rich;
+      var _a = this, rich = _a.rich, content = _a._content;
       // 空内容下，start会是0
       if (!rich.length) {
         var computedStyle = this.computedStyle;
@@ -38633,16 +38898,24 @@
         });
         return;
       }
+      start = Math.max(0, start);
+      // 处在两个location之间的，以前一个样式为准，\n分割的话点击首尾的start不同需特殊处理行头，只考虑行首即可因为点不到\n后面（lineBox不包含\n）
       for (var i = 0, len = rich.length; i < len; i++) {
         var item = rich[i];
-        if (item.location <= start && (item.location + item.length > start || i === len - 1)) {
+        // 用<=start防止开头0时无法命中，另外\n换行点行首也会命中；>=start则命中交界处的前一个
+        if (item.location <= start && item.location + item.length >= start) {
+          if (start === item.location + item.length && content.charAt(start - 1) === '\n') {
+            continue;
+          }
           item.length += length;
           for (var j = i + 1; j < len; j++) {
             rich[j].location += length;
           }
-          break;
+          return;
         }
       }
+      // 兜底末尾
+      rich[rich.length - 1].length += length;
     };
     Text.prototype.insertRich = function (style, start, length) {
       var computedStyle = this.computedStyle;
@@ -38654,14 +38927,13 @@
         fontWeight: 400,
         fontStyle: 'normal',
         letterSpacing: computedStyle.letterSpacing,
-        textAlign: [TEXT_ALIGN.LEFT, TEXT_ALIGN.RIGHT, TEXT_ALIGN.CENTER, TEXT_ALIGN.JUSTIFY][computedStyle.textAlign],
+        textAlign: computedStyle.textAlign,
         textDecoration: computedStyle.textDecoration,
         lineHeight: computedStyle.lineHeight,
         paragraphSpacing: computedStyle.paragraphSpacing,
         color: computedStyle.color,
       }, style);
       st.color = color2rgbaInt(st.color);
-      // 防止被style中脏数据覆盖
       st.location = start;
       st.length = length;
       var rich = this.rich;
@@ -38671,7 +38943,7 @@
       }
       for (var i = 0, len = rich.length; i < len; i++) {
         var item = rich[i];
-        if (item.location <= start && item.location + item.length > start) {
+        if (item.location <= start && item.location + item.length >= start) {
           // 后续偏移
           for (var j = i + 1; j < len; j++) {
             rich[j].location += length;
@@ -38681,7 +38953,10 @@
             rich.splice(i, 0, st);
             item.location += length;
           }
-          else {
+          else if (item.location + item.length === start) {
+            rich.splice(i + 1, 0, st);
+          }
+          else if (item.location + item.length > start) {
             var copy = clone(item);
             item.length = start - item.location;
             copy.location = start + length;
@@ -38782,6 +39057,12 @@
             hasMerge = true;
           }
         }
+        // 如果\n单独形成样式，合并它（操作\n前后字符情况下会出现），因为它无意义
+        else if (b.length === 1 && content.charAt(b.location) === '\n') {
+          a.length += b.length;
+          rich.splice(i + 1, 1);
+          hasMerge = true;
+        }
       }
       return hasMerge;
     };
@@ -38836,6 +39117,9 @@
     Text.prototype.getCursorRich = function () {
       var _a = this, rich = _a.rich, lineBoxList = _a.lineBoxList;
       var res = [];
+      if (!rich.length) {
+        return res;
+      }
       function get2(t, i, j) {
         if (i === void 0) { i = 0; }
         if (j === void 0) { j = rich.length - 1; }
@@ -38875,15 +39159,15 @@
         // 空行
         if (!list.length) {
           var r = get2(lineBox.index);
-          if (res.indexOf(r) === -1) {
+          if (r && res.indexOf(r) === -1) {
             res.push(r);
           }
         }
         else {
-          // 如果光标在textBox的开头，要取前一个的，除非当前textBox是行首取当前的用+1来hack
+          // 如果光标在textBox的开头，要取前一个的，除非当前textBox是行首取当前的
           var textBox = list[startTextBox];
           var r = get2(textBox.index + (startTextBox + startString === 0 ? 1 : startString));
-          if (res.indexOf(r) === -1) {
+          if (r && res.indexOf(r) === -1) {
             res.push(r);
           }
         }
@@ -44341,24 +44625,32 @@
             // 回车等候一下让input先触发，输入法状态不会触发
             setTimeout(function () {
               _this.node.enter();
+              _this.showCursor();
               _this.updateCursor();
               listener.select.updateSelect([_this.node]);
               listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
               listener.emit(Listener.CURSOR_NODE, [_this.node]);
             }, 0);
           }
-          else if (keyCode === 8) {
+          else if (keyCode === 8 || keyCode === 46) {
             e.stopPropagation();
-            _this.node.delete();
+            _this.node.delete(keyCode === 46);
+            _this.showCursor();
             _this.updateCursor();
             listener.select.updateSelect([_this.node]);
             listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
             listener.emit(Listener.CURSOR_NODE, [_this.node]);
           }
           else if (keyCode >= 37 && keyCode <= 40) {
-            var p = _this.node.moveCursor(keyCode);
-            _this.updateCursor(p);
-            _this.showCursor();
+            e.stopPropagation();
+            var p = _this.node.moveCursor(keyCode, e.shiftKey);
+            if (e.shiftKey) {
+              _this.hideCursor();
+            }
+            else {
+              _this.showCursor();
+              _this.updateCursor(p);
+            }
             listener.emit(Listener.CURSOR_NODE, [_this.node]);
           }
         }
@@ -44420,7 +44712,7 @@
         duration: 800,
         iterations: Infinity,
       });
-      // 点击外部自动取消focus输入状态，除非画布自身（listener内逻辑控制），除非textPanel
+      // 点击外部会blur，当来自画布自身且编辑态需自动focus，还有来自textPanel（ignoreBlur）
       document.addEventListener('click', function (e) {
         var _a, _b;
         if (listener.state === State$1.EDIT_TEXT) {
@@ -44429,7 +44721,7 @@
           while (p) {
             if (p === listener.dom || _this.ignoreBlur.includes(p)) {
               // 防止来源input无法聚焦
-              if (target.tagName.toUpperCase() !== 'INPUT') {
+              if (!['INPUT', 'SELECT'].includes(target.tagName.toUpperCase())) {
                 _this.focus();
               }
               return;
@@ -44460,6 +44752,7 @@
     Input.prototype.hide = function () {
       this.containerEl.style.opacity = '0';
       this.inputEl.blur();
+      this.node = undefined;
     };
     Input.prototype.focus = function () {
       this.inputEl.focus();
@@ -44470,6 +44763,7 @@
     Input.prototype.showCursor = function () {
       this.cursorEl.style.opacity = '1';
     };
+    // 选区时隐藏光标但还是focus状态（外部控制）
     Input.prototype.hideCursor = function () {
       this.cursorEl.style.opacity = '0';
     };
@@ -44920,6 +45214,7 @@
     return ColorAdjustCommand;
   }(UpdateStyleCommand));
 
+  var isWin = typeof navigator !== 'undefined' && /win/i.test(navigator.platform);
   var Listener = /** @class */ (function (_super) {
     __extends(Listener, _super);
     function Listener(root, dom, options) {
@@ -45048,9 +45343,11 @@
         if (this.state === State$1.EDIT_TEXT) {
           this.state = State$1.NORMAL;
           this.input.hide();
+          selected[0].resetCursor();
+          selected[0].inputStyle = undefined;
         }
         // 旋转时记住中心坐标
-        if (selected.length === 1 && this.metaKey
+        if (selected.length === 1 && (this.metaKey || isWin && this.ctrlKey)
           && [CONTROL_TYPE.TL, CONTROL_TYPE.TR, CONTROL_TYPE.BL, CONTROL_TYPE.BR].indexOf(controlType_1) > -1) {
           var points = selected[0].getBoundingClientRect().points;
           var i = intersectLineLine(points[0].x, points[0].y, points[2].x, points[2].y, points[1].x, points[1].y, points[3].x, points[3].y);
@@ -45128,7 +45425,7 @@
       // 点到canvas上
       else {
         // 非按键多选情况下点击框内，视为移动，多选时选框一定是无旋转的
-        if (selected.length > 1 && !this.metaKey && !this.shiftKey) {
+        if (selected.length > 1 && !(this.metaKey || isWin && this.ctrlKey) && !this.shiftKey) {
           var x_1 = e.clientX;
           var y_1 = e.clientY;
           var rect = this.select.select.getBoundingClientRect();
@@ -45140,9 +45437,9 @@
         // 普通根据点击坐标获取节点逻辑
         var x = (e.clientX - this.originX) * dpi;
         var y = (e.clientY - this.originY) * dpi;
-        var node = getNodeByPoint(root, x, y, this.metaKey || ((_b = this.options.enabled) === null || _b === void 0 ? void 0 : _b.selectWithMeta), selected, false);
+        var node = getNodeByPoint(root, x, y, (this.metaKey || isWin && this.ctrlKey) || ((_b = this.options.enabled) === null || _b === void 0 ? void 0 : _b.selectWithMeta), selected, false);
         // 特殊的选择画板逻辑，mouseDown时不选择防止影响框选，mouseUp时才选择
-        if (this.metaKey && node instanceof ArtBoard && selected.indexOf(node) === -1) {
+        if ((this.metaKey || isWin && this.ctrlKey) && node instanceof ArtBoard && selected.indexOf(node) === -1) {
           // 如果已选的里面有此画板或者属于此画板，要忽略
           var ignore = false;
           for (var i = 0, len = selected.length; i < len; i++) {
@@ -45174,14 +45471,21 @@
               // 持续编辑更新文本的编辑光标并提前退出
               if (this.state === State$1.EDIT_TEXT) {
                 var text = selected[0];
-                text.resetCursor();
-                var p = this.shiftKey ? text.setCursorEndByAbsCoords(x, y) : text.setCursorStartByAbsCoords(x, y);
                 if (this.shiftKey) {
+                  text.setCursorEndByAbsCoords(x, y);
+                  text.inputStyle = undefined;
                   this.input.hideCursor();
                 }
                 else {
+                  var _c = text.cursor, isMulti = _c.isMulti, start = _c.start;
+                  text.resetCursor();
+                  var p = text.setCursorStartByAbsCoords(x, y);
                   this.input.updateCursor(p);
                   this.input.showCursor();
+                  // 没有变化不触发事件
+                  if (text.cursor.isMulti === isMulti && text.cursor.start === start) {
+                    return;
+                  }
                 }
                 this.emit(Listener.CURSOR_NODE, selected.slice(0));
                 return;
@@ -45220,16 +45524,19 @@
           if (this.state === State$1.EDIT_TEXT) {
             var text = selected[0];
             text.resetCursor();
+            text.inputStyle = undefined;
+            this.state = State$1.NORMAL;
+            this.input.hide();
           }
           else if (!this.shiftKey) {
             selected.splice(0);
           }
         }
         // 一定是退出文本的编辑状态，持续编辑文本在前面逻辑会提前跳出
-        if (this.state === State$1.EDIT_TEXT) {
-          this.state = State$1.NORMAL;
-          this.input.hide();
-        }
+        // if (this.state === State.EDIT_TEXT) {
+        //   this.state = State.NORMAL;
+        //   this.input.hide();
+        // }
         if (this.select.hoverNode) {
           this.select.hideHover();
           this.emit(Listener.UN_HOVER_NODE);
@@ -45245,7 +45552,7 @@
           return;
         }
         // 旋转需记住节点中心坐标
-        if (this.metaKey && selected.length === 1) {
+        if ((this.metaKey || isWin && this.ctrlKey) && selected.length === 1) {
           this.select.metaKey(true);
         }
         this.prepare();
@@ -45368,7 +45675,7 @@
             }
             var x = (this.startX - this.originX) * dpi;
             var y = (this.startY - this.originY) * dpi;
-            var res = getFrameNodes(root, x, y, x + dx * dpi, y + dy * dpi, this.metaKey);
+            var res = getFrameNodes(root, x, y, x + dx * dpi, y + dy * dpi, (this.metaKey || isWin && this.ctrlKey));
             var old = selected.splice(0);
             selected.push.apply(selected, res);
             // 已选择的没变优化
@@ -45431,7 +45738,7 @@
           return;
         }
         // mousemove时可以用offsetXY直接获取坐标无需关心dom位置原点等
-        var node = getNodeByPoint(root, e.offsetX * dpi, e.offsetY * dpi, this.metaKey || ((_c = this.options.enabled) === null || _c === void 0 ? void 0 : _c.selectWithMeta), selected, false);
+        var node = getNodeByPoint(root, e.offsetX * dpi, e.offsetY * dpi, (this.metaKey || isWin && this.ctrlKey) || ((_c = this.options.enabled) === null || _c === void 0 ? void 0 : _c.selectWithMeta), selected, false);
         if (node) {
           if (selected.indexOf(node) === -1 && this.select.hoverNode !== node) {
             this.select.showHover(node);
@@ -45484,7 +45791,7 @@
             return;
           }
           // mousemove时可以用offsetXY直接获取坐标无需关心dom位置原点等
-          var node = getNodeByPoint(root, e.offsetX * dpi, e.offsetY * dpi, this.metaKey || ((_c = this.options.enabled) === null || _c === void 0 ? void 0 : _c.selectWithMeta), selected, false);
+          var node = getNodeByPoint(root, e.offsetX * dpi, e.offsetY * dpi, (this.metaKey || isWin && this.ctrlKey) || ((_c = this.options.enabled) === null || _c === void 0 ? void 0 : _c.selectWithMeta), selected, false);
           if (node) {
             if (selected.indexOf(node) === -1) {
               this.select.showHover(node);
@@ -45523,7 +45830,7 @@
               rotateZ: node.computedStyle.rotateZ,
             },
           }]));
-          if (!this.metaKey) {
+          if (!(this.metaKey || isWin && this.ctrlKey)) {
             this.select.metaKey(false);
           }
         }
@@ -45610,7 +45917,7 @@
         }
       }
       // 特殊的选择画板逻辑，mouseDown时不选择防止影响框选，mouseUp时才选择，shift校验在down时做
-      else if (this.metaKey && this.mouseDownArtBoard) {
+      else if ((this.metaKey || isWin && this.ctrlKey) && this.mouseDownArtBoard) {
         if (!this.shiftKey) {
           selected.splice(0);
         }
@@ -45675,7 +45982,7 @@
         return;
       }
       var dpi = root.dpi;
-      var node = getNodeByPoint(root, (e.clientX - this.originX) * dpi, (e.clientY - this.originY) * dpi, this.metaKey || ((_a = this.options.enabled) === null || _a === void 0 ? void 0 : _a.selectWithMeta), this.selected, true);
+      var node = getNodeByPoint(root, (e.clientX - this.originX) * dpi, (e.clientY - this.originY) * dpi, (this.metaKey || isWin && this.ctrlKey) || ((_a = this.options.enabled) === null || _a === void 0 ? void 0 : _a.selectWithMeta), this.selected, true);
       // 忽略画板
       if (node && !(node instanceof ArtBoard)) {
         if (this.selected.length !== 1 || node !== this.selected[0]) {
@@ -45791,12 +46098,12 @@
       if (!page) {
         return;
       }
-      var isWin = typeof navigator !== 'undefined' && /win/i.test(navigator.platform);
-      if (this.metaKey && this.selected.length === 1) {
+      if ((this.metaKey || isWin && this.ctrlKey) && this.selected.length === 1) {
         this.select.metaKey(true);
       }
+      var keyCode = e.keyCode;
       // backspace
-      if (e.keyCode === 8 || e.keyCode === 46) {
+      if (keyCode === 8 || keyCode === 46) {
         var target = e.target; // 忽略输入时
         if (target.tagName.toUpperCase() !== 'INPUT' && this.selected.length && !((_a = this.options.disabled) === null || _a === void 0 ? void 0 : _a.remove)) {
           var nodes = this.selected.splice(0);
@@ -45810,14 +46117,14 @@
         }
       }
       // space
-      else if (e.keyCode === 32) {
+      else if (keyCode === 32) {
         this.spaceKey = true;
         if (!this.isMouseDown && !((_b = this.options.disabled) === null || _b === void 0 ? void 0 : _b.drag)) {
           this.dom.style.cursor = 'grab';
         }
       }
       // option+esc
-      else if (e.keyCode === 27 && this.altKey) {
+      else if (keyCode === 27 && this.altKey) {
         if (this.selected.length) {
           var node = this.selected[0];
           if (node instanceof Page || node instanceof Root || node instanceof ArtBoard) {
@@ -45831,7 +46138,7 @@
         }
       }
       // esc，优先隐藏颜色picker，再编辑文字回到普通，普通取消选择
-      else if (e.keyCode === 27) {
+      else if (keyCode === 27) {
         if (picker$1.isShow()) {
           picker$1.hide();
           if (this.state === State$1.EDIT_TEXT) {
@@ -45839,7 +46146,9 @@
           }
         }
         else if (this.state === State$1.EDIT_TEXT) {
-          this.selected[0].resetCursor();
+          var text = this.selected[0];
+          text.resetCursor();
+          text.inputStyle = undefined;
           this.state = State$1.NORMAL;
           this.input.hide();
         }
@@ -45850,8 +46159,10 @@
           this.emit(Listener.SELECT_NODE, this.selected.slice(0));
         }
       }
+      // 移动
+      else if (keyCode >= 37 && keyCode <= 40) ;
       // z，undo/redo
-      else if (e.keyCode === 90 && (this.metaKey || isWin && this.ctrlKey)) {
+      else if (keyCode === 90 && (this.metaKey || isWin && this.ctrlKey)) {
         var target = e.target;
         if (target && target.tagName.toUpperCase() === 'INPUT') {
           e.preventDefault();
@@ -45942,7 +46253,7 @@
       this.altKey = e.altKey;
       this.ctrlKey = e.ctrlKey;
       this.shiftKey = e.shiftKey;
-      if (!this.metaKey && !this.isRotate) {
+      if (!(this.metaKey || isWin && this.ctrlKey) && !this.isRotate) {
         this.select.metaKey(false);
       }
       // space
@@ -47561,6 +47872,7 @@
       var ps = panel.querySelector('.ps input');
       var ff = panel.querySelector('.ff select');
       var fw = panel.querySelector('.weight select');
+      var btn = panel.querySelector('.picker-btn b');
       var nodes = [];
       var prevs = [];
       var nexts = [];
@@ -47766,7 +48078,7 @@
           });
           select_1.innerHTML = s_1;
           // 暂时切换后统一Regular，如果没有则第一个
-          var ff_1 = fontWeightList[0].value;
+          var ff_1 = fontWeightList.length ? fontWeightList[0].value : value;
           for (var i = 0, len = fontWeightList.length; i < len; i++) {
             var item = fontWeightList[i];
             if (item.label.toLowerCase() === 'regular') {
@@ -47774,7 +48086,6 @@
               break;
             }
           }
-          select_1.value = ff_1;
           select_1.disabled = false;
           var data_1 = [];
           if (listener.state === State$1.EDIT_TEXT && _this.nodes.length === 1) {
@@ -47884,6 +48195,7 @@
           // 每次变更记录更新nexts
           p.onChange = function (color) {
             nexts = [];
+            btn.title = btn.style.background = color2hexStr(color.rgba);
             if (listener.state === State$1.EDIT_TEXT && nodes.length === 1) {
               var node = nodes[0];
               var _a = node.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
@@ -48106,32 +48418,21 @@
       });
       return _this;
     }
-    TextPanel.prototype.initFontList = function (names) {
-      var _a = style.font, info = _a.info, data = _a.data;
-      var hash = {};
-      if (names && names.length) {
-        names.forEach(function (name) {
-          // family
-          if (info.hasOwnProperty(name)) {
-            hash[name] = true;
-          }
-          // postscriptName
-          else if (data.hasOwnProperty(name)) {
-            hash[data[name].family] = true;
-          }
+    TextPanel.prototype.initFontList = function (custom) {
+      var info = style.font.info;
+      var s = '';
+      if (custom && custom.length) {
+        // 用默认的Arial数据兜底，加载后注册覆盖
+        var Arial_1 = info.Arail;
+        custom.forEach(function (item) {
+          o.registerData(__assign(__assign({}, Arial_1), item));
+          s += "<option value=\"".concat(item.family, "\">").concat(item.name, "</option>");
         });
       }
-      var s = '';
-      for (var i in info) {
-        if (info.hasOwnProperty(i)) {
-          if (names && names.length) {
-            if (!hash.hasOwnProperty(i)) {
-              continue;
-            }
-          }
-          var item = info[i];
-          var list = item.list || [];
-          if (list.length) {
+      else {
+        for (var i in info) {
+          if (info.hasOwnProperty(i)) {
+            var item = info[i];
             s += "<option value=\"".concat(i, "\">").concat(item.name || i, "</option>");
           }
         }
@@ -48191,13 +48492,26 @@
             multi.innerText = o.fontFamily[0];
             multi.classList.add('invalid');
             multi.style.display = 'block';
-            var option_3 = "<option value=\"".concat(o.postscriptName[0], "\" selected=\"selected\" disabled>").concat(o.fontFamily[0], "</option>");
-            select.innerHTML += option_3;
+            var option_3 = select.querySelector("option[value=\"".concat(o.postscriptName[0], "\"]"));
+            // 有可能手动initFontList了一个不可用的字体（特殊需求）已有，此时不添加不可选的选项展示
+            if (!option_3) {
+              var s = "<option value=\"".concat(o.postscriptName[0], "\" selected=\"selected\" disabled>").concat(o.fontFamily[0], "</option>");
+              select.innerHTML += s;
+            }
+            else {
+              select.value = o.postscriptName[0];
+            }
           }
           else {
             multi.style.display = 'none';
             multi.classList.remove('invalid');
-            select.value = o.fontFamily[0];
+            var option_4 = select.querySelector("option[value=\"".concat(o.postscriptName[0], "\"]"));
+            // 有可能手动initFontList没包含但此字体可用，添加之
+            if (!option_4) {
+              var s = "<option value=\"".concat(o.postscriptName[0], "\">").concat(o.fontFamily[0], "</option>");
+              select.innerHTML += s;
+            }
+            select.value = o.postscriptName[0];
           }
         }
       }
@@ -48216,16 +48530,16 @@
         var multi = panel.querySelector('.wc .multi');
         if (o.fontWeight.length > 1) {
           multi.style.display = 'block';
-          var option_4 = "<option value=\"\" selected=\"selected\" disabled>\u591A\u79CD\u5B57\u4F53</option>";
-          select.innerHTML += option_4;
+          var option_5 = "<option value=\"\" selected=\"selected\" disabled>\u591A\u79CD\u5B57\u4F53</option>";
+          select.innerHTML += option_5;
         }
         else {
           multi.style.display = 'none';
           var list = select.querySelectorAll('option');
           for (var i = 0, len = list.length; i < len; i++) {
-            var option_5 = list[i];
-            if (option_5.innerHTML === o.fontWeight[0]) {
-              option_5.selected = true;
+            var option_6 = list[i];
+            if (option_6.innerHTML === o.fontWeight[0]) {
+              option_6.selected = true;
               break;
             }
           }
@@ -49691,7 +50005,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.5.0";
+  var version = "0.5.2";
 
   var gl = {
     ca: ca,
