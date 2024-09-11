@@ -19691,7 +19691,7 @@
         var r = this._cal(family, f);
         Object.assign(o, r);
         o.list = [];
-        info[family] = o;
+        info[family] = data[family] = o;
       }
       this._register(family, style, postscriptName, true);
       inject.addArrayBufferFont(postscriptName, ab);
@@ -19747,14 +19747,11 @@
       var _this = this;
       var family = fd.family;
       if (!info.hasOwnProperty(family)) {
-        info[family] = fd;
+        info[family] = data[family] = fd;
       }
-      if (!data.hasOwnProperty(family)) {
-        fd.list.forEach(function (item) {
-          _this._register(family, item.style, item.postscriptName, item.loaded, item.url);
-        });
-        this.updateLocalStorage();
-      }
+      fd.list.forEach(function (item) {
+        _this._register(family, item.style, item.postscriptName, item.loaded, item.url);
+      });
     },
     updateLocalStorage: function () {
       var cache = {};
@@ -22534,9 +22531,9 @@
       stop: stop,
     };
   }
-  function convert2Css(g, node, opacity) {
-    if (opacity === void 0) { opacity = 1; }
-    var bbox = node.bbox, width = node.width, height = node.height;
+  function convert2Css(g, width, height) {
+    if (width === void 0) { width = 100; }
+    if (height === void 0) { height = 100; }
     var t = g.t, d = g.d, stops = g.stops;
     var x1 = d[0], y1 = d[1], x2 = d[2], y2 = d[3];
     x1 *= width;
@@ -22570,20 +22567,20 @@
     if (t === GRADIENT.LINEAR) {
       var start = void 0, end = void 0;
       if (deg <= 90) {
-        start = { x: bbox[0], y: bbox[3] };
-        end = { x: bbox[2], y: bbox[1] };
+        start = { x: 0, y: height };
+        end = { x: width, y: 0 };
       }
       else if (deg <= 180) {
-        start = { x: bbox[0], y: bbox[1] };
-        end = { x: bbox[2], y: bbox[3] };
+        start = { x: 0, y: 0 };
+        end = { x: width, y: height };
       }
       else if (deg <= 270) {
-        start = { x: bbox[2], y: bbox[1] };
-        end = { x: bbox[0], y: bbox[3] };
+        start = { x: width, y: 0 };
+        end = { x: 0, y: height };
       }
       else {
-        start = { x: bbox[2], y: bbox[3] };
-        end = { x: bbox[0], y: bbox[1] };
+        start = { x: width, y: height };
+        end = { x: 0, y: 0 };
       }
       var a = Math.sqrt(Math.pow(y2 - start.y, 2) + Math.pow(x2 - start.x, 2));
       var b = Math.sqrt(Math.pow(y1 - start.y, 2) + Math.pow(x1 - start.x, 2));
@@ -22687,7 +22684,6 @@
         if (i) {
           s_1 += ', ';
         }
-        item.color[3] *= opacity;
         item.color[3] = toPrecision(item.color[3]);
         s_1 += color2rgbaStr(item.color) + ' ' + toPrecision(item.offset * 100) + '%';
       });
@@ -22709,7 +22705,7 @@
         }
         var color = item.color.map(function (c, i) {
           if (i === 3) {
-            return toPrecision(c * opacity);
+            return toPrecision(c);
           }
           else {
             return Math.min(255, Math.floor(c * ratio_1));
@@ -22725,13 +22721,20 @@
         if (i) {
           s_3 += ', ';
         }
-        item.color[3] *= opacity;
         item.color[3] = toPrecision(item.color[3]);
         s_3 += color2rgbaStr(item.color) + ' ' + toPrecision(item.offset * 100) + '%';
       });
       return s_3 + ')';
     }
+    return '';
   }
+  var gradient = {
+    getColorStop: getColorStop,
+    getLinear: getLinear,
+    getRadial: getRadial,
+    getConic: getConic,
+    convert2Css: convert2Css,
+  };
 
   function compatibleTransform(k, v) {
     if (k === 'scaleX' || k === 'scaleY') {
@@ -23573,7 +23576,7 @@
     return color || 'rgba(0,0,0,0)';
   }
   function toHex(n) {
-    var r = n.toString(16);
+    var r = n.toString(16).toUpperCase();
     if (r.length === 1) {
       r = '0' + r;
     }
@@ -23695,6 +23698,17 @@
   function getCssShadow(item) {
     return "".concat(color2rgbaStr(item.color), " ").concat(item.x, " ").concat(item.y, " ").concat(item.blur, " ").concat(item.spread);
   }
+  function getCssFill(item, width, height) {
+    if (Array.isArray(item)) {
+      return color2rgbaStr(item);
+    }
+    var p = item;
+    if (p.url !== undefined) {
+      var type = ['tile', 'fill', 'stretch', 'fit'][p.type];
+      return "url(".concat(p.url, ") ").concat(type, " ").concat(p.scale);
+    }
+    return convert2Css(item, width, height);
+  }
   var css = {
     normalize: normalize,
     equalStyle: equalStyle,
@@ -23709,6 +23723,7 @@
     calSize: calSize,
     getCssBlur: getCssBlur,
     getCssShadow: getCssShadow,
+    getCssFill: getCssFill,
   };
 
   // sketch的Page没有尺寸，固定100
@@ -26259,6 +26274,7 @@
     transform: transform,
     define: define,
     css: css,
+    gradient: gradient,
   };
 
   var Event = /** @class */ (function () {
@@ -27775,6 +27791,7 @@
           res[k] = o.v;
         }
       });
+      res.opacity = computedStyle.opacity;
       res.color = color2rgbaStr(computedStyle.color);
       res.backgroundColor = color2rgbaStr(computedStyle.backgroundColor);
       res.fontStyle = ['normal', 'italic', 'oblique'][computedStyle.fontStyle];
@@ -27801,40 +27818,11 @@
       ['shadowEnable', 'strokeEnable', 'fillEnable', 'fillOpacity', 'strokeWidth'].forEach(function (k) {
         res[k] = computedStyle[k].slice(0);
       });
-      ['fill', 'stroke'].forEach(function (k) {
-        res[k] = computedStyle[k].map(function (item) {
-          if (Array.isArray(item)) {
-            return color2rgbaStr(item);
-          }
-          else {
-            if (item.url) {
-              var type = ['tile', 'fill', 'stretch', 'fit'][item.type];
-              return "url(".concat(item.url, ") ").concat(type, " ").concat(item.scale);
-            }
-            else if (item.t !== undefined) {
-              return convert2Css(item, _this);
-              // let s = 'linear-gradient';
-              // if (item.t === GRADIENT.RADIAL) {
-              //   s = 'radial-gradient';
-              // }
-              // else if (item.t === GRADIENT.CONIC) {
-              //   s = 'conic-gradient';
-              // }
-              // return `${s}(${item.d.join(' ')}, ${item.stops.map(
-              //   (stop: ColorStop) => {
-              //     return (
-              //       color2rgbaStr(stop.color.v) +
-              //       ' ' +
-              //       stop.offset!.v * 100 +
-              //       '%'
-              //     );
-              //   },
-              // )})`;
-            }
-            return '';
-          }
-        });
-      });
+      res.fill = computedStyle.fill.map(function (item) { return getCssFill(item, _this.width, _this.height); });
+      res.fillOpacity = computedStyle.fillOpacity.slice(0);
+      res.fillEnable = computedStyle.fillEnable.slice(0);
+      res.stroke = computedStyle.stroke.map(function (item) { return getCssFill(item, _this.width, _this.height); });
+      res.strokeEnable = computedStyle.strokeEnable.slice(0);
       res.strokeLinecap = ['butt', 'round', 'square'][computedStyle.strokeLinecap];
       res.strokeLinejoin = ['miter', 'round', 'bevel'][computedStyle.strokeLinejoin];
       res.strokePosition = computedStyle.strokePosition.map(function (item) {
@@ -44420,7 +44408,7 @@
     container: container,
   };
 
-  var html$b = "\n  <span class=\"l\">\n    <b></b>\n  </span>\n  <span class=\"t\">\n    <b></b>\n  </span>\n  <span class=\"r\">\n    <b></b>\n  </span>\n  <span class=\"b\">\n    <b></b>\n  </span>\n  <span class=\"tl\">\n    <b></b>\n  </span>\n  <span class=\"tr\">\n    <b></b>\n  </span>\n  <span class=\"br\">\n    <b></b>\n  </span>\n  <span class=\"bl\">\n    <b></b>\n  </span>\n";
+  var html$b = "\n  <span class=\"l\">\n    <b></b>\n  </span>\n  <span class=\"t\">\n    <b></b>\n  </span>\n  <span class=\"r\">\n    <b></b>\n  </span>\n  <span class=\"b\">\n    <b></b>\n  </span>\n  <div class=\"sub\"></div>\n  <span class=\"tl\">\n    <b></b>\n  </span>\n  <span class=\"tr\">\n    <b></b>\n  </span>\n  <span class=\"br\">\n    <b></b>\n  </span>\n  <span class=\"bl\">\n    <b></b>\n  </span>\n";
   var Select = /** @class */ (function () {
     function Select(root, dom) {
       this.root = root;
@@ -44534,8 +44522,11 @@
       this.select.style.display = 'block';
     };
     Select.prototype.updateSelect = function (selected) {
+      var sub = this.select.querySelector('.sub');
       if (selected.length === 1) {
+        sub.innerHTML = '';
         var res = this.calRect(selected[0]);
+        this.select.classList.remove('multi');
         this.select.style.left = res.left + 'px';
         this.select.style.top = res.top + 'px';
         this.select.style.width = res.width + 'px';
@@ -44544,9 +44535,14 @@
       }
       // 多个时表现不一样，忽略了旋转镜像等transform，取所有节点的boundingClientRect全集
       else if (selected.length > 1) {
+        this.select.classList.add('multi');
         var left_1 = 0, top_1 = 0, right_1 = 0, bottom_1 = 0;
+        var rects_1 = [];
         selected.forEach(function (item, i) {
           var rect = item.getBoundingClientRect();
+          rects_1.push({
+            left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
+          });
           if (i) {
             left_1 = Math.min(left_1, rect.left);
             top_1 = Math.min(top_1, rect.top);
@@ -44560,12 +44556,21 @@
             bottom_1 = rect.bottom;
           }
         });
-        var dpi = this.root.dpi;
-        this.select.style.left = left_1 / dpi + 'px';
-        this.select.style.top = top_1 / dpi + 'px';
-        this.select.style.width = (right_1 - left_1) / dpi + 'px';
-        this.select.style.height = (bottom_1 - top_1) / dpi + 'px';
+        var dpi_1 = this.root.dpi;
+        this.select.style.left = left_1 / dpi_1 + 'px';
+        this.select.style.top = top_1 / dpi_1 + 'px';
+        this.select.style.width = (right_1 - left_1) / dpi_1 + 'px';
+        this.select.style.height = (bottom_1 - top_1) / dpi_1 + 'px';
         this.select.style.transform = '';
+        // 多选更新每个节点的小框
+        var s_1 = '';
+        rects_1.forEach(function (item) {
+          s_1 += "<div style=\"left:".concat((item.left - left_1) / dpi_1, "px;top:").concat((item.top - top_1) / dpi_1, "px;width:").concat((item.right - item.left) / dpi_1, "px;height:").concat((item.bottom - item.top) / dpi_1, "px\"></div>");
+        });
+        var sub_1 = this.select.querySelector('.sub');
+        if (sub_1.innerHTML !== s_1) {
+          sub_1.innerHTML = s_1;
+        }
       }
     };
     Select.prototype.hideSelect = function () {
@@ -45727,18 +45732,16 @@
             var text = selected[0];
             text.resetCursor();
             text.inputStyle = undefined;
-            this.state = State$1.NORMAL;
-            this.input.hide();
           }
           else if (!this.shiftKey) {
             selected.splice(0);
           }
         }
         // 一定是退出文本的编辑状态，持续编辑文本在前面逻辑会提前跳出
-        // if (this.state === State.EDIT_TEXT) {
-        //   this.state = State.NORMAL;
-        //   this.input.hide();
-        // }
+        if (this.state === State$1.EDIT_TEXT) {
+          this.state = State$1.NORMAL;
+          this.input.hide();
+        }
         if (this.select.hoverNode) {
           this.select.hideHover();
           this.emit(Listener.UN_HOVER_NODE);
@@ -47756,9 +47759,41 @@
   }(AbstractCommand));
 
   var html$6 = "\n  <h4 class=\"panel-title\">\u586B\u5145</h4>\n";
-  function renderItem$2(index, multiEnable, enable, multiColor, color, multiOpacity, opacity) {
-    var readOnly = (multiEnable || !enable) ? 'readonly="readonly"' : '';
-    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"").concat(multiColor ? 'multi' : '', "\" style=\"").concat(multiColor ? '' : "background:".concat(color), "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">\u989C\u8272</span>\n    </div>\n    <div class=\"hex\">\n      <div>\n        <span>#</span>\n        <input type=\"text\" value=\"").concat(multiColor ? '' : color2hexStr(color).slice(1), "\" placeholder=\"").concat(multiColor ? '多个' : '', "\"/>\n      </div>\n      <span class=\"txt\">Hex</span>\n    </div>\n    <div class=\"opacity\">\n      <div class=\"input-unit\">\n        <input type=\"number\" min=\"0\" max=\"100\" step=\"1\" value=\"").concat(multiOpacity ? '' : opacity * 100, "\" placeholder=\"").concat(multiOpacity ? '多个' : '', "\"/>\n        <span class=\"unit\">%</span>\n      </div>\n      <span class=\"txt\">\u4E0D\u900F\u660E\u5EA6</span>\n    </div>\n  </div>");
+  function renderItem$2(index, multiEnable, enable, multiOpacity, opacity, fillColor, fillPattern, fillGradient, width, height) {
+    var multiColor = fillColor.length > 1;
+    var multiPattern = fillPattern.length > 1;
+    var multiGradient = fillGradient.length > 1;
+    var multiFill = (fillColor.length ? 1 : 0) + (fillPattern.length ? 1 : 0) + (fillGradient.length ? 1 : 0) > 1;
+    var multi = multiFill || multiColor || multiPattern || multiGradient;
+    var readOnly = (multiEnable || !enable || multiPattern || multiGradient) ? 'readonly="readonly"' : '';
+    var background = '';
+    var txt1 = '';
+    var txt2 = '';
+    if (multiFill) {
+      txt1 = '多个';
+    }
+    else if (fillColor.length) {
+      txt1 = '颜色';
+      txt2 = 'Hex';
+      if (fillColor.length === 1) {
+        background = fillColor[0];
+      }
+    }
+    else if (fillPattern.length) {
+      txt1 = '图像';
+      txt2 = '显示';
+      if (fillPattern.length === 1) {
+        background = getCssFill(fillPattern[0]);
+      }
+    }
+    else if (fillGradient.length) {
+      txt1 = '渐变';
+      txt2 = '类型';
+      if (fillGradient.length === 1) {
+        background = getCssFill(fillGradient[0], width, height);
+      }
+    }
+    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"").concat(multi ? 'multi' : '', "\" style=\"").concat(multi ? '' : "background:".concat(background), "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">").concat(txt1, "</span>\n    </div>\n    <div class=\"hex\">\n      <div class=\"color ").concat((fillPattern.length || fillGradient.length) ? 'hide' : '', "\">\n        <span>#</span>\n        <input type=\"text\" value=\"").concat(multiColor ? '' : color2hexStr(fillColor[0]).slice(1), "\" placeholder=\"").concat(multiColor ? '多个' : '', "\"/>\n      </div>\n      <div class=\"pattern ").concat((fillColor.length || fillGradient.length) ? 'hide' : '', "\">\n        <select>\n          <option value=\"\">\u586B\u5145</option>\n          <option value=\"\">\u9002\u5E94</option>\n          <option value=\"\">\u62C9\u4F38</option>\n          <option value=\"\">\u5E73\u94FA</option>\n        </select>\n      </div>\n      <div class=\"gradient ").concat((fillColor.length || fillPattern.length) ? 'hide' : '', "\">\n        <select>\n          <option value=\"").concat(GRADIENT.LINEAR, "\">\u7EBF\u6027</option>\n          <option value=\"").concat(GRADIENT.RADIAL, "\">\u5F84\u5411</option>\n          <option value=\"").concat(GRADIENT.CONIC, "\">\u89D2\u5EA6</option>\n        </select>\n      </div>\n      <span class=\"txt\">").concat(txt2, "</span>\n    </div>\n    <div class=\"opacity\">\n      <div class=\"input-unit\">\n        <input type=\"number\" min=\"0\" max=\"100\" step=\"1\" value=\"").concat(multiOpacity ? '' : opacity * 100, "\" placeholder=\"").concat(multiOpacity ? '多个' : '', "\"/>\n        <span class=\"unit\">%</span>\n      </div>\n      <span class=\"txt\">\u4E0D\u900F\u660E\u5EA6</span>\n    </div>\n  </div>");
   }
   var FillPanel = /** @class */ (function (_super) {
     __extends(FillPanel, _super);
@@ -47875,42 +47910,97 @@
       }
       this.nodes = nodes;
       panel.style.display = 'block';
-      var es = [];
-      var cs = [];
-      var os = [];
+      var fillList = [];
+      var fillEnableList = [];
+      var fillOpacityList = [];
       nodes.forEach(function (node) {
         if (node instanceof Polyline
           || node instanceof ShapeGroup
           || node instanceof Text
           || node instanceof Bitmap) {
-          var style_1 = node.getCssStyle();
           var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
-          console.log(fill, fillEnable, fillOpacity);
-          style_1.fill.forEach(function (item, i) {
-            var e = es[i] = es[i] || [];
-            if (!e.includes(style_1.fillEnable[i])) {
-              e.push(style_1.fillEnable[i]);
+          fill.forEach(function (item, i) {
+            var o = fillList[i] = fillList[i] || [];
+            // 对象一定引用不同，具体值是否相等后续判断
+            o.push(item);
+          });
+          fillEnable.forEach(function (item, i) {
+            var o = fillEnableList[i] = fillEnableList[i] || [];
+            if (!o.includes(item)) {
+              o.push(item);
             }
-            var c = cs[i] = cs[i] || [];
-            if (!c.includes(item)) {
-              c.push(item);
-            }
-            var o = os[i] = os[i] || [];
-            if (!o.includes(style_1.fillOpacity[i])) {
-              o.push(style_1.fillOpacity[i]);
+          });
+          fillOpacity.forEach(function (item, i) {
+            var o = fillOpacityList[i] = fillOpacityList[i] || [];
+            if (!o.includes(item)) {
+              o.push(item);
             }
           });
         }
       });
-      for (var i = es.length - 1; i >= 0; i--) {
-        var e = es[i];
-        // 理论不会空，兜底防止bug
-        if (!e.length) {
-          return;
-        }
-        var c = cs[i];
-        var o = os[i];
-        this.panel.innerHTML += renderItem$2(i, e.length > 1, e[0], c.length > 1, c[0], o.length > 1, o[0]);
+      var _loop_1 = function (i) {
+        var fill = fillList[i];
+        var fillEnable = fillEnableList[i];
+        var fillOpacity = fillOpacityList[i];
+        var fillColor = [];
+        var fillPattern = [];
+        var fillGradient = [];
+        fill.forEach(function (item) {
+          if (Array.isArray(item)) {
+            var c = color2rgbaStr(item);
+            if (!fillColor.includes(c)) {
+              fillColor.push(c);
+            }
+            return;
+          }
+          var p = item;
+          if (p.url !== undefined) {
+            for (var i_1 = 0, len = fillPattern.length; i_1 < len; i_1++) {
+              var o = fillPattern[i_1];
+              if (o.url === p.url && o.type === p.type && o.scale === p.scale) {
+                return;
+              }
+            }
+            fillPattern.push(p);
+            return;
+          }
+          var g = item;
+          outer: for (var i_2 = 0, len = fillGradient.length; i_2 < len; i_2++) {
+            var o = fillGradient[i_2];
+            if (o.t !== g.t) {
+              continue;
+            }
+            if (o.d.length !== g.d.length) {
+              continue;
+            }
+            for (var j = o.d.length - 1; j >= 0; j--) {
+              if (o.d[j] !== g.d[j]) {
+                continue outer;
+              }
+            }
+            if (o.stops.length !== g.stops.length) {
+              continue;
+            }
+            for (var j = o.stops.length - 1; j >= 0; j--) {
+              var a = o.stops[j];
+              var b = g.stops[j];
+              if (a.color[0] !== b.color[0]
+                || a.color[1] !== b.color[1]
+                || a.color[2] !== b.color[2]
+                || a.color[3] !== b.color[3]
+                || a.offset !== b.offset) {
+                continue outer;
+              }
+            }
+            // 找到相等的就不添加
+            return;
+          }
+          fillGradient.push(g);
+        });
+        panel.innerHTML += renderItem$2(i, fillEnable.length > 1, fillEnable[0], fillOpacity.length > 1, fillOpacity[0], fillColor, fillPattern, fillGradient, nodes[i].width, nodes[i].height);
+      };
+      for (var i = fillList.length - 1; i >= 0; i--) {
+        _loop_1(i);
       }
     };
     return FillPanel;
@@ -48132,26 +48222,27 @@
             }
             // 按上下可能是多个值的情况
             if (!isInput) {
-              var d_1 = 0;
-              if (input.placeholder) {
-                d_1 = value > 0 ? 1 : -1;
-                if (listener.shiftKey) {
-                  d_1 *= 10;
-                }
-              }
-              else {
-                d_1 = value - prevs[0][0][key];
-                if (listener.shiftKey) {
-                  d_1 *= 10;
-                }
-              }
-              node_1.rich.forEach(function (rich) {
+              node_1.rich.forEach(function (rich, i) {
                 var _a;
                 if (rich.location < end_1 && rich.location + rich.length > start_1) {
+                  var d = 0;
+                  if (input.placeholder) {
+                    d = value > 0 ? 1 : -1;
+                    if (listener.shiftKey) {
+                      d *= 10;
+                    }
+                  }
+                  else {
+                    d = value - prevs[0][i][key];
+                    if (listener.shiftKey) {
+                      d *= 10;
+                    }
+                  }
                   var location_1 = Math.max(rich.location, start_1);
                   var len = Math.min(rich.length, end_1 - rich.location) - (location_1 - rich.location);
+                  var v = getRichKeyValue(rich, key, d);
                   node_1.updateRangeStyle(location_1, len, (_a = {},
-                    _a[key] = getRichKeyValue(rich, key, d_1),
+                    _a[key] = v,
                     _a));
                 }
               });
@@ -48180,23 +48271,23 @@
             }
             // 按上下可能是多个值的情况
             if (!isInput) {
-              var d_2 = 0;
+              var d_1 = 0;
               if (input.placeholder) {
-                d_2 = value > 0 ? 1 : -1;
+                d_1 = value > 0 ? 1 : -1;
                 if (listener.shiftKey) {
-                  d_2 *= 10;
+                  d_1 *= 10;
                 }
               }
               else {
-                d_2 = value - prevs[0][0][key];
+                d_1 = value - prevs[0][0][key];
                 if (listener.shiftKey) {
-                  d_2 *= 10;
+                  d_1 *= 10;
                 }
               }
               node.rich.forEach(function (rich) {
                 var _a;
                 node.updateRangeStyle(rich.location, rich.length, (_a = {},
-                  _a[key] = getRichKeyValue(rich, key, d_2),
+                  _a[key] = getRichKeyValue(rich, key, d_1),
                   _a));
               });
             }
@@ -48535,7 +48626,12 @@
             var content = node.content;
             var cursor = node.getSortedCursor();
             var isMulti = cursor.isMulti, start = cursor.start, end = cursor.end;
-            start = content.lastIndexOf('\n', start);
+            if (content.charAt(start) === '\n') {
+              start = content.lastIndexOf('\n', start - 1);
+            }
+            else {
+              start = content.lastIndexOf('\n', start);
+            }
             if (start < 0) {
               start = 0;
             }
@@ -49417,9 +49513,8 @@
         });
         shadow.forEach(function (item, i) {
           var o = shadowList[i] = shadowList[i] || [];
-          if (!o.includes(item)) {
-            o.push(item);
-          }
+          // 对象一定引用不同，具体值是否相等后续判断
+          o.push(item);
         });
       });
       var showDel = false;
@@ -49432,22 +49527,21 @@
         var blur_1 = [];
         var spread = [];
         shadow.forEach(function (item) {
-          var data = item;
-          var c = color2rgbaStr(data.color);
+          var c = color2rgbaStr(item.color);
           if (!color.includes(c)) {
             color.push(c);
           }
-          if (!x.includes(data.x)) {
-            x.push(data.x);
+          if (!x.includes(item.x)) {
+            x.push(item.x);
           }
-          if (!y.includes(data.y)) {
-            y.push(data.y);
+          if (!y.includes(item.y)) {
+            y.push(item.y);
           }
-          if (!blur_1.includes(data.blur)) {
-            blur_1.push(data.blur);
+          if (!blur_1.includes(item.blur)) {
+            blur_1.push(item.blur);
           }
-          if (!spread.includes(data.spread)) {
-            spread.push(data.spread);
+          if (!spread.includes(item.spread)) {
+            spread.push(item.spread);
           }
         });
         panel.innerHTML += renderItem(i, shadowEnable.length > 1, shadowEnable[0], color.length > 1, color[0], x.length > 1, x[0], y.length > 1, y[0], blur_1.length > 1, blur_1[0]);
@@ -50235,7 +50329,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.5.5";
+  var version = "0.5.7";
 
   var gl = {
     ca: ca,
