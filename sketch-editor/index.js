@@ -17490,9 +17490,9 @@
   var config = {
     debug: false,
     offscreenCanvas: false,
-    tile: false,
-    deltaTime: 8,
-    maxTextureSize: 8192,
+    tile: false, // 是否开启tile优化
+    deltaTime: 8, // 跨帧渲染，单帧渲染过程超过值时停止在下一帧继续
+    maxTextureSize: 8192, // 纹理块尺寸限制
     get MAX_TEXTURE_SIZE() {
       return this.maxTextureSize;
     },
@@ -17513,7 +17513,8 @@
       this.MAX_TEXTURE_UNITS = maxUnits;
       this.MAX_VARYING_VECTORS = maxVectors;
     },
-    treeLvPadding: 16,
+    treeLvPadding: 16, // 节点tree列表每级缩进px
+    historyTime: 1000, // 添加历史记录时命令之间是否合并的时间差阈值
   };
 
   // @ts-ignore
@@ -36546,6 +36547,11 @@
         fontSize = computedStyle.fontSize;
         color = color2rgbaStr(computedStyle.color);
         textDecoration = computedStyle.textDecoration || [];
+        if (!lineHeight) {
+          lineHeight = calNormalLineHeight(computedStyle);
+          baseline += lineHeight * 0.5;
+          contentArea += lineHeight * 0.5;
+        }
         ctx.font = setFontStyle(computedStyle);
         // @ts-ignore
         ctx.letterSpacing = letterSpacing + 'px';
@@ -38699,10 +38705,53 @@
       this.refresh(RefreshLevel.REFLOW);
       this.afterEdit(payload);
     };
+    Text.prototype.getCursor = function () {
+      return Object.assign({}, this.cursor);
+    };
     // 传入location/length，修改范围内的Rich的样式，一般来源是TextPanel中改如颜色
-    Text.prototype.updateRangeStyle = function (location, length, style) {
+    Text.prototype.updateRangeStyle = function (location, length, st) {
       var payload = this.beforeEdit();
       var lv = RefreshLevel.NONE;
+      // 开头同时更新节点本身默认样式
+      if (location === 0) {
+        var _a = this, style = _a.style, computedStyle = _a.computedStyle;
+        if (st.fontFamily !== undefined) {
+          style.fontFamily.v = computedStyle.fontFamily = st.fontFamily;
+        }
+        if (st.fontSize !== undefined) {
+          style.fontSize.v = computedStyle.fontSize = st.fontSize;
+        }
+        if (st.color !== undefined) {
+          style.color.v = computedStyle.color = color2rgbaInt(st.color);
+        }
+        if (st.letterSpacing !== undefined) {
+          style.letterSpacing.v = computedStyle.letterSpacing = st.letterSpacing;
+        }
+        if (st.lineHeight !== undefined) {
+          if (st.lineHeight === 0) {
+            style.lineHeight.v = 0;
+            style.lineHeight.u = StyleUnit.AUTO;
+            computedStyle.lineHeight = calNormalLineHeight(computedStyle);
+          }
+          else {
+            style.lineHeight.v = computedStyle.lineHeight = st.lineHeight;
+            style.lineHeight.u = StyleUnit.PX;
+          }
+        }
+        if (st.paragraphSpacing !== undefined) {
+          style.paragraphSpacing.v = computedStyle.paragraphSpacing = st.paragraphSpacing;
+        }
+        if (st.textAlign !== undefined) {
+          style.textAlign.v = computedStyle.textAlign = st.textAlign;
+        }
+        if (st.textDecoration !== undefined) {
+          style.textDecoration = st.textDecoration.map(function (item) { return ({
+            v: item,
+            u: StyleUnit.NUMBER,
+          }); });
+          computedStyle.textDecoration = st.textDecoration.slice(0);
+        }
+      }
       var rich = this.rich;
       for (var i = 0, len = rich.length; i < len; i++) {
         if (length < 1) {
@@ -38729,7 +38778,7 @@
             shouldBreak = true;
           }
           // 可能存在的prev/next操作后（也可能没有），此Rich本身更新
-          lv |= this.updateRichItem(item, style);
+          lv |= this.updateRichItem(item, st);
           if (shouldBreak) {
             break;
           }
@@ -38741,43 +38790,6 @@
       this.mergeRich();
       if (lv) {
         this.refresh(lv);
-      }
-      // 开头同时更新节点本身默认样式
-      if (location === 0) {
-        if (style.fontFamily !== undefined) {
-          this.style.fontFamily.v = style.fontFamily;
-        }
-        if (style.fontSize !== undefined) {
-          this.style.fontSize.v = style.fontSize;
-        }
-        if (style.color !== undefined) {
-          this.style.color.v = color2rgbaInt(style.color);
-        }
-        if (style.letterSpacing !== undefined) {
-          this.style.letterSpacing.v = style.letterSpacing;
-        }
-        if (style.lineHeight !== undefined) {
-          if (style.lineHeight === 0) {
-            this.style.lineHeight.v = 0;
-            this.style.lineHeight.u = StyleUnit.AUTO;
-          }
-          else {
-            this.style.lineHeight.v = style.lineHeight;
-            this.style.lineHeight.u = StyleUnit.PX;
-          }
-        }
-        if (style.paragraphSpacing !== undefined) {
-          this.style.paragraphSpacing.v = style.paragraphSpacing;
-        }
-        if (style.textAlign !== undefined) {
-          this.style.textAlign.v = style.textAlign;
-        }
-        if (style.textDecoration !== undefined) {
-          this.style.textDecoration = style.textDecoration.map(function (item) { return ({
-            v: item,
-            u: StyleUnit.NUMBER,
-          }); });
-        }
       }
       this.afterEdit(payload);
     };
@@ -44590,6 +44602,39 @@
   })(State || (State = {}));
   var State$1 = State;
 
+  var AbstractCommand = /** @class */ (function () {
+    function AbstractCommand(nodes) {
+      this.nodes = nodes;
+    }
+    return AbstractCommand;
+  }());
+
+  var UpdateTextCommand = /** @class */ (function (_super) {
+    __extends(UpdateTextCommand, _super);
+    function UpdateTextCommand(nodes, data) {
+      var _this = _super.call(this, nodes) || this;
+      _this.data = data;
+      return _this;
+    }
+    UpdateTextCommand.prototype.execute = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.cursor = data[i].next.cursor;
+        node.content = data[i].next.content;
+        node.setRich(data[i].next.rich);
+      });
+    };
+    UpdateTextCommand.prototype.undo = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.cursor = data[i].prev.cursor;
+        node.content = data[i].prev.content;
+        node.setRich(data[i].prev.rich);
+      });
+    };
+    return UpdateTextCommand;
+  }(AbstractCommand));
+
   var Input = /** @class */ (function () {
     function Input(root, dom, listener) {
       var _this = this;
@@ -44597,6 +44642,7 @@
       this.dom = dom;
       this.listener = listener;
       this.ignoreBlur = [];
+      this.hasBlur = true;
       var containerEl = this.containerEl = document.createElement('div');
       containerEl.className = 'input';
       containerEl.style.position = 'absolute';
@@ -44622,24 +44668,53 @@
         var keyCode = e.keyCode;
         if (_this.node) {
           if (keyCode === 13) {
-            // 回车等候一下让input先触发，输入法状态不会触发
-            setTimeout(function () {
-              _this.node.enter();
-              _this.showCursor();
-              _this.updateCursor();
-              listener.select.updateSelect([_this.node]);
-              listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
-              listener.emit(Listener.CURSOR_NODE, [_this.node]);
-            }, 0);
+            var content = _this.node._content;
+            var rich = _this.node.getRich();
+            var cursor = _this.node.getCursor();
+            _this.node.enter();
+            _this.showCursor();
+            _this.updateCursor();
+            listener.select.updateSelect([_this.node]);
+            listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+            listener.emit(Listener.CURSOR_NODE, [_this.node]);
+            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+              prev: {
+                content: content,
+                rich: rich,
+                cursor: cursor,
+              },
+              next: {
+                content: _this.node._content,
+                rich: _this.node.getRich(),
+                cursor: _this.node.getCursor(),
+              },
+            }]), _this.hasBlur);
+            _this.hasBlur = false;
           }
           else if (keyCode === 8 || keyCode === 46) {
             e.stopPropagation();
+            var content = _this.node._content;
+            var rich = _this.node.getRich();
+            var cursor = _this.node.getCursor();
             _this.node.delete(keyCode === 46);
             _this.showCursor();
             _this.updateCursor();
             listener.select.updateSelect([_this.node]);
             listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
             listener.emit(Listener.CURSOR_NODE, [_this.node]);
+            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+              prev: {
+                content: content,
+                rich: rich,
+                cursor: cursor,
+              },
+              next: {
+                content: _this.node._content,
+                rich: _this.node.getRich(),
+                cursor: _this.node.getCursor(),
+              },
+            }]), _this.hasBlur);
+            _this.hasBlur = false;
           }
           else if (keyCode >= 37 && keyCode <= 40) {
             e.stopPropagation();
@@ -44659,12 +44734,28 @@
         if (!isIme && _this.node) {
           var s = e.data;
           if (s) {
+            var content = _this.node._content;
+            var rich = _this.node.getRich();
+            var cursor = _this.node.getCursor();
             _this.node.input(s);
             _this.updateCursor();
             _this.showCursor();
             inputEl.value = '';
             _this.listener.select.updateSelect([_this.node]);
             _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
+            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+              prev: {
+                content: content,
+                rich: rich,
+                cursor: cursor,
+              },
+              next: {
+                content: _this.node._content,
+                rich: _this.node.getRich(),
+                cursor: _this.node.getCursor(),
+              },
+            }]), _this.hasBlur);
+            _this.hasBlur = false;
           }
         }
       });
@@ -44673,8 +44764,11 @@
       });
       inputEl.addEventListener('compositionend', function (e) {
         isIme = false;
-        if (_this.node) {
-          var s = e.data;
+        var s = e.data;
+        if (_this.node && s) {
+          var content = _this.node._content;
+          var rich = _this.node.getRich();
+          var cursor = _this.node.getCursor();
           _this.node.input(s);
           _this.updateCursor();
           _this.showCursor();
@@ -44682,6 +44776,19 @@
           _this.listener.select.updateSelect([_this.node]);
           _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
           listener.emit(Listener.CURSOR_NODE, [_this.node]);
+          _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+            prev: {
+              content: content,
+              rich: rich,
+              cursor: cursor,
+            },
+            next: {
+              content: _this.node._content,
+              rich: _this.node.getRich(),
+              cursor: _this.node.getCursor(),
+            },
+          }]), _this.hasBlur);
+          _this.hasBlur = false;
         }
       });
       var cursorEl = this.cursorEl = document.createElement('div');
@@ -44732,6 +44839,7 @@
           _this.hideCursor();
           (_a = _this.node) === null || _a === void 0 ? void 0 : _a.resetCursor();
           (_b = _this.node) === null || _b === void 0 ? void 0 : _b.refresh();
+          _this.hasBlur = true;
         }
       });
     }
@@ -44751,7 +44859,7 @@
     };
     Input.prototype.hide = function () {
       this.containerEl.style.opacity = '0';
-      this.inputEl.blur();
+      this.blur();
       this.node = undefined;
     };
     Input.prototype.focus = function () {
@@ -44759,6 +44867,7 @@
     };
     Input.prototype.blur = function () {
       this.inputEl.blur();
+      this.hasBlur = true;
     };
     Input.prototype.showCursor = function () {
       this.cursorEl.style.opacity = '1';
@@ -44781,56 +44890,6 @@
       this.containerEl.remove();
     };
     return Input;
-  }());
-
-  var history;
-  var History = /** @class */ (function () {
-    function History(size) {
-      if (size === void 0) { size = 100; }
-      this.commands = [];
-      this.commandsR = [];
-      this.size = size;
-    }
-    History.prototype.addCommand = function (c) {
-      var len = this.commands.length;
-      // 加入一条新命令，如果超过长度限制先入先出老的
-      if (len >= this.size) {
-        this.commands.slice(0, len - this.size + 1);
-      }
-      this.commands.push(c);
-      // 新命令清空redo队列
-      this.commandsR.splice(0);
-    };
-    History.prototype.undo = function () {
-      if (this.commands.length) {
-        var c = this.commands.pop();
-        c.undo();
-        this.commandsR.push(c);
-        return c;
-      }
-    };
-    History.prototype.redo = function () {
-      if (this.commandsR.length) {
-        var c = this.commandsR.pop();
-        c.execute();
-        this.commands.push(c);
-        return c;
-      }
-    };
-    History.getInstance = function () {
-      if (!history) {
-        history = new History();
-      }
-      return history;
-    };
-    return History;
-  }());
-
-  var AbstractCommand = /** @class */ (function () {
-    function AbstractCommand(nodes) {
-      this.nodes = nodes;
-    }
-    return AbstractCommand;
   }());
 
   var MoveCommand = /** @class */ (function (_super) {
@@ -44872,6 +44931,28 @@
       });
     };
     return MoveCommand;
+  }(AbstractCommand));
+
+  var UpdateStyleCommand = /** @class */ (function (_super) {
+    __extends(UpdateStyleCommand, _super);
+    function UpdateStyleCommand(nodes, data) {
+      var _this = _super.call(this, nodes) || this;
+      _this.data = data;
+      return _this;
+    }
+    UpdateStyleCommand.prototype.execute = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.updateStyle(data[i].next);
+      });
+    };
+    UpdateStyleCommand.prototype.undo = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.updateStyle(data[i].prev);
+      });
+    };
+    return UpdateStyleCommand;
   }(AbstractCommand));
 
   var CONTROL_TYPE;
@@ -44986,6 +45067,179 @@
     return ResizeCommand;
   }(AbstractCommand));
 
+  var UpdateRichCommand = /** @class */ (function (_super) {
+    __extends(UpdateRichCommand, _super);
+    function UpdateRichCommand(nodes, data, type) {
+      var _this = _super.call(this, nodes) || this;
+      _this.data = data;
+      _this.type = type;
+      return _this;
+    }
+    UpdateRichCommand.prototype.execute = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.setRich(data[i].next);
+      });
+    };
+    UpdateRichCommand.prototype.undo = function () {
+      var _a = this, nodes = _a.nodes, data = _a.data;
+      nodes.forEach(function (node, i) {
+        node.setRich(data[i].prev);
+      });
+    };
+    UpdateRichCommand.FONT_FAMILY = 'FONT_FAMILY';
+    UpdateRichCommand.FONT_SIZE = 'FONT_SIZE';
+    UpdateRichCommand.LETTER_SPACING = 'LETTER_SPACING';
+    UpdateRichCommand.LINE_HEIGHT = 'LINE_HEIGHT';
+    UpdateRichCommand.PARAGRAPH_SPACING = 'PARAGRAPH_SPACING';
+    UpdateRichCommand.COLOR = 'COLOR';
+    UpdateRichCommand.TEXT_ALIGN = 'TEXT_ALIGN';
+    return UpdateRichCommand;
+  }(AbstractCommand));
+
+  var history;
+  function compare(a, b) {
+    if (a.constructor !== b.constructor) {
+      return false;
+    }
+    var na = a.nodes, nb = b.nodes;
+    if (na.length !== nb.length) {
+      return false;
+    }
+    for (var i = 0, len = na.length; i < len; i++) {
+      if (na[i] !== nb[i]) {
+        return false;
+      }
+    }
+    if (a instanceof ResizeCommand) {
+      var da = a.data, db = b.data;
+      for (var i = 0, len = da.length; i < len; i++) {
+        var ia = da[i], ib = db[i];
+        if (ia.controlType !== ib.controlType
+          || ia.aspectRatio !== ib.aspectRatio
+          || ia.fromCenter !== ib.fromCenter
+          || ia.widthFromAuto !== ib.widthFromAuto
+          || ia.heightFromAuto !== ib.heightFromAuto
+          || ia.widthToAuto !== ib.widthToAuto
+          || ia.heightToAuto !== ib.heightToAuto) {
+          return false;
+        }
+      }
+    }
+    if (a instanceof UpdateRichCommand) {
+      if (a.type !== b.type) {
+        return false;
+      }
+      var da = a.data, db = b.data;
+      for (var i = 0, len = da.length; i < len; i++) {
+        var ia = da[i], ib = db[i];
+        if (ia.prev.length !== ib.prev.length) {
+          return false;
+        }
+        for (var j = 0; j < ia.prev.length; j++) {
+          var ra = ia.prev[j], rb = ib.prev[j];
+          if (ra.location !== rb.location || ra.length !== rb.length) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+  var History = /** @class */ (function () {
+    function History(size) {
+      if (size === void 0) { size = 100; }
+      this.commands = [];
+      this.commandsR = [];
+      this.size = Math.max(1, size);
+      this.lastTime = 0;
+    }
+    History.prototype.addCommand = function (c, independence) {
+      if (independence === void 0) { independence = false; }
+      // 新命令清空redo队列
+      this.commandsR.splice(0);
+      var len = this.commands.length;
+      // 非独立命令要考虑合并，除了文字输入不看时间间隔外，其它都要；文字输入外部控制independence（blur后再focus输入视为独立不合并）
+      if (!independence && len > 0) {
+        var last = this.commands[len - 1];
+        var isInTime = Date.now() - this.lastTime < config.historyTime;
+        var isEditText = last instanceof UpdateTextCommand && c instanceof UpdateTextCommand;
+        if ((isInTime || isEditText) && compare(last, c)) {
+          var hasMerge = true;
+          if (last instanceof MoveCommand) {
+            var data_1 = c.data;
+            last.data.forEach(function (item, i) {
+              item.dx += data_1[i].dx;
+              item.dy += data_1[i].dy;
+            });
+          }
+          else if (last instanceof UpdateStyleCommand) {
+            var data_2 = c.data;
+            last.data.forEach(function (item, i) {
+              item.next = data_2[i].next;
+            });
+          }
+          else if (last instanceof ResizeCommand) {
+            var data_3 = c.data;
+            last.data.forEach(function (item, i) {
+              item.dx += data_3[i].dx;
+              item.dy += data_3[i].dy;
+            });
+          }
+          else if (last instanceof UpdateRichCommand) {
+            var data_4 = c.data;
+            last.data.forEach(function (item, i) {
+              item.next = data_4[i].next;
+            });
+          }
+          else if (last instanceof UpdateTextCommand) {
+            var data_5 = c.data;
+            last.data.forEach(function (item, i) {
+              item.next = data_5[i].next;
+            });
+          }
+          // 没命中合并的走后续普通流程
+          else {
+            hasMerge = false;
+          }
+          if (hasMerge) {
+            this.lastTime = Date.now();
+            return;
+          }
+        }
+      }
+      this.lastTime = Date.now();
+      // 加入一条新命令，如果超过长度限制先入先出老的
+      if (len >= this.size) {
+        this.commands.slice(0, len - this.size + 1);
+      }
+      this.commands.push(c);
+    };
+    History.prototype.undo = function () {
+      if (this.commands.length) {
+        var c = this.commands.pop();
+        c.undo();
+        this.commandsR.push(c);
+        return c;
+      }
+    };
+    History.prototype.redo = function () {
+      if (this.commandsR.length) {
+        var c = this.commandsR.pop();
+        c.execute();
+        this.commands.push(c);
+        return c;
+      }
+    };
+    History.getInstance = function () {
+      if (!history) {
+        history = new History();
+      }
+      return history;
+    };
+    return History;
+  }());
+
   var RemoveCommand = /** @class */ (function (_super) {
     __extends(RemoveCommand, _super);
     function RemoveCommand(nodes, data) {
@@ -45024,28 +45278,6 @@
     return RemoveCommand;
   }(AbstractCommand));
 
-  var UpdateStyleCommand = /** @class */ (function (_super) {
-    __extends(UpdateStyleCommand, _super);
-    function UpdateStyleCommand(nodes, data) {
-      var _this = _super.call(this, nodes) || this;
-      _this.data = data;
-      return _this;
-    }
-    UpdateStyleCommand.prototype.execute = function () {
-      var _a = this, nodes = _a.nodes, data = _a.data;
-      nodes.forEach(function (node, i) {
-        node.updateStyle(data[i].next);
-      });
-    };
-    UpdateStyleCommand.prototype.undo = function () {
-      var _a = this, nodes = _a.nodes, data = _a.data;
-      nodes.forEach(function (node, i) {
-        node.updateStyle(data[i].prev);
-      });
-    };
-    return UpdateStyleCommand;
-  }(AbstractCommand));
-
   var RotateCommand = /** @class */ (function (_super) {
     __extends(RotateCommand, _super);
     function RotateCommand(nodes, data) {
@@ -45053,36 +45285,6 @@
     }
     return RotateCommand;
   }(UpdateStyleCommand));
-
-  var UpdateRichCommand = /** @class */ (function (_super) {
-    __extends(UpdateRichCommand, _super);
-    function UpdateRichCommand(nodes, data, type) {
-      var _this = _super.call(this, nodes) || this;
-      _this.data = data;
-      _this.type = type;
-      return _this;
-    }
-    UpdateRichCommand.prototype.execute = function () {
-      var _a = this, nodes = _a.nodes, data = _a.data;
-      nodes.forEach(function (node, i) {
-        node.setRich(data[i].next);
-      });
-    };
-    UpdateRichCommand.prototype.undo = function () {
-      var _a = this, nodes = _a.nodes, data = _a.data;
-      nodes.forEach(function (node, i) {
-        node.setRich(data[i].prev);
-      });
-    };
-    UpdateRichCommand.FONT_FAMILY = 'FONT_FAMILY';
-    UpdateRichCommand.FONT_SIZE = 'FONT_SIZE';
-    UpdateRichCommand.LETTER_SPACING = 'LETTER_SPACING';
-    UpdateRichCommand.LINE_HEIGHT = 'LINE_HEIGHT';
-    UpdateRichCommand.PARAGRAPH_SPACING = 'PARAGRAPH_SPACING';
-    UpdateRichCommand.COLOR = 'COLOR';
-    UpdateRichCommand.TEXT_ALIGN = 'TEXT_ALIGN';
-    return UpdateRichCommand;
-  }(AbstractCommand));
 
   var OpacityCommand = /** @class */ (function (_super) {
     __extends(OpacityCommand, _super);
@@ -45829,7 +46031,7 @@
             next: {
               rotateZ: node.computedStyle.rotateZ,
             },
-          }]));
+          }]), true);
           if (!(this.metaKey || isWin && this.ctrlKey)) {
             this.select.metaKey(false);
           }
@@ -45874,7 +46076,7 @@
               }
             });
             if (data_1.length) {
-              this.history.addCommand(new ResizeCommand(selected.slice(0), data_1));
+              this.history.addCommand(new ResizeCommand(selected.slice(0), data_1), true);
             }
           }
         }
@@ -45912,7 +46114,7 @@
             }
           });
           if (data_2.length) {
-            this.history.addCommand(new MoveCommand(selected.slice(0), data_2));
+            this.history.addCommand(new MoveCommand(selected.slice(0), data_2), true);
           }
         }
       }
@@ -46238,10 +46440,28 @@
             // 更新光标
             if (this.state === State$1.EDIT_TEXT && this.selected.length === 1) {
               var node = this.selected[0];
-              var _c = node.getSortedCursor(), isMulti = _c.isMulti, start = _c.start;
-              if (!isMulti) {
-                var p = node.updateCursorByIndex(start);
-                this.input.updateCursor(p);
+              if (node === this.selected[0]) {
+                var _c = node.getSortedCursor(), isMulti = _c.isMulti, start = _c.start;
+                if (!isMulti) {
+                  var p = node.updateCursorByIndex(start);
+                  this.input.updateCursor(p);
+                  this.input.showCursor();
+                }
+                this.input.focus();
+              }
+            }
+          }
+          else if (c instanceof UpdateTextCommand) {
+            if (this.state === State$1.EDIT_TEXT && this.selected.length === 1) {
+              var node = this.selected[0];
+              if (node === this.selected[0]) {
+                var _d = node.getSortedCursor(), isMulti = _d.isMulti, start = _d.start;
+                if (!isMulti) {
+                  var p = node.updateCursorByIndex(start);
+                  this.input.updateCursor(p);
+                  this.input.showCursor();
+                }
+                this.input.focus();
               }
             }
           }
@@ -47424,7 +47644,7 @@
     return OpacityPanel;
   }(Panel));
 
-  var html$7 = "\n  <h4 class=\"panel-title\">\u5706\u89D2</h4>\n  <div class=\"line\">\n    <input type=\"range\" min=\"0\" max=\"100\" step=\"1\"/>\n    <div class=\"input-unit\">\n      <input type=\"number\" min=\"0\" max=\"100\" step=\"1\"/>\n      <span class=\"unit\">%</span>\n    </div>\n  </div>\n";
+  var html$7 = "\n  <h4 class=\"panel-title\">\u5706\u89D2</h4>\n  <div class=\"line\">\n    <input type=\"range\" min=\"0\" max=\"100\" step=\"1\"/>\n    <div class=\"input-unit\">\n      <input type=\"number\" min=\"0\" max=\"100\" step=\"1\"/>\n    </div>\n  </div>\n";
   var RoundPanel = /** @class */ (function (_super) {
     __extends(RoundPanel, _super);
     function RoundPanel(root, dom, listener) {
@@ -47664,6 +47884,8 @@
           || node instanceof Text
           || node instanceof Bitmap) {
           var style_1 = node.getCssStyle();
+          var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+          console.log(fill, fillEnable, fillOpacity);
           style_1.fill.forEach(function (item, i) {
             var e = es[i] = es[i] || [];
             if (!e.includes(style_1.fillEnable[i])) {
@@ -47872,7 +48094,6 @@
       var ps = panel.querySelector('.ps input');
       var ff = panel.querySelector('.ff select');
       var fw = panel.querySelector('.weight select');
-      var btn = panel.querySelector('.picker-btn b');
       var nodes = [];
       var prevs = [];
       var nexts = [];
@@ -48194,8 +48415,8 @@
           prevs = nodes.map(function (item) { return item.getRich(); });
           // 每次变更记录更新nexts
           p.onChange = function (color) {
+            _this.silence = true;
             nexts = [];
-            btn.title = btn.style.background = color2hexStr(color.rgba);
             if (listener.state === State$1.EDIT_TEXT && nodes.length === 1) {
               var node = nodes[0];
               var _a = node.getSortedCursor(), isMulti = _a.isMulti, start = _a.start, end = _a.end;
@@ -48221,6 +48442,12 @@
                 nexts.push(node.getRich());
               });
             }
+            if (nodes.length) {
+              listener.emit(Listener.COLOR_NODE, nodes.slice(0));
+            }
+            // 新插入样式时无法触发COLOR_NODE更新
+            el.title = el.style.background = color2hexStr(color.rgba);
+            _this.silence = false;
           };
           p.onDone = function () {
             picker$1.hide();
@@ -48423,7 +48650,7 @@
       var s = '';
       if (custom && custom.length) {
         // 用默认的Arial数据兜底，加载后注册覆盖
-        var Arial_1 = info.Arail;
+        var Arial_1 = info.Arial;
         custom.forEach(function (item) {
           o.registerData(__assign(__assign({}, Arial_1), item));
           s += "<option value=\"".concat(item.family, "\">").concat(item.name, "</option>");
@@ -48893,6 +49120,7 @@
           });
           // 每次变更记录更新nexts
           p.onChange = function (color) {
+            _this.silence = true;
             nexts = [];
             nodes.forEach(function (node) {
               var _a = node.getComputedStyle(), shadow = _a.shadow, shadowEnable = _a.shadowEnable;
@@ -48920,6 +49148,8 @@
             if (nodes.length) {
               listener.emit(Listener.SHADOW_NODE, nodes.slice(0));
             }
+            el.title = el.style.background = color2hexStr(color.rgba);
+            _this.silence = false;
           };
           p.onDone = function () {
             picker$1.hide();
@@ -50005,7 +50235,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.5.2";
+  var version = "0.5.5";
 
   var gl = {
     ca: ca,
