@@ -575,6 +575,9 @@ body {
   color: rgba(0, 0, 0, 0.7);
   outline: none;
 }
+.side select:disabled {
+  cursor: not-allowed;
+}
 .side .un-checked {
   width: 16px;
   height: 16px;
@@ -621,6 +624,12 @@ body {
 .side .picker-btn b.multi {
   text-indent: 0;
   background: #FFF;
+}
+.side .picker-btn.read-only {
+  opacity: 0.5;
+}
+.side .picker-btn.read-only b {
+  cursor: not-allowed;
 }
 .side .align-panel {
   margin-bottom: 10px;
@@ -782,7 +791,7 @@ body {
 .side .stroke-panel .txt {
   margin-top: 2px;
   width: auto;
-  white-space: nowrap;
+  white-space: pre;
   font-size: 10px;
   line-height: 14px;
   text-align: center;
@@ -808,8 +817,6 @@ body {
   box-sizing: border-box;
   width: 94px;
   height: 24px;
-  background: #F2F3F5;
-  border-radius: 6px;
 }
 .side .fill-panel input[type=text],
 .side .stroke-panel input[type=text] {
@@ -1166,9 +1173,6 @@ body {
 .side .shadow-panel .multi-checked {
   transform: translateY(-8px);
 }
-.side .shadow-panel .picker-btn.read-only {
-  opacity: 0.5;
-}
 .side .shadow-panel input[type=number] {
   margin: 0;
   padding: 0 0 0 5px;
@@ -1182,11 +1186,12 @@ body {
 }
 .side .shadow-panel input[type=number]:read-only {
   opacity: 0.5;
+  cursor: not-allowed;
 }
 .side .shadow-panel .txt {
   margin-top: 2px;
   width: auto;
-  white-space: nowrap;
+  white-space: pre;
   font-size: 10px;
   text-align: center;
   color: #333;

@@ -29265,6 +29265,15 @@
       gl.disableVertexAttribArray(a_position2);
       gl.useProgram(programs.program);
     };
+    ArtBoard.prototype.clone = function (override) {
+      var props = clone(this.props);
+      props.uuid = v4();
+      props.sourceUuid = this.props.uuid;
+      var res = new ArtBoard(props, this.children.map(function (item) { return item.clone(override); }));
+      res.style = clone(this.style);
+      res.computedStyle = clone(this.computedStyle);
+      return res;
+    };
     ArtBoard.prototype.toJson = function () {
       var res = _super.prototype.toJson.call(this);
       res.tagName = TAG_NAME.ART_BOARD;
@@ -39684,6 +39693,15 @@
         });
       }
     };
+    Page.prototype.clone = function (override) {
+      var props = clone(this.props);
+      props.uuid = v4();
+      props.sourceUuid = this.props.uuid;
+      var res = new Page(props, this.children.map(function (item) { return item.clone(override); }));
+      res.style = clone(this.style);
+      res.computedStyle = clone(this.computedStyle);
+      return res;
+    };
     Page.prototype.toJson = function () {
       var res = _super.prototype.toJson.call(this);
       res.tagName = TAG_NAME.PAGE;
@@ -43002,7 +43020,8 @@
       gl.useProgram(program);
     };
     Root.prototype.checkRoot = function () {
-      var _a = this.style, width = _a.width, height = _a.height;
+      var _a;
+      var _b = this.style, width = _b.width, height = _b.height;
       var canvas = this.canvas;
       if (width.u === StyleUnit.AUTO) {
         if (canvas) {
@@ -43022,7 +43041,8 @@
       else {
         this.height = this.computedStyle.height = Math.max(1, this.style.height.v);
       }
-      this.ctx.viewport(0, 0, this.width, this.height);
+      // 一般情况肯定有，但新建的未添加canvas直接调用toSketchJson会没有
+      (_a = this.ctx) === null || _a === void 0 ? void 0 : _a.viewport(0, 0, this.width, this.height);
     };
     Root.prototype.setJPages = function (jPages) {
       var _this = this;
@@ -43434,6 +43454,12 @@
         return __generator(this, function (_a) {
           switch (_a.label) {
             case 0:
+              if (this.isDestroyed) {
+                // 离屏情况特殊处理
+                this.willMount();
+                this.reLayout();
+                this.didMount();
+              }
               zip = new JSZip$1();
               pagesZip = zip.folder('pages');
               imagesZip = zip.folder('images');
@@ -44614,14 +44640,14 @@
     return AbstractCommand;
   }());
 
-  var UpdateTextCommand = /** @class */ (function (_super) {
-    __extends(UpdateTextCommand, _super);
-    function UpdateTextCommand(nodes, data) {
+  var TextCommand = /** @class */ (function (_super) {
+    __extends(TextCommand, _super);
+    function TextCommand(nodes, data) {
       var _this = _super.call(this, nodes) || this;
       _this.data = data;
       return _this;
     }
-    UpdateTextCommand.prototype.execute = function () {
+    TextCommand.prototype.execute = function () {
       var _a = this, nodes = _a.nodes, data = _a.data;
       nodes.forEach(function (node, i) {
         node.cursor = data[i].next.cursor;
@@ -44629,7 +44655,7 @@
         node.setRich(data[i].next.rich);
       });
     };
-    UpdateTextCommand.prototype.undo = function () {
+    TextCommand.prototype.undo = function () {
       var _a = this, nodes = _a.nodes, data = _a.data;
       nodes.forEach(function (node, i) {
         node.cursor = data[i].prev.cursor;
@@ -44637,7 +44663,7 @@
         node.setRich(data[i].prev.rich);
       });
     };
-    return UpdateTextCommand;
+    return TextCommand;
   }(AbstractCommand));
 
   var Input = /** @class */ (function () {
@@ -44682,7 +44708,7 @@
             listener.select.updateSelect([_this.node]);
             listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
             listener.emit(Listener.CURSOR_NODE, [_this.node]);
-            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+            _this.listener.history.addCommand(new TextCommand([_this.node], [{
               prev: {
                 content: content,
                 rich: rich,
@@ -44707,7 +44733,7 @@
             listener.select.updateSelect([_this.node]);
             listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
             listener.emit(Listener.CURSOR_NODE, [_this.node]);
-            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+            _this.listener.history.addCommand(new TextCommand([_this.node], [{
               prev: {
                 content: content,
                 rich: rich,
@@ -44748,7 +44774,7 @@
             inputEl.value = '';
             _this.listener.select.updateSelect([_this.node]);
             _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
-            _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+            _this.listener.history.addCommand(new TextCommand([_this.node], [{
               prev: {
                 content: content,
                 rich: rich,
@@ -44781,7 +44807,7 @@
           _this.listener.select.updateSelect([_this.node]);
           _this.listener.emit(Listener.TEXT_CONTENT_NODE, [_this.node]);
           listener.emit(Listener.CURSOR_NODE, [_this.node]);
-          _this.listener.history.addCommand(new UpdateTextCommand([_this.node], [{
+          _this.listener.history.addCommand(new TextCommand([_this.node], [{
             prev: {
               content: content,
               rich: rich,
@@ -45072,34 +45098,34 @@
     return ResizeCommand;
   }(AbstractCommand));
 
-  var UpdateRichCommand = /** @class */ (function (_super) {
-    __extends(UpdateRichCommand, _super);
-    function UpdateRichCommand(nodes, data, type) {
+  var RichCommand = /** @class */ (function (_super) {
+    __extends(RichCommand, _super);
+    function RichCommand(nodes, data, type) {
       var _this = _super.call(this, nodes) || this;
       _this.data = data;
       _this.type = type;
       return _this;
     }
-    UpdateRichCommand.prototype.execute = function () {
+    RichCommand.prototype.execute = function () {
       var _a = this, nodes = _a.nodes, data = _a.data;
       nodes.forEach(function (node, i) {
         node.setRich(data[i].next);
       });
     };
-    UpdateRichCommand.prototype.undo = function () {
+    RichCommand.prototype.undo = function () {
       var _a = this, nodes = _a.nodes, data = _a.data;
       nodes.forEach(function (node, i) {
         node.setRich(data[i].prev);
       });
     };
-    UpdateRichCommand.FONT_FAMILY = 'FONT_FAMILY';
-    UpdateRichCommand.FONT_SIZE = 'FONT_SIZE';
-    UpdateRichCommand.LETTER_SPACING = 'LETTER_SPACING';
-    UpdateRichCommand.LINE_HEIGHT = 'LINE_HEIGHT';
-    UpdateRichCommand.PARAGRAPH_SPACING = 'PARAGRAPH_SPACING';
-    UpdateRichCommand.COLOR = 'COLOR';
-    UpdateRichCommand.TEXT_ALIGN = 'TEXT_ALIGN';
-    return UpdateRichCommand;
+    RichCommand.FONT_FAMILY = 'FONT_FAMILY';
+    RichCommand.FONT_SIZE = 'FONT_SIZE';
+    RichCommand.LETTER_SPACING = 'LETTER_SPACING';
+    RichCommand.LINE_HEIGHT = 'LINE_HEIGHT';
+    RichCommand.PARAGRAPH_SPACING = 'PARAGRAPH_SPACING';
+    RichCommand.COLOR = 'COLOR';
+    RichCommand.TEXT_ALIGN = 'TEXT_ALIGN';
+    return RichCommand;
   }(AbstractCommand));
 
   var history;
@@ -45131,7 +45157,7 @@
         }
       }
     }
-    if (a instanceof UpdateRichCommand) {
+    if (a instanceof RichCommand) {
       if (a.type !== b.type) {
         return false;
       }
@@ -45168,7 +45194,7 @@
       if (!independence && len > 0) {
         var last = this.commands[len - 1];
         var isInTime = Date.now() - this.lastTime < config.historyTime;
-        var isEditText = last instanceof UpdateTextCommand && c instanceof UpdateTextCommand;
+        var isEditText = last instanceof TextCommand && c instanceof TextCommand;
         if ((isInTime || isEditText) && compare(last, c)) {
           var hasMerge = true;
           if (last instanceof MoveCommand) {
@@ -45191,13 +45217,13 @@
               item.dy += data_3[i].dy;
             });
           }
-          else if (last instanceof UpdateRichCommand) {
+          else if (last instanceof RichCommand) {
             var data_4 = c.data;
             last.data.forEach(function (item, i) {
               item.next = data_4[i].next;
             });
           }
-          else if (last instanceof UpdateTextCommand) {
+          else if (last instanceof TextCommand) {
             var data_5 = c.data;
             last.data.forEach(function (item, i) {
               item.next = data_5[i].next;
@@ -45421,12 +45447,21 @@
     return ColorAdjustCommand;
   }(UpdateStyleCommand));
 
+  var FillCommand = /** @class */ (function (_super) {
+    __extends(FillCommand, _super);
+    function FillCommand(nodes, data) {
+      return _super.call(this, nodes, data) || this;
+    }
+    return FillCommand;
+  }(UpdateStyleCommand));
+
   var isWin = typeof navigator !== 'undefined' && /win/i.test(navigator.platform);
   var Listener = /** @class */ (function (_super) {
     __extends(Listener, _super);
     function Listener(root, dom, options) {
       if (options === void 0) { options = {}; }
       var _this = _super.call(this) || this;
+      _this.isWin = isWin;
       _this.options = options;
       _this.state = State$1.NORMAL;
       _this.root = root;
@@ -46418,26 +46453,29 @@
           else if (c instanceof VerticalAlignCommand) {
             this.emit(Listener.TEXT_VERTICAL_ALIGN_NODE, this.selected.slice(0));
           }
-          else if (c instanceof UpdateRichCommand) {
-            if (c.type === UpdateRichCommand.TEXT_ALIGN) {
+          else if (c instanceof FillCommand) {
+            this.emit(Listener.FILL_NODE, this.selected.slice(0));
+          }
+          else if (c instanceof RichCommand) {
+            if (c.type === RichCommand.TEXT_ALIGN) {
               this.emit(Listener.TEXT_ALIGN_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.COLOR) {
+            else if (c.type === RichCommand.COLOR) {
               this.emit(Listener.COLOR_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.FONT_FAMILY) {
+            else if (c.type === RichCommand.FONT_FAMILY) {
               this.emit(Listener.FONT_FAMILY_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.FONT_SIZE) {
+            else if (c.type === RichCommand.FONT_SIZE) {
               this.emit(Listener.FONT_SIZE_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.LINE_HEIGHT) {
+            else if (c.type === RichCommand.LINE_HEIGHT) {
               this.emit(Listener.LINE_HEIGHT_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.PARAGRAPH_SPACING) {
+            else if (c.type === RichCommand.PARAGRAPH_SPACING) {
               this.emit(Listener.PARAGRAPH_SPACING_NODE, this.selected.slice(0));
             }
-            else if (c.type === UpdateRichCommand.LETTER_SPACING) {
+            else if (c.type === RichCommand.LETTER_SPACING) {
               this.emit(Listener.LETTER_SPACING_NODE, this.selected.slice(0));
             }
             // 更新光标
@@ -46454,7 +46492,7 @@
               }
             }
           }
-          else if (c instanceof UpdateTextCommand) {
+          else if (c instanceof TextCommand) {
             if (this.state === State$1.EDIT_TEXT && this.selected.length === 1) {
               var node = this.selected[0];
               if (node === this.selected[0]) {
@@ -47516,14 +47554,12 @@
         }
         nexts = [];
         var isInput = e instanceof InputEvent; // 上下键还是真正输入
-        var n = parseFloat(number.value) || 0;
+        var n = Math.min(100, Math.max(0, parseFloat(number.value) || 0));
         _this.nodes.forEach(function (node, i) {
           var prev = node.computedStyle.opacity * 100;
           var next = n;
           var d = 0;
           if (isInput) {
-            next = Math.max(next, 0);
-            next = Math.min(next, 100);
             d = next - prev;
             if (!i) {
               number.placeholder = '';
@@ -47556,17 +47592,15 @@
               number.value = number.placeholder ? '' : next.toString();
             }
           }
-          if (d) {
-            if (prev !== next) {
-              node.updateStyle({
-                opacity: next * 0.01,
-              });
-              if (isFirst) {
-                nodes.push(node);
-                prevs.push(prev * 0.01);
-              }
-              nexts.push(next * 0.01);
+          if (d && prev !== next) {
+            node.updateStyle({
+              opacity: next * 0.01,
+            });
+            if (isFirst) {
+              nodes.push(node);
+              prevs.push(prev * 0.01);
             }
+            nexts.push(next * 0.01);
           }
         });
         range.value = number.value || '0';
@@ -47735,40 +47769,19 @@
     return RoundPanel;
   }(Panel));
 
-  var UpdateFormatStyleCommand = /** @class */ (function (_super) {
-    __extends(UpdateFormatStyleCommand, _super);
-    function UpdateFormatStyleCommand(nodes, prevs, nexts) {
-      var _this = _super.call(this, nodes) || this;
-      _this.prevs = prevs;
-      _this.nexts = nexts;
-      return _this;
-    }
-    UpdateFormatStyleCommand.prototype.execute = function () {
-      var _a = this, nodes = _a.nodes, nexts = _a.nexts;
-      nodes.forEach(function (node, i) {
-        node.updateFormatStyle(nexts[i]);
-      });
-    };
-    UpdateFormatStyleCommand.prototype.undo = function () {
-      var _a = this, nodes = _a.nodes, prevs = _a.prevs;
-      nodes.forEach(function (node, i) {
-        node.updateFormatStyle(prevs[i]);
-      });
-    };
-    return UpdateFormatStyleCommand;
-  }(AbstractCommand));
-
   var html$6 = "\n  <h4 class=\"panel-title\">\u586B\u5145</h4>\n";
   function renderItem$2(index, multiEnable, enable, multiOpacity, opacity, fillColor, fillPattern, fillGradient, width, height) {
+    var _a, _b, _c, _d, _e, _f, _g;
     var multiColor = fillColor.length > 1;
     var multiPattern = fillPattern.length > 1;
     var multiGradient = fillGradient.length > 1;
     var multiFill = (fillColor.length ? 1 : 0) + (fillPattern.length ? 1 : 0) + (fillGradient.length ? 1 : 0) > 1;
     var multi = multiFill || multiColor || multiPattern || multiGradient;
-    var readOnly = (multiEnable || !enable || multiPattern || multiGradient) ? 'readonly="readonly"' : '';
+    var readOnly = (multiEnable || !enable || multiFill || multiPattern || multiGradient || fillPattern.length || fillGradient.length) ? 'readonly="readonly"' : '';
     var background = '';
-    var txt1 = '';
-    var txt2 = '';
+    var txt1 = ' ';
+    var txt2 = ' ';
+    var txt3 = '多种';
     if (multiFill) {
       txt1 = '多个';
     }
@@ -47785,6 +47798,15 @@
       if (fillPattern.length === 1) {
         background = getCssFill(fillPattern[0]);
       }
+      else {
+        txt3 = ['填充', '适应', '拉伸', '平铺'][fillPattern[0].type];
+        for (var i = 1, len = fillPattern.length; i < len; i++) {
+          if (fillPattern[i].type !== fillPattern[0].type) {
+            txt3 = '多个';
+            break;
+          }
+        }
+      }
     }
     else if (fillGradient.length) {
       txt1 = '渐变';
@@ -47792,8 +47814,17 @@
       if (fillGradient.length === 1) {
         background = getCssFill(fillGradient[0], width, height);
       }
+      else {
+        txt3 = ['线性', '径向', '角度'][fillGradient[0].t];
+        for (var i = 1, len = fillGradient.length; i < len; i++) {
+          if (fillGradient[i].t !== fillGradient[0].t) {
+            txt3 = '多个';
+            break;
+          }
+        }
+      }
     }
-    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"").concat(multi ? 'multi' : '', "\" style=\"").concat(multi ? '' : "background:".concat(background), "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">").concat(txt1, "</span>\n    </div>\n    <div class=\"hex\">\n      <div class=\"color ").concat((fillPattern.length || fillGradient.length) ? 'hide' : '', "\">\n        <span>#</span>\n        <input type=\"text\" value=\"").concat(multiColor ? '' : color2hexStr(fillColor[0]).slice(1), "\" placeholder=\"").concat(multiColor ? '多个' : '', "\"/>\n      </div>\n      <div class=\"pattern ").concat((fillColor.length || fillGradient.length) ? 'hide' : '', "\">\n        <select>\n          <option value=\"\">\u586B\u5145</option>\n          <option value=\"\">\u9002\u5E94</option>\n          <option value=\"\">\u62C9\u4F38</option>\n          <option value=\"\">\u5E73\u94FA</option>\n        </select>\n      </div>\n      <div class=\"gradient ").concat((fillColor.length || fillPattern.length) ? 'hide' : '', "\">\n        <select>\n          <option value=\"").concat(GRADIENT.LINEAR, "\">\u7EBF\u6027</option>\n          <option value=\"").concat(GRADIENT.RADIAL, "\">\u5F84\u5411</option>\n          <option value=\"").concat(GRADIENT.CONIC, "\">\u89D2\u5EA6</option>\n        </select>\n      </div>\n      <span class=\"txt\">").concat(txt2, "</span>\n    </div>\n    <div class=\"opacity\">\n      <div class=\"input-unit\">\n        <input type=\"number\" min=\"0\" max=\"100\" step=\"1\" value=\"").concat(multiOpacity ? '' : opacity * 100, "\" placeholder=\"").concat(multiOpacity ? '多个' : '', "\"/>\n        <span class=\"unit\">%</span>\n      </div>\n      <span class=\"txt\">\u4E0D\u900F\u660E\u5EA6</span>\n    </div>\n  </div>");
+    return "<div class=\"line\" title=\"".concat(index, "\">\n    <span class=\"enabled ").concat(multiEnable ? 'multi-checked' : (enable ? 'checked' : 'un-checked'), "\"></span>\n    <div class=\"color\">\n      <span class=\"picker-btn ").concat(readOnly ? 'read-only' : '', "\">\n        <b class=\"pick ").concat(multi ? 'multi' : '', "\" style=\"").concat(multi ? '' : "background:".concat(background), "\" title=\"").concat(background, "\">\u25CB\u25CB\u25CB</b>\n      </span>\n      <span class=\"txt\">").concat(txt1, "</span>\n    </div>\n    <div class=\"hex\">\n      <div class=\"color ").concat((fillPattern.length || fillGradient.length) ? 'hide' : '', "\">\n        <span>#</span>\n        <input type=\"text\" value=\"").concat(multiColor ? '' : color2hexStr(fillColor[0]).slice(1), "\" placeholder=\"").concat(multiColor ? '多个' : '', "\" maxlength=\"8\"/>\n      </div>\n      <div class=\"pattern ").concat((fillColor.length || fillGradient.length || multiPattern) ? 'hide' : '', "\">\n        <select disabled=\"disabled\">\n          <option value=\"").concat(PATTERN_FILL_TYPE.FILL, "\" ").concat(((_a = fillPattern[0]) === null || _a === void 0 ? void 0 : _a.type) === PATTERN_FILL_TYPE.FILL ? 'selected="selected"' : '', ">\u586B\u5145</option>\n          <option value=\"").concat(PATTERN_FILL_TYPE.FIT, "\" ").concat(((_b = fillPattern[0]) === null || _b === void 0 ? void 0 : _b.type) === PATTERN_FILL_TYPE.FIT ? 'selected="selected"' : '', ">\u9002\u5E94</option>\n          <option value=\"").concat(PATTERN_FILL_TYPE.STRETCH, "\" ").concat(((_c = fillPattern[0]) === null || _c === void 0 ? void 0 : _c.type) === PATTERN_FILL_TYPE.STRETCH ? 'selected="selected"' : '', ">\u62C9\u4F38</option>\n          <option value=\"").concat(PATTERN_FILL_TYPE.TILE, "\" ").concat(((_d = fillPattern[0]) === null || _d === void 0 ? void 0 : _d.type) === PATTERN_FILL_TYPE.TILE ? 'selected="selected"' : '', ">\u5E73\u94FA</option>\n        </select>\n      </div>\n      <div class=\"gradient ").concat((fillColor.length || fillPattern.length || multiGradient) ? 'hide' : '', "\">\n        <select disabled=\"disabled\">\n          <option value=\"").concat(GRADIENT.LINEAR, "\" ").concat(((_e = fillGradient[0]) === null || _e === void 0 ? void 0 : _e.t) === GRADIENT.LINEAR ? 'selected="selected"' : '', ">\u7EBF\u6027</option>\n          <option value=\"").concat(GRADIENT.RADIAL, "\" ").concat(((_f = fillGradient[0]) === null || _f === void 0 ? void 0 : _f.t) === GRADIENT.RADIAL ? 'selected="selected"' : '', ">\u5F84\u5411</option>\n          <option value=\"").concat(GRADIENT.CONIC, "\" ").concat(((_g = fillGradient[0]) === null || _g === void 0 ? void 0 : _g.t) === GRADIENT.CONIC ? 'selected="selected"' : '', ">\u89D2\u5EA6</option>\n        </select>\n      </div>\n      <div class=\"multi-type ").concat(multiFill || multiPattern || multiGradient ? '' : 'hide', "\">\n        <select disabled=\"disabled\">\n          <option>").concat(txt3, "</option>\n        </select>\n      </div>\n      <span class=\"txt\">").concat(txt2, "</span>\n    </div>\n    <div class=\"opacity\">\n      <div class=\"input-unit\">\n        <input type=\"number\" min=\"0\" max=\"100\" step=\"1\" value=\"").concat(multiOpacity ? '' : opacity * 100, "\" placeholder=\"").concat(multiOpacity ? '多个' : '', "\"/>\n        <span class=\"unit\">%</span>\n      </div>\n      <span class=\"txt\">\u4E0D\u900F\u660E\u5EA6</span>\n    </div>\n  </div>");
   }
   var FillPanel = /** @class */ (function (_super) {
     __extends(FillPanel, _super);
@@ -47804,14 +47835,15 @@
       panel.style.display = 'none';
       panel.innerHTML = html$6;
       _this.dom.appendChild(panel);
-      var nodes;
-      var prevs;
-      var nexts;
-      var callback = function () {
+      var nodes = [];
+      var prevs = [];
+      var nexts = [];
+      var pickCallback = function () {
         // 只有变更才会有next
-        if (nexts && nexts.length) {
-          listener.history.addCommand(new UpdateFormatStyleCommand(nodes.slice(0), prevs, nexts));
-          listener.emit(Listener.FILL_NODE, nodes.slice(0));
+        if (nexts.length) {
+          listener.history.addCommand(new FillCommand(nodes, prevs.map(function (prev, i) {
+            return { prev: prev, next: nexts[i] };
+          })));
         }
         nodes = [];
         prevs = [];
@@ -47819,63 +47851,253 @@
       };
       panel.addEventListener('click', function (e) {
         var el = e.target;
-        if (el.tagName === 'B') {
-          var p = picker$1.show(el, 'fillPanel', callback);
+        var classList = el.classList;
+        if (classList.contains('pick')) {
+          // picker侦听了document全局click隐藏窗口，这里停止向上冒泡
+          e.stopPropagation();
+          if (el.parentElement.classList.contains('read-only')) {
+            return;
+          }
+          if (picker$1.isShowFrom('fillPanel')) {
+            picker$1.hide();
+            pickCallback();
+            return;
+          }
           var line_1 = el.parentElement.parentElement.parentElement;
           var index_1 = parseInt(line_1.title);
+          var p = picker$1.show(el, 'shadowPanel', pickCallback);
           // 最开始记录nodes/prevs
           nodes = _this.nodes.slice(0);
           prevs = [];
           nodes.forEach(function (node) {
-            var fill = clone(node.style.fill);
-            var fillOpacity = clone(node.style.fillOpacity);
+            var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+            var cssFill = fill.map(function (item) { return getCssFill(item, node.width, node.height); });
             prevs.push({
-              fill: fill,
+              fill: cssFill,
               fillOpacity: fillOpacity,
+              fillEnable: fillEnable,
             });
           });
           // 每次变更记录更新nexts
           p.onChange = function (color) {
+            _this.silence = true;
             nexts = [];
-            nodes.forEach(function (node, i) {
-              var fill = clone(node.style.fill);
-              var rgba = color.rgba.slice(0);
-              rgba[3] = 1;
-              fill[index_1].v = rgba;
-              var fillOpacity = clone(node.style.fillOpacity);
-              fillOpacity[index_1].v = color.rgba[3];
-              if (!i) {
-                var hex = line_1.querySelector('.hex input');
-                hex.value = color2hexStr(rgba).slice(0, 7);
-                var b = line_1.querySelector('.picker b');
-                b.style.opacity = String(color.rgba[3]);
-                b.style.background = hex.value;
-                var op = line_1.querySelector('.opacity input');
-                op.value = String(toPrecision(color.rgba[3] * 100, 0));
-              }
-              nexts.push({
-                fill: fill,
-                fillOpacity: fillOpacity,
+            nodes.forEach(function (node) {
+              var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+              var cssFill = fill.map(function (item, i) {
+                if (i === index_1) {
+                  return getCssFill(color.rgba, node.width, node.height);
+                }
+                else {
+                  return getCssFill(item, node.width, node.height);
+                }
               });
-              node.updateFormatStyle({
-                fill: fill,
+              var o = {
+                fill: cssFill,
                 fillOpacity: fillOpacity,
-              });
+                fillEnable: fillEnable,
+              };
+              nexts.push(o);
+              node.updateStyle(o);
             });
+            if (nodes.length) {
+              listener.emit(Listener.FILL_NODE, nodes.slice(0));
+            }
+            var c = color2hexStr(color.rgba);
+            el.title = el.style.background = c;
+            line_1.querySelector('.hex input').value = c.slice(1);
+            _this.silence = false;
           };
           p.onDone = function () {
             picker$1.hide();
-            callback();
+            pickCallback();
           };
         }
+        else if (classList.contains('enabled')) {
+          _this.silence = true;
+          var line = el.parentElement;
+          var index_2 = parseInt(line.title);
+          var nodes_1 = _this.nodes.slice(0);
+          var prevs_1 = [];
+          var nexts_1 = [];
+          var value_1 = false;
+          if (classList.contains('multi-checked') || classList.contains('un-checked')) {
+            value_1 = true;
+          }
+          nodes_1.forEach(function (node) {
+            var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+            var cssFill = fill.map(function (item) { return getCssFill(item, node.width, node.height); });
+            prevs_1.push({
+              fill: cssFill,
+              fillOpacity: fillOpacity,
+              fillEnable: fillEnable,
+            });
+            var f = cssFill.slice(0);
+            var fe = fillEnable.slice(0);
+            var fo = fillOpacity.slice(0);
+            if (fe[index_2] !== undefined) {
+              fe[index_2] = value_1;
+            }
+            var o = {
+              fill: f,
+              fillEnable: fe,
+              fillOpacity: fo,
+            };
+            nexts_1.push(o);
+            node.updateStyle(o);
+          });
+          classList.remove('multi-checked');
+          if (value_1) {
+            classList.remove('un-checked');
+            classList.add('checked');
+            line.querySelectorAll('input:read-only').forEach(function (item) {
+              item.readOnly = false;
+            });
+          }
+          else {
+            classList.remove('checked');
+            classList.add('un-checked');
+            line.querySelectorAll('input').forEach(function (item) {
+              item.readOnly = true;
+            });
+          }
+          listener.emit(Listener.FILL_NODE, nodes_1.slice(0));
+          listener.history.addCommand(new FillCommand(nodes_1, prevs_1.map(function (prev, i) {
+            return { prev: prev, next: nexts_1[i] };
+          })));
+          _this.silence = false;
+        }
       });
+      // 颜色input防止无效输入，undo/redo干扰输入
+      panel.addEventListener('keydown', function (e) {
+        var target = e.target;
+        if (target.tagName.toUpperCase() === 'INPUT' && target.type === 'text') {
+          var keyCode = e.keyCode;
+          if (e.metaKey || listener.isWin && e.ctrlKey) ;
+          else if (keyCode >= 48 && keyCode <= 57
+            || keyCode >= 37 && keyCode <= 40
+            || keyCode >= 65 && keyCode <= 90
+            || keyCode === 8
+            || keyCode === 46
+            || keyCode === 27
+            || keyCode === 13) ;
+          else {
+            e.preventDefault();
+          }
+        }
+      });
+      panel.addEventListener('input', function (e) {
+        _this.silence = true;
+        var input = e.target;
+        var line = input.parentElement.parentElement.parentElement;
+        var index = parseInt(line.title);
+        // 连续多次只有首次记录节点和prev值，但每次都更新next值
+        var isFirst = !nodes.length;
+        if (isFirst) {
+          prevs = [];
+        }
+        nexts = [];
+        if (input.type === 'text') {
+          var value_2 = color2rgbaInt(input.value);
+          _this.nodes.forEach(function (node, i) {
+            if (isFirst) {
+              nodes.push(node);
+              var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+              var cssFill = fill.map(function (item) { return getCssFill(item, node.width, node.height); });
+              prevs.push({
+                fill: cssFill,
+                fillOpacity: fillOpacity,
+                fillEnable: fillEnable,
+              });
+            }
+            var o = {
+              fill: prevs[i].fill.slice(0),
+              fillOpacity: prevs[i].fillOpacity.slice(0),
+              fillEnable: prevs[i].fillEnable.slice(0),
+            };
+            nexts.push(o);
+            o.fill[index] = value_2;
+            node.updateStyle(o);
+          });
+          input.placeholder = '';
+          var b = line.querySelector('.picker-btn b');
+          b.title = b.style.background = color2rgbaStr(value_2);
+        }
+        else if (input.type === 'number') {
+          var n_1 = Math.min(100, Math.max(0, parseFloat(input.value) || 0));
+          var isInput_1 = e instanceof InputEvent; // 上下键还是真正输入
+          _this.nodes.forEach(function (node, i) {
+            if (isFirst) {
+              nodes.push(node);
+              var _a = node.getComputedStyle(), fill = _a.fill, fillEnable = _a.fillEnable, fillOpacity = _a.fillOpacity;
+              var cssFill = fill.map(function (item) { return getCssFill(item, node.width, node.height); });
+              prevs.push({
+                fill: cssFill,
+                fillOpacity: fillOpacity,
+                fillEnable: fillEnable,
+              });
+            }
+            var o = {
+              fill: prevs[i].fill.slice(0),
+              fillOpacity: prevs[i].fillOpacity.slice(0),
+              fillEnable: prevs[i].fillEnable.slice(0),
+            };
+            nexts.push(o);
+            var prev = prevs[i].fillOpacity[index] * 100;
+            var next = n_1;
+            var d = 0;
+            if (isInput_1) {
+              d = next - prev;
+              if (!i) {
+                input.placeholder = '';
+              }
+            }
+            else {
+              // 由于min/max限制，在极小值的时候下键获取的值不再是-1而是0，仅会发生在multi情况，单个直接被限制min/max不会有input事件
+              if (next === 0) {
+                next = -1;
+              }
+              // 多个的时候有placeholder无值，差值就是1或-1；单个则是值本身
+              if (input.placeholder) {
+                d = next;
+              }
+              else {
+                d = next - prev;
+              }
+              if (listener.shiftKey) {
+                if (d > 0) {
+                  d = 10;
+                }
+                else {
+                  d = -10;
+                }
+              }
+              next = prev + d;
+              next = Math.max(next, 0);
+              next = Math.min(next, 100);
+              if (!i) {
+                input.value = input.placeholder ? '' : next.toString();
+              }
+            }
+            if (d) {
+              o.fillOpacity[index] = next * 0.01;
+              node.updateStyle(o);
+            }
+          });
+        }
+        if (nodes.length) {
+          listener.emit(Listener.FILL_NODE, nodes.slice(0));
+        }
+        _this.silence = false;
+      });
+      panel.addEventListener('change', pickCallback);
       listener.on([
         Listener.SELECT_NODE,
         Listener.ADD_NODE,
+        Listener.FILL_NODE,
       ], function (nodes) {
-        if (picker$1.isShowFrom('fillPanel')) {
-          picker$1.hide();
-          callback();
+        if (_this.silence) {
+          return;
         }
         _this.show(nodes);
       });
@@ -48005,6 +48227,29 @@
     };
     return FillPanel;
   }(Panel));
+
+  var UpdateFormatStyleCommand = /** @class */ (function (_super) {
+    __extends(UpdateFormatStyleCommand, _super);
+    function UpdateFormatStyleCommand(nodes, prevs, nexts) {
+      var _this = _super.call(this, nodes) || this;
+      _this.prevs = prevs;
+      _this.nexts = nexts;
+      return _this;
+    }
+    UpdateFormatStyleCommand.prototype.execute = function () {
+      var _a = this, nodes = _a.nodes, nexts = _a.nexts;
+      nodes.forEach(function (node, i) {
+        node.updateFormatStyle(nexts[i]);
+      });
+    };
+    UpdateFormatStyleCommand.prototype.undo = function () {
+      var _a = this, nodes = _a.nodes, prevs = _a.prevs;
+      nodes.forEach(function (node, i) {
+        node.updateFormatStyle(prevs[i]);
+      });
+    };
+    return UpdateFormatStyleCommand;
+  }(AbstractCommand));
 
   var html$5 = "\n  <h4 class=\"panel-title\">\u63CF\u8FB9</h4>\n";
   function renderItem$1(index, multiEnable, enable, multiColor, color, position, multiWidth, width) {
@@ -48191,9 +48436,9 @@
       var pickCallback = function () {
         // 只有变更才会有next
         if (nodes.length && nexts.length) {
-          listener.history.addCommand(new UpdateRichCommand(nodes, prevs.map(function (prev, i) {
+          listener.history.addCommand(new RichCommand(nodes, prevs.map(function (prev, i) {
             return { prev: prev, next: nexts[i] };
-          }), UpdateRichCommand.COLOR));
+          }), RichCommand.COLOR));
         }
         nodes = [];
         prevs = [];
@@ -48204,7 +48449,6 @@
         _this.silence = true;
         var input = e.target;
         var value = parseFloat(input.value) || 0;
-        pickCallback();
         // 连续多次只有首次记录节点和prev值，但每次都更新next值
         var isFirst = !nodes.length;
         if (isFirst) {
@@ -48322,18 +48566,18 @@
         if (nodes.length) {
           var type = '';
           if (key == 'fontSize') {
-            type = UpdateRichCommand.FONT_SIZE;
+            type = RichCommand.FONT_SIZE;
           }
           else if (key === 'letterSpacing') {
-            type = UpdateRichCommand.LETTER_SPACING;
+            type = RichCommand.LETTER_SPACING;
           }
           else if (key === 'lineHeight') {
-            type = UpdateRichCommand.LINE_HEIGHT;
+            type = RichCommand.LINE_HEIGHT;
           }
           else if (key === 'paragraphSpacing') {
-            type = UpdateRichCommand.PARAGRAPH_SPACING;
+            type = RichCommand.PARAGRAPH_SPACING;
           }
-          listener.history.addCommand(new UpdateRichCommand(nodes, prevs.map(function (prev, i) {
+          listener.history.addCommand(new RichCommand(nodes, prevs.map(function (prev, i) {
             return { prev: prev, next: nexts[i] };
           }), type));
           nodes = [];
@@ -48428,7 +48672,7 @@
             });
           }
           if (data_1.length) {
-            listener.history.addCommand(new UpdateRichCommand(nodes, data_1, UpdateRichCommand.FONT_FAMILY));
+            listener.history.addCommand(new RichCommand(nodes, data_1, RichCommand.FONT_FAMILY));
             listener.select.updateSelect(nodes);
             listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
           }
@@ -48469,7 +48713,7 @@
             });
           }
           if (data_2.length) {
-            listener.history.addCommand(new UpdateRichCommand(nodes, data_2, UpdateRichCommand.FONT_FAMILY));
+            listener.history.addCommand(new RichCommand(nodes, data_2, RichCommand.FONT_FAMILY));
             listener.select.updateSelect(nodes);
             listener.emit(Listener.FONT_FAMILY_NODE, nodes.slice(0));
           }
@@ -48558,7 +48802,6 @@
         // 尺寸固定模式
         else if ((classList.contains('auto') || classList.contains('fw') || classList.contains('fwh'))
           && !classList.contains('cur')) {
-          pickCallback();
           nodes = _this.nodes.slice(0);
           var next_1 = TEXT_BEHAVIOUR.AUTO;
           if (classList.contains('fw')) {
@@ -48607,7 +48850,6 @@
         // 左右对齐
         else if ((classList.contains('left') || classList.contains('right') || classList.contains('center') || el.classList.contains('justify'))
           && !classList.contains('cur')) {
-          pickCallback();
           var nodes_1 = _this.nodes.slice(0);
           var value_1 = TEXT_ALIGN.LEFT;
           if (classList.contains('right')) {
@@ -48670,7 +48912,7 @@
             });
           }
           if (data_4.length) {
-            listener.history.addCommand(new UpdateRichCommand(nodes_1, data_4, UpdateRichCommand.TEXT_ALIGN));
+            listener.history.addCommand(new RichCommand(nodes_1, data_4, RichCommand.TEXT_ALIGN));
             listener.emit(Listener.TEXT_ALIGN_NODE, nodes_1.slice(0));
           }
           (_b = dom.querySelector('.al .cur')) === null || _b === void 0 ? void 0 : _b.classList.remove('cur');
@@ -49178,7 +49420,7 @@
       // 选择颜色会刷新但不产生步骤，关闭颜色面板后才callback产生
       var pickCallback = function () {
         // 只有变更才会有next
-        if (nexts && nexts.length) {
+        if (nexts.length) {
           listener.history.addCommand(new ShadowCommand(nodes, prevs.map(function (prev, i) {
             return { prev: prev, next: nexts[i] };
           })));
@@ -49222,13 +49464,9 @@
               var _a = node.getComputedStyle(), shadow = _a.shadow, shadowEnable = _a.shadowEnable;
               var cssShadow = shadow.map(function (item, i) {
                 if (i === index_1) {
-                  return getCssShadow({
+                  return getCssShadow(Object.assign(item, {
                     color: color.rgba,
-                    x: item.x,
-                    y: item.y,
-                    blur: item.blur,
-                    spread: item.spread,
-                  });
+                  }));
                 }
                 else {
                   return getCssShadow(item);
@@ -49338,8 +49576,9 @@
           _this.silence = false;
         }
         else if (classList.contains('enabled')) {
-          var index_2 = parseInt(el.parentElement.title);
           _this.silence = true;
+          var line = el.parentElement;
+          var index_2 = parseInt(line.title);
           var nodes_3 = _this.nodes.slice(0);
           var prevs_3 = [];
           var nexts_3 = [];
@@ -49366,22 +49605,32 @@
             nexts_3.push(o);
             node.updateStyle(o);
           });
-          _this.show(nodes_3);
+          classList.remove('multi-checked');
+          if (value_1) {
+            classList.remove('un-checked');
+            classList.add('checked');
+            line.querySelectorAll('input:read-only').forEach(function (item) {
+              item.readOnly = false;
+            });
+          }
+          else {
+            classList.remove('checked');
+            classList.add('un-checked');
+            line.querySelectorAll('input').forEach(function (item) {
+              item.readOnly = true;
+            });
+          }
           listener.emit(Listener.SHADOW_NODE, nodes_3.slice(0));
           listener.history.addCommand(new ShadowCommand(nodes_3.slice(0), prevs_3.map(function (prev, i) {
-            return {
-              prev: prev,
-              next: nexts_3[i],
-            };
+            return { prev: prev, next: nexts_3[i] };
           })));
           _this.silence = false;
         }
       });
       panel.addEventListener('input', function (e) {
         _this.silence = true;
-        pickCallback();
         var input = e.target;
-        var index = parseInt(input.parentElement.parentElement.title);
+        var index = parseInt((input.parentElement.parentElement).title);
         var classList = input.classList;
         var type = 1; // x
         if (classList.contains('y')) {
@@ -49393,10 +49642,7 @@
         else if (classList.contains('spread')) {
           type = 4;
         }
-        var n = parseFloat(input.value) || 0;
-        if (n > 500000 || n < -500000) {
-          n = 0;
-        }
+        var n = Math.min(500000, Math.max(-500000, parseFloat(input.value) || 0));
         // 连续多次只有首次记录节点和prev值，但每次都更新next值
         var isFirst = !nodes.length;
         if (isFirst) {
@@ -49458,19 +49704,7 @@
         }
         _this.silence = false;
       });
-      panel.addEventListener('change', function (e) {
-        if (nexts.length) {
-          listener.history.addCommand(new ShadowCommand(nodes, prevs.map(function (prev, i) {
-            return {
-              prev: prev,
-              next: nexts[i],
-            };
-          })));
-        }
-        nodes = [];
-        prevs = [];
-        nexts = [];
-      });
+      panel.addEventListener('change', pickCallback);
       listener.on([
         Listener.SELECT_NODE,
         Listener.ADD_NODE,
@@ -50329,7 +50563,7 @@
     ColorAdjustPanel: ColorAdjustPanel,
   };
 
-  var version = "0.5.7";
+  var version = "0.6.0";
 
   var gl = {
     ca: ca,
