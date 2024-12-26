@@ -21439,6 +21439,7 @@
       var d = Math.sqrt(Math.pow(x3 - x, 2) + Math.pow(y3 - y, 2));
       return { x: x3, y: y3, d: d, t: t };
     }
+    console.error(points, x, y);
     // 先单调切割，但要防止切割的结果使得曲线面积特别小，w/h<=eps，后面做
     var tx = getBezierMonotonicityT(points, true);
     var ty = getBezierMonotonicityT(points, false);
@@ -21460,16 +21461,22 @@
     // 分别对每一段进行牛顿迭代
     var temp = [];
     ts.forEach(function (t, i) {
-      temp.push(getEachPDByApprox(points, t, ts[i + 1] || 1, x, y, eps));
       if (!i) {
         temp.push(getEachPDByApprox(points, 0, t, x, y, eps));
       }
+      // @ts-ignore
+      if (i === 0)
+        window.ttt = 1;
+      temp.push(getEachPDByApprox(points, t, ts[i + 1] || 1, x, y, eps));
+      // @ts-ignore
+      window.ttt = 0;
     });
     // 本身就是单调无切割则求整个
     if (!ts.length) {
       temp.push(getEachPDByApprox(points, 0, 1, x, y, eps));
     }
     temp.sort(function (a, b) { return a.d - b.d; });
+    console.error('最终结果', temp);
     if (temp.length) {
       return {
         x: temp[0].x,
@@ -21489,11 +21496,16 @@
     if (eps === void 0) { eps = 1e-4; }
     if (min === void 0) { min = 3; }
     if (max === void 0) { max = 30; }
-    console.warn('在此t范围内查找2次', t1, t2);
-    console.log('查找第1次，t初始化是开头', t1);
-    var r1 = getEachPDByApproxWithStartT(points, t1, t2, t1, x, y, eps, min, max);
-    console.log('查找第2次，t初始化是结尾', t2);
-    var r2 = getEachPDByApproxWithStartT(points, t1, t2, t2, x, y, eps, min, max);
+    // @ts-ignore
+    window.ttt && console.warn('在此t范围内查找2次', t1, t2);
+    var t3 = t1 + Number.EPSILON;
+    var t4 = t2 - Number.EPSILON;
+    // @ts-ignore
+    window.ttt && console.log('查找第1次，t初始化是开头', t3);
+    var r1 = getEachPDByApproxWithStartT(points, t1, t2, t3, x, y, eps, min, max);
+    // @ts-ignore
+    window.ttt && console.log('查找第2次，t初始化是结尾', t4);
+    var r2 = getEachPDByApproxWithStartT(points, t1, t2, t4, x, y, eps, min, max);
     if (r1.d > r2.d) {
       return r2;
     }
@@ -21506,14 +21518,19 @@
     var last = t;
     var count = 0;
     while (count++ < max) {
-      var f = (bezierValue(points, t, true) - x) * bezierDerivative(points, t, true)
-        + (bezierValue(points, t, false) - y) * bezierDerivative(points, t, false);
-      var df = Math.pow(bezierDerivative(points, t, true), 2)
-        + (bezierValue(points, t, true) - x) * bezierDerivative2(points, t, true)
-        + Math.pow(bezierDerivative(points, t, false), 2)
-        + (bezierValue(points, t, false) - y) * bezierDerivative2(points, t, false);
+      var vx = (bezierValue(points, t, true) - x);
+      var vy = (bezierValue(points, t, false) - y);
+      var dx1 = bezierDerivative(points, t, true);
+      var dy1 = bezierDerivative(points, t, false);
+      var f = vx * dx1 + vy * dy1;
+      var df = Math.pow(dx1, 2) + vx * bezierDerivative2(points, t, true)
+        + Math.pow(dy1, 2) + vy * bezierDerivative2(points, t, false);
       var d_1 = f / df;
-      console.log(count, f, df, d_1, t);
+      // @ts-ignore
+      if (window.ttt) {
+        console.log(count, f, df, ';', d_1, t);
+        console.log(vx, dx1, ',', vy, dy1, ';', bezierDerivative2(points, t, true), bezierDerivative2(points, t, false));
+      }
       t -= d_1;
       if (t > t2) {
         t = t2;
@@ -21538,7 +21555,8 @@
     var px = bezierValue(points, t, true);
     var py = bezierValue(points, t, false);
     var d = Math.sqrt(Math.pow(x - px, 2) + Math.pow(y - py, 2));
-    console.log('查找结束，t为', t, '点坐标为', px, py, '距离', d);
+    // @ts-ignore
+    window.ttt && console.log('查找结束，t为', t, '点坐标为', px, py, '距离', d);
     return { x: px, y: py, t: t, d: d };
   }
   // 贝塞尔1阶导数
@@ -21591,7 +21609,7 @@
     }
     if (points.length === 4) {
       var p3 = isX ? points[3].x : points[3].y;
-      return Math.pow(1 - t, 2) * p0 + 3 * Math.pow(1 - t, 2) * p1 + 3 * Math.pow(t, 2) * (1 - t) * p2 + Math.pow(t, 3) * p3;
+      return Math.pow(1 - t, 3) * p0 + 3 * Math.pow(1 - t, 2) * t * p1 + 3 * Math.pow(t, 2) * (1 - t) * p2 + Math.pow(t, 3) * p3;
     }
   }
   var bezier = {
@@ -65304,27 +65322,17 @@
           isDrag = true;
         }
         else if (tagName === 'PATH') {
-          idx = parseInt(target.getAttribute('title') || '0');
-          var x = e.pageX - ox;
-          var y = e.pageY - oy;
+          idx = +target.getAttribute('title');
+          var x = e.offsetX;
+          var y = e.offsetY;
           var scale = root.getCurPageZoom(true);
-          // console.log(1, idx, x, y, scale)
-          var node_1 = _this.node;
-          if (node_1) {
-            if (node_1 instanceof Polyline) {
-              var coords = node_1.coords;
-              // console.log(coords);
-              var prev = coords[idx].slice(-2);
-              var next = coords[idx + 1] || coords[0];
-              // console.log(prev, next);
-              var points = [];
-              points.push({ x: prev[0] * scale, y: prev[1] * scale });
-              for (var i = 0, len = next.length; i < len; i += 2) {
-                points.push({ x: next[i] * scale, y: next[i + 1] * scale });
-              }
-              // console.log(points);
-              getPointWithDByApprox(points, x, y);
-              // console.log(p);
+          if (node instanceof Polyline) {
+            var points = getPolylineCoords(node, idx, scale);
+            var p = getPointWithDByApprox(points, x, y);
+            if (p && p.d <= 5) {
+              console.log(idx, p);
+              sliceBezier(points, 0, p.t);
+              sliceBezier(points, p.t, 1);
             }
           }
         }
@@ -65366,40 +65374,36 @@
         }
       });
       panel.addEventListener('mousemove', function (e) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         var node = _this.node;
         if (pathIdx > -1 && node) {
+          var x = e.offsetX;
+          var y = e.offsetY;
+          var scale = root.getCurPageZoom(true);
           if (node instanceof Polyline) {
-            var x = e.offsetX;
-            var y = e.offsetY;
-            console.error('鼠标坐标', x, y);
-            var scale = root.getCurPageZoom(true);
-            var coords = node.coords;
-            var prev = coords[pathIdx].slice(-2);
-            var next = coords[pathIdx + 1] || coords[0];
-            var points = [];
-            points.push({ x: prev[0] * scale, y: prev[1] * scale });
-            for (var i = 0, len = next.length; i < len; i += 2) {
-              points.push({ x: next[i] * scale, y: next[i + 1] * scale });
-            }
-            console.log('曲线坐标', points);
+            var points = getPolylineCoords(node, pathIdx, scale);
             var p = getPointWithDByApprox(points, x, y);
-            console.error('最终结果', p);
             (_a = panel.querySelector('svg.stroke .cur')) === null || _a === void 0 ? void 0 : _a.classList.remove('cur');
             (_b = panel.querySelector('svg.interactive .cur')) === null || _b === void 0 ? void 0 : _b.classList.remove('cur');
+            (_c = panel.querySelector('.pt.cur')) === null || _c === void 0 ? void 0 : _c.classList.remove('cur');
             if (p && p.d <= 5) {
-              (_c = panel.querySelector("svg.stroke path[title=\"".concat(pathIdx, "\"]"))) === null || _c === void 0 ? void 0 : _c.classList.add('cur');
-              (_d = panel.querySelector("svg.interactive path[title=\"".concat(pathIdx, "\"]"))) === null || _d === void 0 ? void 0 : _d.classList.add('cur');
+              (_d = panel.querySelector("svg.stroke path[title=\"".concat(pathIdx, "\"]"))) === null || _d === void 0 ? void 0 : _d.classList.add('cur');
+              (_e = panel.querySelector("svg.interactive path[title=\"".concat(pathIdx, "\"]"))) === null || _e === void 0 ? void 0 : _e.classList.add('cur');
+              var pj = panel.querySelector('.pj');
+              pj.style.left = p.x + 'px';
+              pj.style.top = p.y + 'px';
+              pj.classList.add('cur');
             }
           }
         }
       });
       panel.addEventListener('mouseout', function (e) {
-        var _a;
+        var _a, _b;
         var target = e.target;
         var tagName = target.tagName.toUpperCase();
         if (tagName === 'PATH') {
           (_a = panel.querySelector('svg.stroke .cur')) === null || _a === void 0 ? void 0 : _a.classList.remove('cur');
+          (_b = panel.querySelector('svg.interactive .cur')) === null || _b === void 0 ? void 0 : _b.classList.remove('cur');
         }
         pathIdx = -1;
       });
@@ -65450,52 +65454,74 @@
       coords.forEach(function (item, i) {
         if (i) {
           s += "<path title=\"".concat(i - 1, "\" d=\"\"></path>");
-          s2 += "<div title=\"".concat(i - 1, "\"></div>");
+          var p = node.props.points[i - 1];
+          if (p.curveMode === CURVE_MODE.NONE || p.curveMode === CURVE_MODE.STRAIGHT) {
+            s2 += "<div class=\"vt\" title=\"".concat(i - 1, "\"></div>");
+          }
+          else {
+            s2 += "<div class=\"vt\" title=\"".concat(i - 1, "\">");
+            if (p.hasCurveFrom) {
+              s2 += '<span></span>';
+            }
+            if (p.hasCurveTo) {
+              s2 += '<span></span>';
+            }
+            s2 += '</div>';
+          }
         }
       });
       svg1.innerHTML = s;
       svg2.innerHTML = s;
-      panel.innerHTML += s2;
+      panel.innerHTML += s2 + '<div class="pj"></div>';
     };
     Geometry.prototype.updateVertex = function (node) {
-      var _a;
       node.buildPoints();
-      var coords = node.coords;
-      var zoom = ((_a = node.root) === null || _a === void 0 ? void 0 : _a.getCurPageZoom(true)) || 1;
-      var panel = this.panel;
-      var divs = panel.querySelectorAll('div');
-      var paths1 = panel.querySelectorAll('svg.stroke path');
-      var paths2 = panel.querySelectorAll('svg.interactive path');
-      coords.forEach(function (item, i) {
-        if (divs[i]) {
-          var c = item.slice(-2);
-          var style = divs[i].style;
-          style.left = c[0] * zoom + 'px';
-          style.top = c[1] * zoom + 'px';
-        }
-        if (paths1[i]) {
-          var d = 'M' + item.slice(-2).map(function (n) { return n * zoom; }).join(',');
-          var next = coords[i + 1] || coords[0];
-          if (next) {
-            if (next.length === 6) {
-              d += 'C';
+      if (node instanceof Polyline) {
+        var coords_1 = node.coords;
+        var zoom_1 = node.root.getCurPageZoom(true) || 1;
+        var panel = this.panel;
+        var vts_1 = panel.querySelectorAll('.vt');
+        var paths1_1 = panel.querySelectorAll('svg.stroke path');
+        var paths2_1 = panel.querySelectorAll('svg.interactive path');
+        coords_1.forEach(function (item, i) {
+          var div = vts_1[i];
+          if (div) {
+            var c = item.slice(-2);
+            var style = div.style;
+            style.left = c[0] * zoom_1 + 'px';
+            style.top = c[1] * zoom_1 + 'px';
+            div.querySelectorAll('span');
+            console.log(node.props.points, i);
+            if (i) {
+              var p = node.props.points[i - 1];
+              if (p.curveMode !== CURVE_MODE.NONE && p.curveMode !== CURVE_MODE.STRAIGHT) ;
             }
-            else if (next.length === 4) {
-              d += 'Q';
-            }
-            else if (next.length === 2) {
-              d += 'L';
-            }
-            d += next.map(function (n) { return n * zoom; }).join(',');
-            paths1[i].setAttribute('d', d);
-            paths2[i].setAttribute('d', d);
           }
-        }
-      });
+          if (paths1_1[i]) {
+            var d = 'M' + item.slice(-2).map(function (n) { return n * zoom_1; }).join(',');
+            var next = coords_1[i + 1] || coords_1[0];
+            if (next) {
+              if (next.length === 6) {
+                d += 'C';
+              }
+              else if (next.length === 4) {
+                d += 'Q';
+              }
+              else if (next.length === 2) {
+                d += 'L';
+              }
+              d += next.map(function (n) { return n * zoom_1; }).join(',');
+              paths1_1[i].setAttribute('d', d);
+              paths2_1[i] && paths2_1[i].setAttribute('d', d);
+            }
+          }
+        });
+      }
     };
     Geometry.prototype.updatePos = function () {
-      if (this.node) {
-        this.updateSize(this.node);
+      var node = this.node;
+      if (node) {
+        this.updateSize(node);
       }
     };
     Geometry.prototype.hide = function () {
@@ -65506,6 +65532,17 @@
     };
     return Geometry;
   }());
+  function getPolylineCoords(node, idx, scale) {
+    var coords = node.coords;
+    var prev = coords[idx].slice(-2);
+    var next = coords[idx + 1] || coords[0];
+    var points = [];
+    points.push({ x: prev[0] * scale, y: prev[1] * scale });
+    for (var i = 0, len = next.length; i < len; i += 2) {
+      points.push({ x: next[i] * scale, y: next[i + 1] * scale });
+    }
+    return points;
+  }
 
   var isWin = typeof navigator !== 'undefined' && /win/i.test(navigator.platform);
   var Listener = /** @class */ (function (_super) {
@@ -66498,7 +66535,7 @@
           this.state = State$1.EDIT_TEXT;
           this.emit(Listener.STATE_CHANGE, State$1.NORMAL, this.state);
         }
-        else if (node instanceof Geom) {
+        else if (node instanceof Polyline) {
           if ((_c = this.options.disabled) === null || _c === void 0 ? void 0 : _c.editGeom) {
             return;
           }
