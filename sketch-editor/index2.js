@@ -21525,13 +21525,26 @@
       var f = vx * dx1 + vy * dy1;
       var df = Math.pow(dx1, 2) + vx * bezierDerivative2(points, t, true)
         + Math.pow(dy1, 2) + vy * bezierDerivative2(points, t, false);
-      var d_1 = f / df;
+      var a = points[0], b = points[1], c = points[2], d_1 = points[3];
+      var d1 = 6 * (a.x * a.x + a.y * a.y) * Math.pow(t, 5)
+        + 10 * (a.x * b.x + a.y * b.y) * Math.pow(t, 4)
+        + 4 * (2 * (a.x * c.x + a.y * c.y) + b.x * b.x + b.y * b.y) * Math.pow(t, 3)
+        + 6 * (a.x * (d_1.x - x) + b.x * c.x + a.y * (d_1.y - y) + b.y * c.y) * Math.pow(t, 2)
+        + 2 * (2 * (b.x * d_1.x - b.x * x + b.y * d_1.y - b.y * y) + c.x * c.x + c.y * c.y) * t
+        + 2 * (c.x * d_1.x - c.x * x + c.y * d_1.y - c.y * y);
+      var d2 = 30 * (a.x * a.x + a.y * a.y) * Math.pow(t, 4)
+        + 40 * (a.x * b.x + a.y * b.y) * Math.pow(t, 3)
+        + 12 * (2 * a.x * c.x + b.x * b.x + 2 * a.y * c.y + b.y * b.y) * Math.pow(t, 2)
+        + 12 * (a.x * (d_1.x - x) + b.x * c.x + a.y * (d_1.y - y) + b.y * c.y) * t
+        + 2 * (2 * (b.x * d_1.x - b.x * x + b.y * d_1.y - b.y * y) + c.x * c.x + c.y * c.y);
+      var diff = f / df;
+      var diff2 = d1 / d2;
       // @ts-ignore
       if (window.ttt) {
-        console.log(count, f, df, ';', d_1, t);
+        console.log(count, f, df, diff, ';', d1, d2, diff2, ';', t);
         console.log(vx, dx1, ',', vy, dy1, ';', bezierDerivative2(points, t, true), bezierDerivative2(points, t, false));
       }
-      t -= d_1;
+      t -= diff;
       if (t > t2) {
         t = t2;
       }
@@ -21544,9 +21557,9 @@
         var y1 = bezierValue(points, t, false);
         var x2 = bezierValue(points, last, true);
         var y2 = bezierValue(points, last, false);
-        var diff = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        var diff_1 = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
         // console.log(count, diff);
-        if (Math.abs(diff) < eps) {
+        if (Math.abs(diff_1) < eps) {
           break;
         }
       }
@@ -21573,9 +21586,10 @@
     }
     if (points.length === 4) {
       var p3 = isX ? points[3].x : points[3].y;
-      return 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t
-        + 2 * (3 * p0 - 6 * p1 + 3 * p2) * t
-        + 3 * p1 - 3 * p0;
+      return 3 * Math.pow(1 - t, 2) * (p1 - p0) + 6 * (1 - t) * t * (p2 - p1) + 3 * t * t * (p3 - p2);
+      // return 3 * (-p0 + 3 * p1 - 3 * p2 + p3) * t * t
+      //   + 2 * (3 * p0 - 6 * p1 + 3 * p2) * t
+      //   + 3 * p1 - 3 * p0;
     }
   }
   // 贝塞尔2阶导数
@@ -21592,8 +21606,9 @@
     }
     if (points.length === 4) {
       var p3 = isX ? points[3].x : points[3].y;
-      return 6 * (-p0 + 3 * p1 - 3 * p2 + p3) * t
-        + 2 * (3 * p0 - 6 * p1 + 3 * p2);
+      return 6 * (1 - t) * (p2 - 2 * p1 + p0) + 6 * t * (p3 - 2 * p2 + p1);
+      // return 6 * (-p0 + 3 * p1 - 3 * p2 + p3) * t
+      //   + 2 * (3 * p0 - 6 * p1 + 3 * p2);
     }
   }
   function bezierValue(points, t, isX) {
