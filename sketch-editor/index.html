@@ -4,16 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
   <title>sketch-editor</title>
-  <link href="style.css" media="all" rel="stylesheet"/>
+  <link href="https://gw.alipayobjects.com/os/lib/sketch-editor/0.14.0/dist/style.min.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: arial, sans-serif;
+      background: #FFF;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
+<div class="sketch-editor-wrap">
   <div class="menu">
-    <input type="file" title="请选择sketch文件" id="file" accept=".sketch,.psd"/>
-    <div>
+    <input style="color: #FFF" type="file" title="请选择sketch文件" id="file" accept=".sketch,.psd"/>
+    <div style="color: #FFF">
       <label><input type="checkbox" class="tile"/>开启tile</label>
       <label><input type="checkbox" class="debug"/>开启debug</label>
     </div>
+    <div class="toolbar" id="toolbar"></div>
     <div class="zoom" id="zoom"></div>
     <div>
       <button id="save">保存</button>
@@ -22,19 +34,18 @@
   </div>
   <div class="container">
     <div class="list">
-      <ul class="page" id="page"></ul>
+      <div class="page" id="page"></div>
       <div class="tree" id="tree"></div>
     </div>
     <div class="main" id="main">
       <div class="canvas-c" id="canvasC"></div>
     </div>
     <div class="side" id="side"></div>
-    <div class="toolbar" id="toolbar"></div>
   </div>
 </div>
 <script src="https://gw.alipayobjects.com/os/lib/vanilla-picker/2.12.3/dist/vanilla-picker.min.js"></script>
 <script src="https://gw.alipayobjects.com/os/lib/pdfjs-dist/3.11.174/build/pdf.min.js"></script>
-<script src="index.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/sketch-editor/0.14.0/dist/index.min.js"></script>
 <script>
   const search = {};
   (location.search.replace(/^\?/, '')).split('&').forEach(function(item) {
@@ -108,11 +119,21 @@
         });
 
         listener = sketchEditor.control.initCanvasControl(root, $canvasC);
-        sketchEditor.control.initPageList(root, document.querySelector('#page'), listener);
-        sketchEditor.control.initTree(root, document.querySelector('#tree'), listener);
-        sketchEditor.control.initPanel(root, document.querySelector('#side'), listener);
-        sketchEditor.control.initZoom(root, document.querySelector('#zoom'), listener);
-        sketchEditor.control.initToolbar(root, document.querySelector('#toolbar'), listener);
+        const $page = document.querySelector('#page');
+        const $tree = document.querySelector('#tree');
+        const $side = document.querySelector('#side');
+        const $zoom = document.querySelector('#zoom');
+        const $toolbar = document.querySelector('#toolbar');
+        $page.innerHTML = '';
+        $tree.innerHTML = '';
+        $side.innerHTML = '';
+        $zoom.innerHTML = '';
+        $toolbar.innerHTML = '';
+        sketchEditor.control.initPageList(root, $page, listener);
+        sketchEditor.control.initTree(root, $tree, listener);
+        sketchEditor.control.initPanel(root, $side, listener);
+        sketchEditor.control.initZoom(root, $zoom, listener);
+        sketchEditor.control.initToolbar(root, $toolbar, listener);
       });
     }
   };
@@ -146,7 +167,9 @@
     if (!selected) {
       return;
     }
-    sketchEditor.tools.node.toPngBlob(selected).then(blob => {
+    sketchEditor.tools.node.toBitmap(selected, {
+      blob: true,
+    }).then(blob => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       if (typeof link.download === 'string') {
