@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=0"/>
+  <title>sketch-editor</title>
+  <link href="https://gw.alipayobjects.com/os/lib/sketch-editor/0.16.4/dist/style.min.css" media="all" rel="stylesheet"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: arial, sans-serif;
+      background: #FFF;
+    }
+  </style>
+</head>
+<body>
+<div class="sketch-editor-wrap">
+  <div class="menu">
+    <div style="color: #FFF">
+      <label><input type="checkbox" class="tile"/>开启tile</label>
+      <label><input type="checkbox" class="debug"/>开启debug</label>
+    </div>
+    <div class="toolbar" id="toolbar"></div>
+    <div class="zoom" id="zoom"></div>
+    <div>
+      <button id="save">保存</button>
+      <button id="export">导出</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="list">
+      <div class="page" id="page"></div>
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="main" id="main">
+      <div class="canvas-c" id="canvasC"></div>
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+</div>
+<input id="base64" type="text" value="" style="position:absolute;left:0;bottom:0;z-index:9999"/>
+<script src="https://gw.alipayobjects.com/os/lib/pdfjs-dist/3.11.174/build/pdf.min.js"></script>
+<script src="https://gw.alipayobjects.com/os/lib/sketch-editor/0.16.4/dist/index.min.js"></script>
+<script>
+  // document.body.addEventListener('click', () => {
+  //   console.log('click')
+  // })
+  // document.body.addEventListener('mousedown', () => {
+  //   console.log('mousedown')
+  // })
+  // document.querySelector('#base64').addEventListener('input', () => {
+  //   console.log('input')
+  // });
+  // document.querySelector('#base64').addEventListener('change', () => {
+  //   console.log('change')
+  // });
+  // document.querySelector('#base64').addEventListener('blur', () => {
+  //   console.log('blur')
+  // });
+  const search = {};
+  (location.search.replace(/^\?/, '')).split('&').forEach(function(item) {
+    const arr = item.split('=');
+    search[arr[0]] = arr[1];
+  });
+  const tile = document.querySelector('.menu .tile');
+  if (search.tile && search.tile !== 0 && search.tile !== false) {
+    sketchEditor.config.tile = true;
+    tile.checked = true;
+  }
+  const debug = document.querySelector('.menu .debug');
+  if (search.debug) {
+    sketchEditor.config.debug = true;
+    debug.checked = true;
+  }
+  tile.addEventListener('change', function() {
+    location.href = '?tile=' + (tile.checked ? '1' : '') + '&debug=' + (debug.checked ? '1' : '');
+  });
+  debug.addEventListener('change', function() {
+    location.href = '?tile=' + (tile.checked ? '1' : '') + '&debug=' + (debug.checked ? '1' : '');
+  });
+
+  sketchEditor.config.MAX_TEXTURE_SIZE = 4096;
+
+  Promise.all([
+    fetch(search.url),
+    // fetch('https://mdn.alipayobjects.com/fin_kaleidoscopetwa/afts/file/bLTFTL7vkhAAAAAAAAAAAAAADrnBAQBr'),
+    sketchEditor.style.font.registerLocalFonts(),
+  ]).then((res) => {
+    const data = res.filter(item => item);
+    if (data.length > 1) {
+      return Promise.all(data.map(item => item.arrayBuffer()));
+    }
+    else {
+      return data[0].arrayBuffer();
+    }
+  }).then((buff) => {
+    if (Array.isArray(buff)) {
+      return Promise.all(buff.map(item => sketchEditor.openAndConvertSketchBuffer(item)));
+    }
+    else {
+      return sketchEditor.openAndConvertSketchBuffer(buff);
+    }
+  }).then(json => {
+    console.log(json);
+    const dpi = 2;
+    const $canvasC = document.querySelector('#canvasC');
+    const { clientWidth, clientHeight } = $canvasC;
+    const canvas = document.createElement('canvas');
+    canvas.width = clientWidth * dpi;
+    canvas.height = clientHeight * dpi;
+    $canvasC.appendChild(canvas);
+
+    const root = window.root = sketchEditor.parse(Array.isArray(json) ? json[0] : json, {
+      dpi,
+      canvas,
+    });
+    // root.appendFake();
+
+    const listener = window.listener = sketchEditor.control.initCanvasControl(root, $canvasC);
+    const $page = document.querySelector('#page');
+    const $tree = document.querySelector('#tree');
+    const $side = document.querySelector('#side');
+    const $zoom = document.querySelector('#zoom');
+    const $toolbar = document.querySelector('#toolbar');
+    $page.innerHTML = '';
+    $tree.innerHTML = '';
+    $side.innerHTML = '';
+    $zoom.innerHTML = '';
+    $toolbar.innerHTML = '';
+    sketchEditor.control.initPageList(root, $page, listener);
+    sketchEditor.control.initTree(root, $tree, listener);
+    sketchEditor.control.initPanel(root, $side, listener);
+    sketchEditor.control.initZoom(root, $zoom, listener);
+    sketchEditor.control.initToolbar(root, $toolbar, listener);
+
+    listener.on(sketchEditor.control.Listener.CONTEXT_MENU, (state, dom) => {
+      if (state) {
+        // const classList = dom.classList;
+        // const custom = document.createElement('div');
+        // custom.className = 'item';
+        // // empty/single/single-group/multi/outline/alpha/break/locked/hidden
+        // if (classList.contains('empty')) {
+        //   custom.innerHTML = '沐弈1';
+        // }
+        // else {
+        //   custom.innerHTML = '沐弈2';
+        // }
+        // custom.onclick = () => {
+        //   console.log(1);
+        // };
+        // dom.querySelector('.version').before(custom);
+      }
+    });
+
+    setTimeout(() => {
+      // const text = root.refs['CAC471A0-76AE-4040-A37C-FB1EB456E531'];
+      // const rect = text.getBoundingClientRect();
+      // console.log(rect);
+    }, 300);
+
+    let timeout;
+    window.onresize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const { clientWidth, clientHeight } = $canvasC;
+        canvas.width = clientWidth * dpi;
+        canvas.height = clientHeight * dpi;
+        root.updateStyle({
+          width: clientWidth * dpi,
+          height: clientHeight * dpi,
+        });
+      }, 20);
+    };
+
+    const $save = document.querySelector('#save');
+    $save.addEventListener('click', function(e) {
+      if (!root) {
+        return;
+      }
+      root.toSketchFile().then(zip => {
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          if (typeof link.download === 'string') {
+            document.body.appendChild(link);
+            link.download = (root.props.name || 'se') + '.sketch';
+            link.href = url;
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            location.replace(url);
+          }
+        })
+      });
+    });
+    const $export = document.querySelector('#export');
+    $export.addEventListener('click', () => {
+      if (!root) {
+        return;
+      }
+      const selected = listener.selected[0] || root.getCurPage()?.children[0];
+      if (!selected) {
+        return;
+      }
+      sketchEditor.tools.node.toBitmap(selected, {
+        blob: true,
+      }).then(blob => {
+        console.log(blob);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        if (typeof link.download === 'string') {
+          document.body.appendChild(link);
+          link.download = (root.props.name || 'se') + '.png';
+          link.href = url;
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          location.replace(url);
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
