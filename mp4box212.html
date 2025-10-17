@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>212</title>
+</head>
+<body>
+<script type="module">
+  import { createFile } from './mp4box.212.js';
+  window.parseMp4 = (url) => {
+    console.log(url);
+    fetch(url)
+      .then(data => {
+        console.log(data);
+        const mp4boxfile = createFile();
+        mp4boxfile.onError = (e) => {
+          console.error(e);
+        };
+        mp4boxfile.onReady = (info) => {
+          console.log('onReady:', info);
+          const track = info.videoTracks[0];
+          mp4boxfile.setExtractionOptions(track.id);
+          mp4boxfile.start();
+        };
+        mp4boxfile.onSamples = (id, user, samples) => {
+          console.log('onSamples', samples);
+        };
+        let fileStart = 0;
+        data.body.pipeTo(new WritableStream({
+          write(chunk) {
+            const buffer = chunk.buffer;
+            buffer.fileStart = fileStart;
+            fileStart += buffer.byteLength;
+            mp4boxfile.appendBuffer(buffer);
+          },
+          close() {
+            mp4boxfile.flush();
+            console.log('close');
+          },
+        }));
+      });
+  };
+</script>
+<button id="file1">file1(success)</button>
+<button id="file2">file2(fail)</button>
+<script>
+  document.querySelector('#file1').onclick = () => {
+    parseMp4('https://gw.alipayobjects.com/v/portal_xiu8o2/afts/video/A*BTdXT6bgEXYAAAAAgQAAAAgAAQAAAQ');
+  };
+  document.querySelector('#file2').onclick = () => {
+    parseMp4('https://mdn.alipayobjects.com/fineapmng/afts/file/gB3USJSjXbIAAAAAAAAAAAAADh6IAQBr');
+  };
+</script>
+</body>
+</html>
